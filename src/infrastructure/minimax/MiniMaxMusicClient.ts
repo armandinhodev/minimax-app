@@ -44,6 +44,7 @@ export class MiniMaxMusicError extends Error {
 }
 
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
+const MUSIC_GENERATION_FETCH_TIMEOUT_MS = 180_000;
 const COVER_PREPROCESS_FETCH_TIMEOUT_MS = 180_000;
 
 function normalizeError(apiError: MiniMaxApiError): MiniMaxMusicError {
@@ -117,7 +118,7 @@ export class MiniMaxMusicClient {
 
   async generateMusic(request: GenerateMusicRequest): Promise<GenerateMusicResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), MUSIC_GENERATION_FETCH_TIMEOUT_MS);
 
     try {
       const response = await fetch(`${MINIMAX_BASE_URL}/v1/music_generation`, {
