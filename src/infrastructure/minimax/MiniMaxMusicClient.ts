@@ -42,7 +42,8 @@ export class MiniMaxMusicError extends Error {
   }
 }
 
-const FETCH_TIMEOUT_MS = 60_000;
+const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
+const COVER_PREPROCESS_FETCH_TIMEOUT_MS = 180_000;
 
 function normalizeError(apiError: MiniMaxApiError): MiniMaxMusicError {
   return new MiniMaxMusicError(apiError.message, apiError.code, apiError.status, apiError.retryAfterSeconds);
@@ -110,7 +111,7 @@ export class MiniMaxMusicClient {
 
   async generateMusic(request: GenerateMusicRequest): Promise<GenerateMusicResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_FETCH_TIMEOUT_MS);
 
     try {
       const response = await fetch(`${MINIMAX_BASE_URL}/v1/music_generation`, {
@@ -164,7 +165,7 @@ export class MiniMaxMusicClient {
 
   async generateLyrics(request: GenerateLyricsRequest): Promise<GenerateLyricsResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_FETCH_TIMEOUT_MS);
 
     try {
       const response = await fetch(`${MINIMAX_BASE_URL}/v1/lyrics_generation`, {
@@ -212,7 +213,7 @@ export class MiniMaxMusicClient {
 
   async preprocessMusicCover(request: MusicCoverPreprocessRequest): Promise<MusicCoverPreprocessResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), COVER_PREPROCESS_FETCH_TIMEOUT_MS);
 
     try {
       const response = await fetch(`${MINIMAX_BASE_URL}/v1/music_cover_preprocess`, {

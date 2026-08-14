@@ -258,6 +258,38 @@ describe('MiniMaxMusicClient', () => {
     });
   });
 
+  it('uses a longer timeout for cover preprocess requests', async () => {
+    let signal: AbortSignal | undefined;
+    global.fetch = vi.fn((_url, init) => {
+      signal = init?.signal as AbortSignal;
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => {
+          const error = new Error('Aborted');
+          error.name = 'AbortError';
+          reject(error);
+        });
+      });
+    }) as typeof fetch;
+
+    const request = new MiniMaxMusicClient().preprocessMusicCover({
+      model: 'music-cover',
+      audioUrl: 'https://example.com/reference.mp3',
+      audioBase64: '',
+    });
+    const requestExpectation = expect(request).rejects.toMatchObject({
+      name: 'MiniMaxMusicError',
+      status: 408,
+      message: 'Request timed out',
+    });
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(signal?.aborted).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(120_000);
+    await requestExpectation;
+    expect(signal?.aborted).toBe(true);
+  });
+
   it('treats non-zero lyrics base_resp as an application error without retrying', async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({

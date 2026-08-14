@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
+const MIN_AUDIO_DURATION_SECONDS = 6;
+const MAX_AUDIO_DURATION_SECONDS = 6 * 60;
 const ALLOWED_AUDIO_MIME_TYPES = new Set([
   'audio/mpeg',
   'audio/mp3',
@@ -68,6 +70,52 @@ function validateAudioFile(file: File): string | null {
   return null;
 }
 
+function validateAudioDuration(durationSeconds: number): string | null {
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return 'Could not read the reference audio duration. Choose a supported audio file and try again.';
+  }
+  if (durationSeconds < MIN_AUDIO_DURATION_SECONDS) {
+    return 'Reference audio must be at least 6 seconds long.';
+  }
+  if (durationSeconds > MAX_AUDIO_DURATION_SECONDS) {
+    return 'Reference audio must be no longer than 6 minutes.';
+  }
+  return null;
+}
+
+function readAudioDurationSeconds(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const audio = new Audio();
+
+    const cleanup = () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('error', handleError);
+      URL.revokeObjectURL(objectUrl);
+    };
+    const handleLoadedMetadata = () => {
+      const duration = audio.duration;
+      cleanup();
+      resolve(duration);
+    };
+    const handleError = () => {
+      cleanup();
+      reject(new Error('Failed to read reference audio duration'));
+    };
+
+    audio.preload = 'metadata';
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('error', handleError);
+    try {
+      audio.src = objectUrl;
+      audio.load();
+    } catch (error) {
+      cleanup();
+      reject(error instanceof Error ? error : new Error('Failed to read reference audio duration'));
+    }
+  });
+}
+
 function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -99,7 +147,8 @@ export default function MusicCoverPreprocessPage() {
   const canPreprocess = !isLoading && !isReadingFile && validationMessage === null;
 
   const handleAudioFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0] ?? null;
+    const input = event.currentTarget;
+    const file = input.files?.[0] ?? null;
     setResult(null);
     setActionStatus(null);
 
@@ -112,13 +161,21 @@ export default function MusicCoverPreprocessPage() {
     if (validationError) {
       setSelectedFile(null);
       setError({ code: null, message: validationError });
-      event.currentTarget.value = '';
+      input.value = '';
       return;
     }
 
     setError(null);
     setIsReadingFile(true);
     try {
+      const duration = await readAudioDurationSeconds(file);
+      const durationError = validateAudioDuration(duration);
+      if (durationError) {
+        setSelectedFile(null);
+        setError({ code: null, message: durationError });
+        input.value = '';
+        return;
+      }
       const base64 = await readFileAsBase64(file);
       setSelectedFile({ name: file.name, size: file.size, base64 });
     } catch {

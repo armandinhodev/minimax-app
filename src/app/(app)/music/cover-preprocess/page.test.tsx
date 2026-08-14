@@ -68,10 +68,15 @@ describe('MusicCoverPreprocessPage', () => {
   let container: HTMLDivElement | null = null;
   let root: ReturnType<typeof createRoot> | null = null;
   const originalFileReader = globalThis.FileReader;
+  const originalAudio = globalThis.Audio;
+  const originalCreateObjectURL = URL.createObjectURL;
+  const originalRevokeObjectURL = URL.revokeObjectURL;
+  let audioDurationSeconds = 12;
 
   beforeEach(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.clearAllMocks();
+    audioDurationSeconds = 12;
     class MockFileReader {
       result: string | null = null;
       onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
@@ -82,6 +87,29 @@ describe('MusicCoverPreprocessPage', () => {
       }
     }
     globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
+    class MockAudio {
+      duration = audioDurationSeconds;
+      preload = '';
+      src = '';
+      private readonly listeners = new Map<string, EventListener>();
+
+      addEventListener(type: string, listener: EventListener) {
+        this.listeners.set(type, listener);
+      }
+
+      removeEventListener(type: string, listener: EventListener) {
+        if (this.listeners.get(type) === listener) {
+          this.listeners.delete(type);
+        }
+      }
+
+      load() {
+        this.listeners.get('loadedmetadata')?.(new Event('loadedmetadata'));
+      }
+    }
+    globalThis.Audio = MockAudio as unknown as typeof Audio;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:reference-audio') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -92,6 +120,9 @@ describe('MusicCoverPreprocessPage', () => {
       root?.unmount();
     });
     globalThis.FileReader = originalFileReader;
+    globalThis.Audio = originalAudio;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
     container?.remove();
     root = null;
     container = null;
@@ -172,6 +203,40 @@ describe('MusicCoverPreprocessPage', () => {
     });
     expect(setItemSpy).not.toHaveBeenCalled();
     setItemSpy.mockRestore();
+  });
+
+  it('rejects local audio uploads shorter than 6 seconds before preprocessing', async () => {
+    audioDurationSeconds = 5;
+
+    act(() => {
+      root!.render(<MusicCoverPreprocessPage />);
+    });
+
+    const audioFile = container!.querySelector('#cover-audio-file') as HTMLInputElement;
+    await act(async () => {
+      selectFile(audioFile, new File(['abc'], 'reference.mp3', { type: 'audio/mpeg' }));
+    });
+
+    expect(container!.textContent).toContain('Reference audio must be at least 6 seconds long.');
+    expect(authClientMocks.authFetch).not.toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:reference-audio');
+  });
+
+  it('rejects local audio uploads longer than 6 minutes before preprocessing', async () => {
+    audioDurationSeconds = 361;
+
+    act(() => {
+      root!.render(<MusicCoverPreprocessPage />);
+    });
+
+    const audioFile = container!.querySelector('#cover-audio-file') as HTMLInputElement;
+    await act(async () => {
+      selectFile(audioFile, new File(['abc'], 'reference.mp3', { type: 'audio/mpeg' }));
+    });
+
+    expect(container!.textContent).toContain('Reference audio must be no longer than 6 minutes.');
+    expect(authClientMocks.authFetch).not.toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:reference-audio');
   });
 
   it('blocks submitting both URL and local upload sources', async () => {
