@@ -48,6 +48,10 @@ vi.mock('@/components/ui/card', () => ({
   CardContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
+vi.mock('@/components/ui/input', () => ({
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+}));
+
 vi.mock('@/components/ui/label', () => ({
   Label: ({ children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props}>{children}</label>,
 }));
@@ -96,7 +100,7 @@ describe('MusicPage', () => {
   beforeEach(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.clearAllMocks();
-    audioStorageMocks.storeAudioFromHex.mockResolvedValue('music-storage-key-1');
+    window.history.replaceState(null, '', window.location.pathname || '/');
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -111,7 +115,7 @@ describe('MusicPage', () => {
     container = null;
   });
 
-  it('generates vocal music and saves only safe Library metadata', async () => {
+  it('generates vocal music and relies on backend Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -152,22 +156,9 @@ describe('MusicPage', () => {
         audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
       }),
     }));
-    expect(audioStorageMocks.storeAudioFromHex).toHaveBeenCalledWith('00010203', 'mp3');
-    expect(historyMocks.saveHistoryItem).toHaveBeenCalledWith({
-      type: 'music',
-      source: 'text-to-music',
-      text: 'Glossy synth-pop with a bright chorus.',
-      lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
-      audioStorageKey: 'music-storage-key-1',
-      format: 'mp3',
-      model: 'music-3.0',
-      instrumental: false,
-      durationSeconds: 118,
-      sampleRate: 44100,
-      bitrate: 256000,
-    });
-    expect(JSON.stringify(historyMocks.saveHistoryItem.mock.calls[0][0])).not.toContain('00010203');
-    expect(container!.textContent).toContain('Music generated, stored locally');
+    expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Music generated and saved to backend Library');
     expect(container!.textContent).toContain('Audio preview mp3: 00010203');
   });
 
@@ -202,11 +193,52 @@ describe('MusicPage', () => {
       lyrics: '',
       instrumental: true,
     });
-    expect(historyMocks.saveHistoryItem).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'music',
-      source: 'instrumental-music',
-      lyrics: undefined,
-      instrumental: true,
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
+  });
+
+  it('prefills cover generation from URL params and submits coverFeatureId', async () => {
+    const params = new URLSearchParams({
+      coverFeatureId: 'cover-feature-1',
+      lyrics: '[Verse]\nCity lights',
+      style: 'Acoustic folk cover with warm vocals.',
+    });
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?${params.toString()}`);
+    authClientMocks.authFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'trace-cover', audio: '00010203', format: 'mp3', metadata: {} }),
+    });
+
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    expect(container!.textContent).toContain('Step 2 after Cover Preprocess');
+    expect(container!.textContent).toContain('expires 24 hours');
+    const coverFeatureId = container!.querySelector('#cover-feature-id') as HTMLInputElement;
+    const prompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;
+    const lyrics = container!.querySelector('#music-lyrics') as HTMLTextAreaElement;
+    expect(coverFeatureId.value).toBe('cover-feature-1');
+    expect(prompt.value).toBe('Acoustic folk cover with warm vocals.');
+    expect(lyrics.value).toBe('[Verse]\nCity lights');
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Cover');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music', expect.objectContaining({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'music-cover',
+        prompt: 'Acoustic folk cover with warm vocals.',
+        lyrics: '[Verse]\nCity lights',
+        instrumental: false,
+        coverFeatureId: 'cover-feature-1',
+        stream: false,
+        outputFormat: 'hex',
+        audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+      }),
     }));
   });
 
@@ -226,12 +258,11 @@ describe('MusicPage', () => {
     expect(authClientMocks.authFetch).not.toHaveBeenCalled();
   });
 
-  it('keeps generated preview visible when local audio storage is unavailable', async () => {
+  it('keeps generated preview visible without browser audio storage', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ id: 'trace-3', audio: '00010203', format: 'mp3', metadata: {} }),
     });
-    audioStorageMocks.storeAudioFromHex.mockRejectedValue(new Error('IndexedDB unavailable'));
 
     act(() => {
       root!.render(<MusicPage />);
@@ -247,7 +278,8 @@ describe('MusicPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(container!.textContent).toContain('Music generated for preview');
+    expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Music generated and saved to backend Library');
     expect(container!.textContent).toContain('Audio preview mp3: 00010203');
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
   });

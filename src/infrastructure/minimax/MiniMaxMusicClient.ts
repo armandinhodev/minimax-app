@@ -12,6 +12,7 @@ import {
   DEFAULT_MUSIC_MODEL,
   DEFAULT_MUSIC_SAMPLE_RATE,
   MUSIC_COVER_MODEL,
+  isMusicCoverModel,
   normalizeMusicCoverAudioBase64,
   type GenerateLyricsRequest,
   type GenerateLyricsResponse,
@@ -55,11 +56,16 @@ function mapRequestBody(request: GenerateMusicRequest) {
     bitrate: DEFAULT_MUSIC_BITRATE,
     format: DEFAULT_MUSIC_FORMAT,
   };
+  const model = request.model ?? DEFAULT_MUSIC_MODEL;
+  const isCoverModel = isMusicCoverModel(model);
 
   return {
-    model: request.model ?? DEFAULT_MUSIC_MODEL,
+    model,
     ...(request.prompt?.trim() ? { prompt: request.prompt.trim() } : {}),
-    ...(request.instrumental ? {} : { lyrics: request.lyrics?.trim() ?? '' }),
+    ...(isCoverModel && request.coverFeatureId?.trim() ? { cover_feature_id: request.coverFeatureId.trim() } : {}),
+    ...(isCoverModel
+      ? request.lyrics?.trim() ? { lyrics: request.lyrics.trim() } : {}
+      : request.instrumental ? {} : { lyrics: request.lyrics?.trim() ?? '' }),
     stream: false,
     output_format: request.outputFormat ?? 'hex',
     audio_setting: {

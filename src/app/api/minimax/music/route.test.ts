@@ -87,6 +87,34 @@ describe('POST /api/minimax/music', () => {
     }));
   });
 
+  it('passes cover generation requests to the use case with a cover feature ID', async () => {
+    const { POST } = await import('./route');
+    executeMock.mockResolvedValue({ id: 'trace-cover', audio: '00010203', format: 'mp3', metadata: {} });
+
+    const response = await POST(new Request('http://localhost/api/minimax/music', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer test-key',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'music-cover',
+        coverFeatureId: 'cover-feature-1',
+        prompt: 'Acoustic folk cover with warm vocals.',
+        lyrics: '[Verse]\nCity lights',
+      }),
+    }));
+
+    expect(response.status).toBe(200);
+    expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: '[Verse]\nCity lights',
+      instrumental: false,
+    }));
+  });
+
   it('rejects invalid music requests before calling MiniMax', async () => {
     const { POST } = await import('./route');
 

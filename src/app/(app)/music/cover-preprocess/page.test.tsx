@@ -166,6 +166,11 @@ describe('MusicCoverPreprocessPage', () => {
     }));
     expect(container!.textContent).toContain('cover-feature-1');
     expect(container!.textContent).toContain('valid for 24 hours');
+    const coverGenerationLink = container!.querySelector('a[href^="/music?"]') as HTMLAnchorElement;
+    const coverGenerationUrl = new URL(coverGenerationLink.getAttribute('href') ?? '', 'http://localhost');
+    expect(coverGenerationLink.textContent).toBe('Use in Cover Generation');
+    expect(coverGenerationUrl.searchParams.get('coverFeatureId')).toBe('cover-feature-1');
+    expect(coverGenerationUrl.searchParams.get('lyrics')).toBe('[Verse]\nCity lights');
   });
 
   it('converts a local audio upload to base64 without adding persistence calls', async () => {

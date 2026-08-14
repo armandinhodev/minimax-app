@@ -108,6 +108,40 @@ describe('MiniMaxMusicClient', () => {
     });
   });
 
+  it('sends cover generation payload with cover_feature_id and optional lyrics', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 'Success' },
+      trace_id: 'trace-cover-generation',
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MiniMaxMusicClient().generateMusic({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: '[Verse]\nCity lights',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [url, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.minimax.io/v1/music_generation');
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'music-cover',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      cover_feature_id: 'cover-feature-1',
+      lyrics: '[Verse]\nCity lights',
+      stream: false,
+      output_format: 'hex',
+      audio_setting: { sample_rate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+  });
+
   it('does not retry transient generation failures to avoid duplicate music jobs', async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({

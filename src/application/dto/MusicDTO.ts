@@ -5,12 +5,17 @@ export const DEFAULT_MUSIC_FORMAT = 'mp3' as const;
 export const DEFAULT_MUSIC_SAMPLE_RATE = 44100 as const;
 export const DEFAULT_MUSIC_BITRATE = 256000 as const;
 export const MUSIC_COVER_MODEL = 'music-cover' as const;
+export const MUSIC_COVER_FREE_MODEL = 'music-cover-free' as const;
 export const MAX_MUSIC_COVER_AUDIO_BYTES = 50 * 1024 * 1024;
 
-export const MusicModelSchema = z.enum(['music-3.0', 'music-3.0-free']);
+export const MusicModelSchema = z.enum(['music-3.0', 'music-3.0-free', MUSIC_COVER_MODEL, MUSIC_COVER_FREE_MODEL]);
 export const MusicOutputFormatSchema = z.literal('hex');
 export const MusicAudioFormatSchema = z.literal(DEFAULT_MUSIC_FORMAT);
 export const LyricsGenerationModeSchema = z.enum(['write_full_song', 'edit']);
+
+export function isMusicCoverModel(model: z.infer<typeof MusicModelSchema>): boolean {
+  return model === MUSIC_COVER_MODEL || model === MUSIC_COVER_FREE_MODEL;
+}
 
 const AUDIO_DATA_URL_PATTERN = /^data:audio\/[a-z0-9.+-]+;base64,([A-Za-z0-9+/]+={0,2})$/i;
 const RAW_BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
@@ -63,6 +68,7 @@ export const GenerateMusicSchema = z
       .max(3500, 'Lyrics must be at most 3,500 characters')
       .optional()
       .default(''),
+    coverFeatureId: z.string().trim().optional(),
     instrumental: z.boolean().default(false),
     stream: z.literal(false).default(false),
     outputFormat: MusicOutputFormatSchema.default('hex'),
@@ -73,6 +79,38 @@ export const GenerateMusicSchema = z
     }),
   })
   .superRefine((value, ctx) => {
+    if (isMusicCoverModel(value.model)) {
+      if (!value.coverFeatureId || value.coverFeatureId.trim().length === 0) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['coverFeatureId'],
+          message: 'Cover feature ID is required for cover generation',
+        });
+      }
+      if (value.prompt.trim().length < 10 || value.prompt.trim().length > 300) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['prompt'],
+          message: 'Cover style prompt must be 10 to 300 characters',
+        });
+      }
+      if (value.lyrics.trim().length > 0 && (value.lyrics.trim().length < 10 || value.lyrics.trim().length > 1000)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['lyrics'],
+          message: 'Cover lyrics must be 10 to 1,000 characters when provided',
+        });
+      }
+      if (value.instrumental) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['instrumental'],
+          message: 'Instrumental mode is not supported for cover generation',
+        });
+      }
+      return;
+    }
+
     if (value.instrumental) {
       if (value.prompt.trim().length === 0) {
         ctx.addIssue({

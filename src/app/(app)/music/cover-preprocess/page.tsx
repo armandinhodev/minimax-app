@@ -128,6 +128,14 @@ function readFileAsBase64(file: File): Promise<string> {
   });
 }
 
+function buildCoverGenerationHref(result: CoverPreprocessResult): string {
+  const params = new URLSearchParams({ coverFeatureId: result.coverFeatureId });
+  if (result.formattedLyrics.trim().length > 0) {
+    params.set('lyrics', result.formattedLyrics);
+  }
+  return `/music?${params.toString()}`;
+}
+
 export default function MusicCoverPreprocessPage() {
   const [audioUrl, setAudioUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState<SelectedAudioFile | null>(null);
@@ -322,7 +330,10 @@ export default function MusicCoverPreprocessPage() {
                       <Box color="gray.500" fontSize="xs">Cover feature ID</Box>
                       <Box fontWeight={700} style={{ wordBreak: 'break-all' }}>{result.coverFeatureId}</Box>
                     </Box>
-                    <Button variant="outline" colorPalette="blue" size="sm" onClick={handleCopyFeatureId}>Copy ID</Button>
+                    <Box display="flex" gap={2} flexWrap="wrap">
+                      <Button variant="outline" colorPalette="blue" size="sm" onClick={handleCopyFeatureId}>Copy ID</Button>
+                      <a href={buildCoverGenerationHref(result)} style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'underline' }}>Use in Cover Generation</a>
+                    </Box>
                   </Box>
                   <Box color="gray.600" fontSize="sm">Trace: {result.traceId ?? 'not returned'} · Expires after 24 hours</Box>
                 </Box>

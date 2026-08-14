@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { GenerateMusicUseCase } from '@/application/use-cases/music/GenerateMusic';
+import { isMusicCoverModel } from '@/application/dto/MusicDTO';
 import { MiniMaxMusicClient } from '@/infrastructure/minimax/MiniMaxMusicClient';
 import { GenerateMusicRequestSchema } from '@/lib/validators';
 import { requireAuth } from '../../_shared/auth';
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
         sampleRate: result.metadata.sampleRate,
         bitrate: result.metadata.bitrate,
         traceId: result.metadata.traceId,
+        coverFeatureId: isMusicCoverModel(parsed.data.model) ? parsed.data.coverFeatureId : undefined,
       },
       assets: [{
         kind: 'audio',

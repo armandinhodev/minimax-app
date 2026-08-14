@@ -245,6 +245,56 @@ describe('GenerateMusicRequestSchema', () => {
     expect(GenerateMusicRequestSchema.safeParse({ instrumental: true, prompt: 'a'.repeat(2001) }).success).toBe(false);
   });
 
+  it('accepts cover generation with a cover feature ID and optional lyrics', () => {
+    const result = GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: '',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.instrumental).toBe(false);
+      expect(result.data.coverFeatureId).toBe('cover-feature-1');
+    }
+  });
+
+  it('rejects invalid cover generation states', () => {
+    expect(GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover',
+      prompt: 'Acoustic folk cover with warm vocals.',
+    }).success).toBe(false);
+    expect(GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'short',
+    }).success).toBe(false);
+    expect(GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover-free',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'a'.repeat(301),
+    }).success).toBe(false);
+    expect(GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: 'too few',
+    }).success).toBe(false);
+    expect(GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: 'a'.repeat(1001),
+    }).success).toBe(false);
+    expect(GenerateMusicRequestSchema.safeParse({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      instrumental: true,
+    }).success).toBe(false);
+  });
+
   it('rejects unsupported music output settings', () => {
     expect(GenerateMusicRequestSchema.safeParse({
       prompt: 'test',
