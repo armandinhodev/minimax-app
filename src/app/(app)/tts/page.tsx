@@ -17,8 +17,6 @@ import { TextInput } from '@/components/tts/TextInput';
 import { VoiceSelector } from '@/components/tts/VoiceSelector';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { StreamingPlayer } from '@/components/tts/StreamingPlayer';
-import { saveHistoryItem } from '@/lib/history';
-import { storeAudioFromHex } from '@/lib/audio-storage';
 import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
 
 const MODEL_OPTIONS: SelectOption[] = [
@@ -94,22 +92,10 @@ export default function TTSPage() {
 
       if (data.audioUrl) {
         setAudioUrl(data.audioUrl);
-        saveHistoryItem({ type: 'tts', text: generateText, voiceId: generateVoiceId, audioUrl: data.audioUrl, format });
-        setActionStatus('Audio generated and saved to Library as a temporary URL. Download it soon because provider URLs can expire.');
+        setActionStatus('Audio generated and saved to backend Library as a temporary URL. Download it soon because provider URLs can expire.');
       } else if (data.audio) {
         setAudioHex(data.audio);
-        let audioStorageKey: string | undefined;
-        try {
-          audioStorageKey = await storeAudioFromHex(data.audio, format);
-        } catch {
-          audioStorageKey = undefined;
-        }
-        saveHistoryItem({ type: 'tts', text: generateText, voiceId: generateVoiceId, audioStorageKey, format });
-        setActionStatus(
-          audioStorageKey
-            ? 'Audio generated, stored locally in this browser, and saved to Library.'
-            : 'Audio generated for preview, but browser storage was unavailable. This Library item may not be downloadable after refresh.'
-        );
+        setActionStatus('Audio generated and saved to backend Library. The preview remains available on this page.');
       }
     } catch {
       setError({ code: null, message: 'Failed to generate audio. Check your connection.' });
@@ -131,12 +117,12 @@ export default function TTSPage() {
         <CardHeader>
           <CardTitle>Generate Audio</CardTitle>
           <CardDescription>
-            Creates audio you can download now and find later in Library when local storage or a temporary URL is available.
+            Creates audio you can download now and find later in Library when the backend stores an asset reference.
           </CardDescription>
         </CardHeader>
         <CardContent display="grid" gap={4}>
           <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm">
-            Best for finished clips, exports, and anything you want to keep in your browser Library.
+            Best for finished clips, exports, and anything you want to keep in backend Library.
           </Box>
           {/* Text Input — Phase 6 component */}
           <TextInput

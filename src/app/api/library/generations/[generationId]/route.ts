@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { deleteLocalAsset } from '@/infrastructure/assets/LocalAssetStorage';
 import { SQLiteGenerationRepository } from '@/infrastructure/sqlite/SQLiteGenerationRepository';
 import { requireAuth } from '../../../_shared/auth';
 
@@ -14,7 +15,17 @@ export async function DELETE(request: Request, context: RouteContext) {
   if (authError) return authError;
 
   const { generationId } = await context.params;
-  const deleted = new SQLiteGenerationRepository().deleteGeneration(generationId);
+  const repository = new SQLiteGenerationRepository();
+  const generation = repository.findGeneration(generationId);
+  const deleted = repository.deleteGeneration(generationId);
+
+  if (deleted && generation) {
+    await Promise.all(generation.assets
+      .filter((asset) => asset.storageType === 'local_file')
+      .map((asset) => deleteLocalAsset(asset.storageRef).catch((error) => {
+        console.error('Failed to delete local asset file.', error);
+      })));
+  }
 
   return NextResponse.json({ deleted });
 }

@@ -58,6 +58,7 @@ const GENERATION_SOURCES: ReadonlySet<string> = new Set<LibraryGenerationSource>
   'image-to-image',
   'text-to-music',
   'instrumental-music',
+  'cover-preprocess',
 ]);
 
 function parseGenerationSource(source: string | null): LibraryGenerationSource | null {
@@ -226,7 +227,7 @@ export class SQLiteGenerationRepository implements IGenerationRepository {
       .run(generationId, assetId, asset.role ?? 'primary');
   }
 
-  private findGeneration(id: string): LibraryGenerationDTO | null {
+  findGeneration(id: string): LibraryGenerationDTO | null {
     const row = this.db.prepare('SELECT * FROM generations WHERE id = ?').get(id) as GenerationRow | undefined;
     if (!row) return null;
 

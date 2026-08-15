@@ -53,6 +53,7 @@ vite.config.ts.timestamp-*
 # Local SQLite metadata stores
 /data/*.sqlite
 /data/*.sqlite-*
+/data/assets/
 
 # Top-level test fixtures (audio samples, etc.). Only the root /voices/
 # directory — src/app/(app)/voices/ is the Next.js route and must NOT

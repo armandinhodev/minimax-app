@@ -1,7 +1,7 @@
 export type LibraryGenerationKind = 'tts' | 'music' | 'image' | 'clone' | 'design';
-export type LibraryGenerationSource = 'text-to-speech' | 'text-to-image' | 'image-to-image' | 'text-to-music' | 'instrumental-music';
+export type LibraryGenerationSource = 'text-to-speech' | 'text-to-image' | 'image-to-image' | 'text-to-music' | 'instrumental-music' | 'cover-preprocess';
 export type LibraryAssetKind = 'audio' | 'image' | 'voice' | 'metadata';
-export type LibraryAssetStorageType = 'provider_url' | 'provider_file' | 'browser_indexeddb' | 'metadata_only';
+export type LibraryAssetStorageType = 'provider_url' | 'provider_file' | 'local_file' | 'browser_indexeddb' | 'metadata_only';
 export type LibraryGenerationStatus = 'completed' | 'failed' | 'processing';
 
 export interface LibraryAssetDTO {

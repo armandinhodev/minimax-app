@@ -1,15 +1,15 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
 import LibraryPage from './page';
 
-const audioStorageMocks = vi.hoisted(() => ({
-  deleteStoredAudio: vi.fn(() => Promise.resolve()),
-  downloadBlob: vi.fn(),
-  getStoredAudio: vi.fn(),
+const authClientMocks = vi.hoisted(() => ({
+  authFetch: vi.fn(),
+  parseApiError: vi.fn(async (response: Response) => ({ code: response.status, message: `HTTP ${response.status}` })),
 }));
 
-vi.mock('@/lib/audio-storage', () => audioStorageMocks);
+vi.mock('@/lib/auth-client', () => authClientMocks);
 
 vi.mock('@chakra-ui/react', () => ({
   Box: ({ children }: { children?: ReactNode } & Record<string, unknown>) => <div>{children}</div>,
@@ -76,15 +76,60 @@ vi.mock('@/components/ui/confirmation-dialog', () => ({
     ) : null,
 }));
 
-describe('LibraryPage destructive confirmations', () => {
+function createGeneration(overrides: Partial<LibraryGenerationDTO> = {}): LibraryGenerationDTO {
+  return {
+    id: 'generation-1',
+    kind: 'tts',
+    source: 'text-to-speech',
+    status: 'completed',
+    title: null,
+    prompt: 'Hello from SQLite',
+    model: 'speech-2.8-hd',
+    providerGenerationId: null,
+    providerTaskId: null,
+    providerFileId: null,
+    metadata: { voiceId: 'voice-a' },
+    assets: [
+      {
+        id: 'asset-1',
+        kind: 'audio',
+        storageType: 'local_file',
+        storageRef: 'audio/generation-1.mp3',
+        format: 'mp3',
+        mimeType: 'audio/mpeg',
+        sizeBytes: 4,
+        expiresAt: null,
+        metadata: {},
+        createdAt: 1,
+      },
+    ],
+    createdAt: 1,
+    updatedAt: 1,
+    ...overrides,
+  };
+}
+
+describe('LibraryPage backend source of truth', () => {
   let container: HTMLDivElement | null = null;
   let root: ReturnType<typeof createRoot> | null = null;
+  let generations: LibraryGenerationDTO[] = [];
 
   beforeEach(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.clearAllMocks();
     localStorage.clear();
-    seedHistory([{ id: 'history-1', type: 'tts', text: 'Hello world', voiceId: 'voice-a', createdAt: 1 }]);
+    generations = [];
+    authClientMocks.authFetch.mockImplementation(async (url: string, options?: RequestInit) => {
+      if (url.startsWith('/api/library/generations?')) {
+        return Response.json({ generations });
+      }
+      if (url.startsWith('/api/library/generations/') && options?.method === 'DELETE') {
+        const generationId = decodeURIComponent(url.split('/')[4] ?? '');
+        generations = generations.filter((generation) => generation.id !== generationId);
+        return Response.json({ deleted: true });
+      }
+      return Response.json({ error: 'Not found' }, { status: 404 });
+    });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -100,265 +145,162 @@ describe('LibraryPage destructive confirmations', () => {
     container = null;
   });
 
-  function seedHistory(items: unknown[]) {
-    localStorage.setItem('minimax_speech_history', JSON.stringify(items));
-  }
-
-  it('removes one history item only after confirmation', () => {
-    seedHistory([
-      { id: 'history-1', type: 'tts', text: 'Hello world', voiceId: 'voice-a', audioStorageKey: 'audio-key-1', createdAt: 1 },
-    ]);
-
-    act(() => {
+  async function renderPage() {
+    await act(async () => {
       root!.render(<LibraryPage />);
     });
+  }
+
+  it('loads backend records only and ignores localStorage history', async () => {
+    localStorage.setItem('minimax_speech_history', JSON.stringify([{ id: 'local-1', type: 'tts', text: 'Local-only item', createdAt: 1 }]));
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+
+    await renderPage();
+
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations?limit=50');
+    expect(getItemSpy).not.toHaveBeenCalledWith('minimax_speech_history');
+    expect(container!.textContent).toContain('No backend Library records yet.');
+    expect(container!.textContent).not.toContain('Local-only item');
+  });
+
+  it('renders and downloads local_file audio through the backend asset endpoint', async () => {
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const removeSpy = vi.spyOn(HTMLAnchorElement.prototype, 'remove').mockImplementation(() => undefined);
+    generations = [createGeneration()];
+
+    await renderPage();
+
+    expect(container!.textContent).toContain('Hello from SQLite');
+    expect(container!.textContent).toContain('Stored on server');
+    expect(container!.textContent).toContain('Voice: voice-a');
+
+    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
+    act(() => {
+      downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(clickSpy).toHaveBeenCalled();
+    expect(removeSpy).toHaveBeenCalled();
+  });
+
+  it('filters backend records by kind', async () => {
+    generations = [
+      createGeneration(),
+      createGeneration({
+        id: 'generation-2',
+        kind: 'music',
+        source: 'text-to-music',
+        prompt: 'Glossy synth-pop',
+        model: 'music-3.0',
+        metadata: { durationSeconds: 118, sampleRate: 44100, bitrate: 256000 },
+        assets: [],
+        createdAt: 2,
+        updatedAt: 2,
+      }),
+    ];
+
+    await renderPage();
+
+    const musicFilter = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Music');
+    act(() => {
+      musicFilter?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(container!.textContent).toContain('Glossy synth-pop');
+    expect(container!.textContent).not.toContain('Hello from SQLite');
+  });
+
+  it('renders cover preprocess records with cover generation action before expiry', async () => {
+    generations = [createGeneration({
+      id: 'cover-preprocess-1',
+      kind: 'music',
+      source: 'cover-preprocess',
+      title: 'Cover preprocess',
+      prompt: '[Verse]\nCity lights',
+      model: 'music-cover',
+      providerGenerationId: 'cover-feature-1',
+      metadata: {
+        coverFeatureId: 'cover-feature-1',
+        formattedLyrics: '[Verse]\nCity lights',
+        audioDurationSeconds: 42,
+        expiresAt: Date.now() + 60_000,
+      },
+      assets: [],
+    })];
+
+    await renderPage();
+
+    expect(container!.textContent).toContain('Cover preprocess');
+    expect(container!.textContent).toContain('Source: Cover Preprocess');
+    expect(container!.textContent).toContain('Reference duration: 42s');
+    expect(container!.textContent).toContain('Reference audio bytes were not saved.');
+    expect(container!.textContent).toContain('Cover ID TTL');
+    const action = Array.from(container!.querySelectorAll('a')).find((anchor) => anchor.textContent === 'Use in Cover Generation');
+    expect(action?.getAttribute('href')).toBe('/music?coverFeatureId=cover-feature-1&lyrics=%5BVerse%5D%0ACity+lights');
+    expect(container!.textContent).not.toContain('Missing audio');
+  });
+
+  it('explains expired cover preprocess records without offering cover generation action', async () => {
+    generations = [createGeneration({
+      id: 'cover-preprocess-expired',
+      kind: 'music',
+      source: 'cover-preprocess',
+      title: 'Cover preprocess',
+      prompt: '[Verse]\nCity lights',
+      metadata: {
+        coverFeatureId: 'cover-feature-expired',
+        formattedLyrics: '[Verse]\nCity lights',
+        expiresAt: Date.now() - 1,
+      },
+      assets: [],
+    })];
+
+    await renderPage();
+
+    expect(container!.textContent).toContain('Cover ID expired');
+    expect(container!.textContent).toContain('This cover feature ID expired. Run Cover Preprocess again before using it for cover generation.');
+    expect(container!.textContent).not.toContain('Use in Cover Generation');
+  });
+
+  it('deletes one backend generation only after confirmation', async () => {
+    generations = [createGeneration()];
+
+    await renderPage();
 
     const removeButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Remove');
-    expect(removeButton).toBeDefined();
-
     act(() => {
       removeButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(container!.querySelector('[role="alertdialog"]')?.getAttribute('aria-label')).toBe('Remove library item?');
-    expect(localStorage.getItem('minimax_speech_history')).toContain('history-1');
+    expect(container!.querySelector('[role="alertdialog"]')?.getAttribute('aria-label')).toBe('Remove library record?');
+    expect(container!.textContent).toContain('Hello from SQLite');
 
     const confirmButton = Array.from(container!.querySelectorAll('[role="alertdialog"] button')).find((button) => button.textContent === 'Remove');
-    act(() => {
+    await act(async () => {
       confirmButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(localStorage.getItem('minimax_speech_history')).toBe('[]');
-    expect(audioStorageMocks.deleteStoredAudio).toHaveBeenCalledWith('audio-key-1');
-    expect(container!.textContent).toContain('No history yet.');
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/generation-1', { method: 'DELETE' });
+    expect(container!.textContent).toContain('No backend Library records yet.');
   });
 
-  it('clears all history only after confirmation', () => {
-    seedHistory([
-      { id: 'history-1', type: 'tts', text: 'Hello world', voiceId: 'voice-a', audioStorageKey: 'audio-key-1', createdAt: 1 },
-      { id: 'history-2', type: 'tts', text: 'Another item', voiceId: 'voice-a', audioStorageKey: 'audio-key-2', createdAt: 2 },
-    ]);
+  it('clears backend records through the API', async () => {
+    generations = [createGeneration(), createGeneration({ id: 'generation-2', prompt: 'Second record' })];
 
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
+    await renderPage();
 
     const clearButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Clear All');
     act(() => {
       clearButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(container!.querySelector('[role="alertdialog"]')?.getAttribute('aria-label')).toBe('Clear all library history?');
-    expect(localStorage.getItem('minimax_speech_history')).toContain('history-1');
-
-    const cancelButton = Array.from(container!.querySelectorAll('[role="alertdialog"] button')).find((button) => button.textContent === 'Cancel');
-    act(() => {
-      cancelButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(container!.querySelector('[role="alertdialog"]')).toBeNull();
-    expect(localStorage.getItem('minimax_speech_history')).toContain('history-1');
-
-    act(() => {
-      clearButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
     const confirmButton = Array.from(container!.querySelectorAll('[role="alertdialog"] button')).find((button) => button.textContent === 'Clear All');
-    act(() => {
+    await act(async () => {
       confirmButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(localStorage.getItem('minimax_speech_history')).toBeNull();
-    expect(audioStorageMocks.deleteStoredAudio).toHaveBeenCalledWith('audio-key-1');
-    expect(audioStorageMocks.deleteStoredAudio).toHaveBeenCalledWith('audio-key-2');
-    expect(container!.textContent).toContain('No history yet.');
-  });
-
-  it('opens direct audioUrl downloads for TTS items', () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    seedHistory([
-      {
-        id: 'history-1',
-        type: 'tts',
-        text: 'Hello world',
-        voiceId: 'voice-a',
-        audioUrl: 'https://example.com/audio.mp3',
-        format: 'mp3',
-        createdAt: 1,
-      },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
-    act(() => {
-      downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(openSpy).toHaveBeenCalledWith('https://example.com/audio.mp3', '_blank');
-    expect(audioStorageMocks.getStoredAudio).not.toHaveBeenCalled();
-  });
-
-  it('downloads local audio blobs by audioStorageKey for TTS items', async () => {
-    const blob = new Blob(['audio'], { type: 'audio/mpeg' });
-    audioStorageMocks.getStoredAudio.mockResolvedValue({
-      key: 'audio-key-1',
-      blob,
-      format: 'mp3',
-      createdAt: 1,
-    });
-    seedHistory([
-      {
-        id: 'history-1',
-        type: 'tts',
-        text: 'Hello world',
-        voiceId: 'voice-a',
-        audioStorageKey: 'audio-key-1',
-        format: 'mp3',
-        createdAt: 123,
-      },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
-    await act(async () => {
-      downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(audioStorageMocks.getStoredAudio).toHaveBeenCalledWith('audio-key-1');
-    expect(audioStorageMocks.downloadBlob).toHaveBeenCalledWith(blob, 'tts-123.mp3');
-  });
-
-  it('filters items by type and shows storage status badges', () => {
-    seedHistory([
-      { id: 'history-1', type: 'tts', text: 'Hello world', voiceId: 'voice-a', audioStorageKey: 'audio-key-1', createdAt: 1 },
-      { id: 'history-music', type: 'music', source: 'text-to-music', text: 'Glossy synth-pop', lyrics: '[Chorus]\nRise again', audioStorageKey: 'music-key-1', format: 'mp3', model: 'music-3.0', durationSeconds: 118, sampleRate: 44100, bitrate: 256000, createdAt: 5 },
-      { id: 'history-2', type: 'image', source: 'image-to-image', text: 'A premium studio product photo', imageUrls: ['https://example.com/image.png'], aspectRatio: '1:1', createdAt: 2, ttlExpiry: Date.now() + 24 * 60 * 60 * 1000 },
-      { id: 'history-3', type: 'clone', voiceId: 'voice-clone', createdAt: 3 },
-      { id: 'history-4', type: 'design', voiceId: 'voice-design', createdAt: 4 },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    expect(container!.textContent).toContain('Stored locally');
-    expect(container!.textContent).toContain('Mode: Text to Music');
-    expect(container!.textContent).toContain('Model: music-3.0');
-    expect(container!.textContent).toContain('Duration: 118s');
-    expect(container!.textContent).toContain('24h image URLs');
-    expect(container!.textContent).toContain('Source: Image to Image');
-    expect(container!.textContent).toContain('Voice only');
-
-    const audioFilter = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Audio');
-    act(() => {
-      audioFilter?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(container!.textContent).toContain('Hello world');
-    expect(container!.textContent).not.toContain('Glossy synth-pop');
-    expect(container!.textContent).not.toContain('premium studio');
-    expect(container!.textContent).not.toContain('voice-clone');
-    expect(container!.textContent).not.toContain('voice-design');
-  });
-
-  it('opens and downloads image URLs from Library cards', () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-    const removeSpy = vi.spyOn(HTMLAnchorElement.prototype, 'remove').mockImplementation(() => undefined);
-    seedHistory([
-      {
-        id: 'history-image',
-        type: 'image',
-        text: 'A premium studio product photo',
-        imageUrls: ['https://example.com/image.png'],
-        aspectRatio: '1:1',
-        createdAt: 123,
-        ttlExpiry: Date.now() + 24 * 60 * 60 * 1000,
-      },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    const openButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Open');
-    act(() => {
-      openButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(openSpy).toHaveBeenCalledWith('https://example.com/image.png', '_blank');
-
-    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
-    act(() => {
-      downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(clickSpy).toHaveBeenCalled();
-    expect(removeSpy).toHaveBeenCalled();
-  });
-
-  it('downloads local music blobs by audioStorageKey and music filename', async () => {
-    const blob = new Blob(['music'], { type: 'audio/mpeg' });
-    audioStorageMocks.getStoredAudio.mockResolvedValue({
-      key: 'music-key-1',
-      blob,
-      format: 'mp3',
-      createdAt: 1,
-    });
-    seedHistory([
-      {
-        id: 'history-music',
-        type: 'music',
-        source: 'text-to-music',
-        text: 'Glossy synth-pop',
-        audioStorageKey: 'music-key-1',
-        format: 'mp3',
-        createdAt: 456,
-      },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
-    await act(async () => {
-      downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(audioStorageMocks.getStoredAudio).toHaveBeenCalledWith('music-key-1');
-    expect(audioStorageMocks.downloadBlob).toHaveBeenCalledWith(blob, 'music-456.mp3');
-  });
-
-  it('marks TTS entries without a local blob or URL as missing audio', () => {
-    seedHistory([
-      { id: 'history-1', type: 'tts', text: 'Hello world', voiceId: 'voice-a', createdAt: 1 },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    expect(container!.textContent).toContain('Audio unavailable');
-    expect(container!.textContent).toContain('Missing audio');
-    expect(container!.textContent).toContain('No local audio blob or temporary URL is available');
-  });
-
-  it('marks music entries without a local blob as missing audio', () => {
-    seedHistory([
-      { id: 'history-music', type: 'music', text: 'Glossy synth-pop', createdAt: 1 },
-    ]);
-
-    act(() => {
-      root!.render(<LibraryPage />);
-    });
-
-    expect(container!.textContent).toContain('Music unavailable');
-    expect(container!.textContent).toContain('Missing audio');
-    expect(container!.textContent).toContain('No local audio blob or temporary URL is available');
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/generation-1', { method: 'DELETE' });
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/generation-2', { method: 'DELETE' });
+    expect(container!.textContent).toContain('No backend Library records yet.');
   });
 });

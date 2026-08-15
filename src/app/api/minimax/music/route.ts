@@ -14,7 +14,7 @@ import {
   createMiniMaxRouteErrorResponse,
   createValidationErrorResponse,
 } from '../_shared/route-error';
-import { recordGenerationBestEffort } from '../_shared/library-recording';
+import { createLocalAudioAssetBestEffort, recordGenerationBestEffort } from '../_shared/library-recording';
 
 export const runtime = 'nodejs';
 
@@ -37,6 +37,12 @@ export async function POST(request: Request) {
   try {
     const useCase = new GenerateMusicUseCase(new MiniMaxMusicClient());
     const result = await useCase.execute(parsed.data);
+    const audioAsset = await createLocalAudioAssetBestEffort({
+      payload: result.audio,
+      format: result.format,
+      mimeType: 'audio/mpeg',
+    });
+
     recordGenerationBestEffort({
       kind: 'music',
       source: parsed.data.instrumental ? 'instrumental-music' : 'text-to-music',
@@ -52,13 +58,7 @@ export async function POST(request: Request) {
         traceId: result.metadata.traceId,
         coverFeatureId: isMusicCoverModel(parsed.data.model) ? parsed.data.coverFeatureId : undefined,
       },
-      assets: [{
-        kind: 'audio',
-        storageType: 'metadata_only',
-        format: result.format,
-        mimeType: 'audio/mpeg',
-        sizeBytes: result.metadata.sizeBytes,
-      }],
+      assets: [audioAsset],
     });
     return NextResponse.json(result);
   } catch (error) {

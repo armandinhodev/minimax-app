@@ -9,7 +9,8 @@ type DatabaseConnection = Database.Database;
 interface Migration {
   version: number;
   name: string;
-  sql: string;
+  sql?: string;
+  up?: (db: DatabaseConnection) => void;
 }
 
 const DEFAULT_DATABASE_PATH = path.join(process.cwd(), 'data', 'minimax.sqlite');
@@ -38,7 +39,7 @@ const MIGRATIONS: Migration[] = [
       CREATE TABLE IF NOT EXISTS assets (
         id TEXT PRIMARY KEY,
         kind TEXT NOT NULL CHECK (kind IN ('audio', 'image', 'voice', 'metadata')),
-        storage_type TEXT NOT NULL CHECK (storage_type IN ('provider_url', 'provider_file', 'browser_indexeddb', 'metadata_only')),
+        storage_type TEXT NOT NULL CHECK (storage_type IN ('provider_url', 'provider_file', 'local_file', 'browser_indexeddb', 'metadata_only')),
         storage_ref TEXT,
         format TEXT,
         mime_type TEXT,
@@ -71,6 +72,50 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_assets_expires_at ON assets(expires_at);
       CREATE INDEX IF NOT EXISTS idx_generation_assets_asset_id ON generation_assets(asset_id);
     `,
+  },
+  {
+    version: 2,
+    name: 'allow_local_file_assets',
+    up: (db) => {
+      const wasForeignKeysEnabled = db.pragma('foreign_keys', { simple: true }) === 1;
+      db.pragma('foreign_keys = OFF');
+
+      try {
+        db.transaction(() => {
+          db.exec(`
+            CREATE TABLE assets_next (
+              id TEXT PRIMARY KEY,
+              kind TEXT NOT NULL CHECK (kind IN ('audio', 'image', 'voice', 'metadata')),
+              storage_type TEXT NOT NULL CHECK (storage_type IN ('provider_url', 'provider_file', 'local_file', 'browser_indexeddb', 'metadata_only')),
+              storage_ref TEXT,
+              format TEXT,
+              mime_type TEXT,
+              size_bytes INTEGER,
+              expires_at INTEGER,
+              metadata_json TEXT NOT NULL DEFAULT '{}',
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            );
+
+            INSERT INTO assets_next (
+              id, kind, storage_type, storage_ref, format, mime_type, size_bytes,
+              expires_at, metadata_json, created_at, updated_at
+            )
+            SELECT
+              id, kind, storage_type, storage_ref, format, mime_type, size_bytes,
+              expires_at, metadata_json, created_at, updated_at
+            FROM assets;
+
+            DROP TABLE assets;
+            ALTER TABLE assets_next RENAME TO assets;
+            CREATE INDEX IF NOT EXISTS idx_assets_kind_created_at ON assets(kind, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_assets_expires_at ON assets(expires_at);
+          `);
+        })();
+      } finally {
+        if (wasForeignKeysEnabled) db.pragma('foreign_keys = ON');
+      }
+    },
   },
 ];
 
@@ -109,13 +154,20 @@ export function migrateDatabase(db: DatabaseConnection): void {
   for (const migration of MIGRATIONS) {
     if (appliedVersions.has(migration.version)) continue;
 
-    const applyMigration = db.transaction(() => {
-      db.exec(migration.sql);
+    if (migration.up) {
+      migration.up(db);
       db.prepare('INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)')
         .run(migration.version, migration.name, Date.now());
-    });
+    } else if (migration.sql) {
+      const sql = migration.sql;
+      const applyMigration = db.transaction(() => {
+        db.exec(sql);
+        db.prepare('INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)')
+          .run(migration.version, migration.name, Date.now());
+      });
 
-    applyMigration();
+      applyMigration();
+    }
   }
 }
 

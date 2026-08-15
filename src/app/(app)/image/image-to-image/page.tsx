@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import { saveHistoryItem } from '@/lib/history';
 
 const PROMPT_MAX_LENGTH = 1500;
 const MAX_REFERENCE_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -184,23 +183,7 @@ export default function ImageToImagePage() {
       const data = await response.json() as Omit<ImageGenerationResult, 'aspectRatio'>;
       const generatedResult = { ...data, aspectRatio };
       setResult(generatedResult);
-
-      try {
-        saveHistoryItem({
-          type: 'image',
-          source: 'image-to-image',
-          text: trimmedPrompt,
-          imageUrls: data.imageUrls,
-          aspectRatio,
-          seed: parsedSeed,
-          model: 'image-01',
-          promptOptimizer,
-          ttlExpiry: data.expiresAt,
-        });
-        setActionStatus('Images generated and saved to Library. MiniMax image URLs expire after 24 hours, so download final assets soon.');
-      } catch {
-        setActionStatus('Images generated for preview, but browser storage was unavailable. Download final assets now because MiniMax image URLs expire after 24 hours.');
-      }
+      setActionStatus('Images generated and saved to backend Library. MiniMax image URLs expire after 24 hours, so download final assets soon.');
     } catch {
       setError({ code: null, message: 'Failed to generate images. Check your connection and try again.' });
     } finally {
@@ -369,7 +352,7 @@ export default function ImageToImagePage() {
 
             {!isLoading && !result && (
               <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
-                Upload a clean portrait, describe the desired direction, then generate. Results are saved to Library automatically.
+                Upload a clean portrait, describe the desired direction, then generate. Results are saved to backend Library automatically.
               </Box>
             )}
 

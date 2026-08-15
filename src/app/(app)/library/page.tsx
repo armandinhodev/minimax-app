@@ -1,29 +1,17 @@
 'use client';
 
-/**
- * Library page — local history of generated audio, images, and voices.
- * Reads from localStorage, displays task metadata.
- * Re-fetches download URLs via GET /api/minimax/async/result/[fileId].
- * Shows TTLCounter for expiry.
- *
- * This page does NOT store secrets in localStorage — only task metadata.
- */
-
 import { useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { authFetch, buildAuthHeader, parseApiError } from '@/lib/auth-client';
+import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { getHistoryItems, removeHistoryItem, clearHistory, updateHistoryItemTtl } from '@/lib/history';
-import type { HistoryItem } from '@/lib/history';
-import { deleteStoredAudio, downloadBlob, getStoredAudio } from '@/lib/audio-storage';
-import type { LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
+import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/LibraryDTO';
 
-type LibraryFilter = 'all' | HistoryItem['type'];
+type LibraryFilter = 'all' | LibraryGenerationKind;
 
 const FILTERS: Array<{ value: LibraryFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -43,15 +31,6 @@ function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength) + '...';
 }
 
-function getAudioFormat(item: HistoryItem, fallback?: string): string {
-  const format = (item.format || fallback || 'mp3').toLowerCase().replace(/^\./, '');
-  return /^[a-z0-9]+$/.test(format) ? format : 'mp3';
-}
-
-function getAudioFilename(item: HistoryItem, fallbackFormat?: string): string {
-  return `${item.type === 'music' ? 'music' : 'tts'}-${item.createdAt}.${getAudioFormat(item, fallbackFormat)}`;
-}
-
 function getStringMetadata(metadata: Record<string, unknown>, key: string): string | undefined {
   const value = metadata[key];
   return typeof value === 'string' ? value : undefined;
@@ -67,71 +46,17 @@ function getBooleanMetadata(metadata: Record<string, unknown>, key: string): boo
   return typeof value === 'boolean' ? value : undefined;
 }
 
-function getServerGenerationId(item: HistoryItem): string | null {
-  return item.id.startsWith('server:') ? item.id.slice('server:'.length) : null;
-}
-
-function areLikelySameGeneration(localItem: HistoryItem, serverItem: HistoryItem): boolean {
-  const createdCloseEnough = Math.abs(localItem.createdAt - serverItem.createdAt) < 10_000;
-  return createdCloseEnough
-    && localItem.type === serverItem.type
-    && (localItem.text ?? null) === (serverItem.text ?? null)
-    && (localItem.model ?? null) === (serverItem.model ?? null);
-}
-
-function mergeLibraryItems(localItems: HistoryItem[], serverItems: HistoryItem[]): HistoryItem[] {
-  const merged = [...localItems];
-
-  for (const serverItem of serverItems) {
-    const alreadyRepresented = merged.some((item) => item.id === serverItem.id || areLikelySameGeneration(item, serverItem));
-    if (!alreadyRepresented) merged.push(serverItem);
-  }
-
-  return merged.sort((a, b) => b.createdAt - a.createdAt);
-}
-
-function mapServerGenerationToHistoryItem(generation: LibraryGenerationDTO): HistoryItem {
-  const audioAsset = generation.assets.find((asset) => asset.kind === 'audio');
-  const imageAssets = generation.assets.filter((asset) => asset.kind === 'image' && asset.storageType === 'provider_url' && asset.storageRef);
-  const imageUrls = imageAssets.map((asset) => asset.storageRef).filter((url): url is string => typeof url === 'string');
-  const expiresAt = imageAssets[0]?.expiresAt ?? audioAsset?.expiresAt ?? undefined;
-
-  return {
-    id: `server:${generation.id}`,
-    type: generation.kind,
-    source: generation.source ?? undefined,
-    text: generation.prompt ?? undefined,
-    lyrics: getStringMetadata(generation.metadata, 'lyrics'),
-    fileId: generation.providerFileId ?? undefined,
-    audioUrl: audioAsset?.storageType === 'provider_url' ? audioAsset.storageRef ?? undefined : undefined,
-    imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
-    format: audioAsset?.format ?? undefined,
-    aspectRatio: getStringMetadata(generation.metadata, 'aspectRatio'),
-    seed: getNumberMetadata(generation.metadata, 'seed'),
-    model: generation.model ?? undefined,
-    promptOptimizer: getBooleanMetadata(generation.metadata, 'promptOptimizer'),
-    instrumental: getBooleanMetadata(generation.metadata, 'instrumental'),
-    durationSeconds: getNumberMetadata(generation.metadata, 'durationSeconds'),
-    sampleRate: getNumberMetadata(generation.metadata, 'sampleRate'),
-    bitrate: getNumberMetadata(generation.metadata, 'bitrate'),
-    createdAt: generation.createdAt,
-    ttlExpiry: expiresAt ?? undefined,
-    serverSynced: true,
-  };
-}
-
-function getImageFilename(item: HistoryItem, index: number): string {
-  return `image-${item.createdAt}-${index + 1}.png`;
+function getDownloadUrl(generation: LibraryGenerationDTO, asset: LibraryAssetDTO): string {
+  return `/api/library/generations/${encodeURIComponent(generation.id)}/assets/${encodeURIComponent(asset.id)}`;
 }
 
 function openUrl(url: string): void {
   window.open(url, '_blank');
 }
 
-function downloadImageUrl(url: string, filename: string): void {
+function downloadUrl(url: string): void {
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   document.body.appendChild(link);
@@ -139,178 +64,225 @@ function downloadImageUrl(url: string, filename: string): void {
   link.remove();
 }
 
-interface LibraryItemCardProps {
-  item: HistoryItem;
-  onRefreshUrl: (item: HistoryItem) => Promise<void>;
-  onDownload: (item: HistoryItem) => Promise<void> | void;
-  onDelete: (item: HistoryItem) => void;
-  isRefreshing: boolean;
-}
-
-function getItemAccent(type: HistoryItem['type']): 'green' | 'purple' | 'teal' | 'blue' {
-  if (type === 'image') return 'blue';
-  if (type === 'clone') return 'purple';
-  if (type === 'design') return 'teal';
+function getItemAccent(kind: LibraryGenerationKind): 'green' | 'purple' | 'teal' | 'blue' {
+  if (kind === 'image') return 'blue';
+  if (kind === 'clone') return 'purple';
+  if (kind === 'design') return 'teal';
   return 'green';
 }
 
-function getItemBadgeVariant(type: HistoryItem['type']): 'success' | 'purple' | 'info' {
-  if (type === 'image') return 'info';
-  if (type === 'music') return 'purple';
-  if (type === 'clone') return 'purple';
-  if (type === 'design') return 'info';
+function getItemBadgeVariant(kind: LibraryGenerationKind): 'success' | 'purple' | 'info' {
+  if (kind === 'image') return 'info';
+  if (kind === 'music') return 'purple';
+  if (kind === 'clone') return 'purple';
+  if (kind === 'design') return 'info';
   return 'success';
 }
 
-function getItemTypeLabel(type: HistoryItem['type']): string {
-  if (type === 'image') return 'Generated image';
-  if (type === 'music') return 'Generated music';
-  if (type === 'clone') return 'Cloned voice';
-  if (type === 'design') return 'Designed voice';
+function getItemTypeLabel(kind: LibraryGenerationKind): string {
+  if (kind === 'image') return 'Generated image';
+  if (kind === 'music') return 'Generated music';
+  if (kind === 'clone') return 'Cloned voice';
+  if (kind === 'design') return 'Designed voice';
   return 'Generated audio';
 }
 
-function getImageSourceLabel(source: HistoryItem['source']): string | null {
+function getSourceLabel(source: LibraryGenerationSource | null): string | null {
   if (source === 'image-to-image') return 'Image to Image';
   if (source === 'text-to-image') return 'Text to Image';
   if (source === 'text-to-music') return 'Text to Music';
   if (source === 'instrumental-music') return 'Instrumental Music';
+  if (source === 'cover-preprocess') return 'Cover Preprocess';
+  if (source === 'text-to-speech') return 'Text to Speech';
   return null;
 }
 
-function getStorageStatus(item: HistoryItem): { label: string; variant: 'success' | 'info' | 'warning' | 'secondary' } {
-  if (item.type === 'image') {
-    if (item.ttlExpiry && item.ttlExpiry <= Date.now()) return { label: 'URL may be expired', variant: 'warning' };
-    if (item.imageUrls?.length) return { label: '24h image URLs', variant: 'info' };
-    return { label: 'Image unavailable', variant: 'warning' };
-  }
-  if (item.serverSynced && !item.audioStorageKey && !item.audioUrl) {
-    return { label: 'Metadata only', variant: 'secondary' };
-  }
-  if (item.type === 'music') {
-    if (item.audioStorageKey) return { label: 'Stored locally', variant: 'success' };
-    return { label: 'Music unavailable', variant: 'warning' };
-  }
-  if (item.type !== 'tts') return { label: 'Voice only', variant: 'secondary' };
-  if (item.audioStorageKey) return { label: 'Stored locally', variant: 'success' };
-  if (item.audioUrl) return { label: 'Temporary URL', variant: 'info' };
-  return { label: 'Audio unavailable', variant: 'warning' };
+function isCoverPreprocessGeneration(generation: LibraryGenerationDTO): boolean {
+  return generation.source === 'cover-preprocess';
 }
 
-function LibraryItemCard({ item, onRefreshUrl, onDownload, onDelete, isRefreshing }: LibraryItemCardProps) {
-  const canRefreshUrl = item.type !== 'clone' && Boolean(item.fileId);
-  const canDownload = (item.type === 'tts' || item.type === 'music') && Boolean(item.audioUrl || item.audioStorageKey);
-  const imageUrls = item.type === 'image' ? item.imageUrls ?? [] : [];
-  const storageStatus = getStorageStatus(item);
+function getStorageStatus(generation: LibraryGenerationDTO): { label: string; variant: 'success' | 'info' | 'warning' | 'secondary' } {
+  const audioAsset = generation.assets.find((asset) => asset.kind === 'audio');
+  const imageAssets = generation.assets.filter((asset) => asset.kind === 'image');
+
+  if (isCoverPreprocessGeneration(generation)) {
+    const expiresAt = getNumberMetadata(generation.metadata, 'expiresAt');
+    if (expiresAt && expiresAt <= Date.now()) return { label: 'Cover ID expired', variant: 'warning' };
+    return { label: 'Cover feature ID', variant: 'info' };
+  }
+
+  if (generation.kind === 'image') {
+    const firstImage = imageAssets[0];
+    if (firstImage?.expiresAt && firstImage.expiresAt <= Date.now()) return { label: 'URL may be expired', variant: 'warning' };
+    if (imageAssets.some((asset) => asset.storageType === 'provider_url' && asset.storageRef)) return { label: 'Provider URLs', variant: 'info' };
+    if (imageAssets.some((asset) => asset.storageType === 'local_file')) return { label: 'Stored on server', variant: 'success' };
+    return { label: 'Image unavailable', variant: 'warning' };
+  }
+
+  if (audioAsset?.storageType === 'local_file') return { label: 'Stored on server', variant: 'success' };
+  if (audioAsset?.storageType === 'provider_url') return { label: 'Temporary URL', variant: 'info' };
+  if (generation.kind === 'tts' || generation.kind === 'music') return { label: 'Metadata only', variant: 'secondary' };
+  return { label: 'Voice metadata', variant: 'secondary' };
+}
+
+function isDownloadable(asset: LibraryAssetDTO): boolean {
+  return (asset.storageType === 'local_file' || asset.storageType === 'provider_url') && Boolean(asset.storageRef);
+}
+
+function getCoverGenerationHref(generation: LibraryGenerationDTO): string | null {
+  const coverFeatureId = getStringMetadata(generation.metadata, 'coverFeatureId');
+  const formattedLyrics = getStringMetadata(generation.metadata, 'formattedLyrics');
+  const expiresAt = getNumberMetadata(generation.metadata, 'expiresAt');
+
+  if (!coverFeatureId || !expiresAt || expiresAt <= Date.now()) return null;
+
+  const params = new URLSearchParams({
+    coverFeatureId,
+    lyrics: formattedLyrics ?? '',
+  });
+
+  return `/music?${params.toString()}`;
+}
+
+interface LibraryItemCardProps {
+  generation: LibraryGenerationDTO;
+  onDelete: (generation: LibraryGenerationDTO) => void;
+}
+
+function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
+  const audioAsset = generation.assets.find((asset) => asset.kind === 'audio' && isDownloadable(asset));
+  const imageAssets = generation.assets.filter((asset) => asset.kind === 'image' && isDownloadable(asset));
+  const storageStatus = getStorageStatus(generation);
+  const aspectRatio = getStringMetadata(generation.metadata, 'aspectRatio');
+  const sourceLabel = getSourceLabel(generation.source);
+  const coverGenerationHref = getCoverGenerationHref(generation);
+  const coverExpiresAt = isCoverPreprocessGeneration(generation) ? getNumberMetadata(generation.metadata, 'expiresAt') : undefined;
+  const isExpiredCoverPreprocess = isCoverPreprocessGeneration(generation) && !coverGenerationHref;
 
   return (
-    <Card accent={getItemAccent(item.type)}>
+    <Card accent={getItemAccent(generation.kind)}>
       <CardHeader>
         <Box display="flex" alignItems="flex-start" justifyContent="space-between">
           <Box>
-            <CardTitle style={{ fontSize: '0.875rem' }}>{getItemTypeLabel(item.type)}</CardTitle>
+            <CardTitle style={{ fontSize: '0.875rem' }}>{isCoverPreprocessGeneration(generation) ? 'Cover preprocess' : getItemTypeLabel(generation.kind)}</CardTitle>
             <CardDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-              {formatDate(item.createdAt)}
+              {formatDate(generation.createdAt)}
             </CardDescription>
           </Box>
           <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
-            <Badge variant={getItemBadgeVariant(item.type)}>{item.type}</Badge>
+            <Badge variant={getItemBadgeVariant(generation.kind)}>{generation.kind}</Badge>
             <Badge variant={storageStatus.variant}>{storageStatus.label}</Badge>
           </Box>
         </Box>
       </CardHeader>
       <CardContent display="grid" gap={2}>
-        {item.text && (
+        {generation.prompt && (
           <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            &ldquo;{truncateText(item.text, 80)}&rdquo;
+            &ldquo;{truncateText(generation.prompt, 80)}&rdquo;
           </p>
         )}
-        {item.voiceId && (
+        {sourceLabel && (
+          <p style={{ fontSize: '0.75rem', color: '#4b5563' }}>Source: {sourceLabel}</p>
+        )}
+        {generation.model && (
           <p style={{ fontSize: '0.75rem' }}>
-            Voice: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{item.voiceId}</code>
+            Model: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.model}</code>
           </p>
         )}
-        {item.fileId && (
+        {getStringMetadata(generation.metadata, 'voiceId') && (
           <p style={{ fontSize: '0.75rem' }}>
-            File: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{item.fileId}</code>
+            Voice: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{getStringMetadata(generation.metadata, 'voiceId')}</code>
           </p>
         )}
-        {item.type === 'image' && (
+        {generation.providerFileId && (
+          <p style={{ fontSize: '0.75rem' }}>
+            File: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.providerFileId}</code>
+          </p>
+        )}
+        {generation.kind === 'image' && (
           <Box display="flex" gap={2} flexWrap="wrap" color="gray.600" fontSize="0.75rem">
-            {getImageSourceLabel(item.source) && <span>Source: {getImageSourceLabel(item.source)}</span>}
-            {item.aspectRatio && <span>Ratio: {item.aspectRatio}</span>}
-            {item.seed !== undefined && <span>Seed: {item.seed}</span>}
-            {item.promptOptimizer !== undefined && <span>Optimizer: {item.promptOptimizer ? 'On' : 'Off'}</span>}
+            {aspectRatio && <span>Ratio: {aspectRatio}</span>}
+            {getNumberMetadata(generation.metadata, 'seed') !== undefined && <span>Seed: {getNumberMetadata(generation.metadata, 'seed')}</span>}
+            {getBooleanMetadata(generation.metadata, 'promptOptimizer') !== undefined && <span>Optimizer: {getBooleanMetadata(generation.metadata, 'promptOptimizer') ? 'On' : 'Off'}</span>}
           </Box>
         )}
-        {item.type === 'music' && (
+        {generation.kind === 'music' && (
           <Box display="flex" gap={2} flexWrap="wrap" color="gray.600" fontSize="0.75rem">
-            {getImageSourceLabel(item.source) && <span>Mode: {getImageSourceLabel(item.source)}</span>}
-            {item.model && <span>Model: {item.model}</span>}
-            {item.format && <span>Format: {item.format.toUpperCase()}</span>}
-            {item.durationSeconds !== undefined && <span>Duration: {Math.round(item.durationSeconds)}s</span>}
-            {item.sampleRate !== undefined && <span>Sample rate: {item.sampleRate} Hz</span>}
-            {item.bitrate !== undefined && <span>Bitrate: {Math.round(item.bitrate / 1000)} kbps</span>}
+            {audioAsset?.format && <span>Format: {audioAsset.format.toUpperCase()}</span>}
+            {getNumberMetadata(generation.metadata, 'durationSeconds') !== undefined && <span>Duration: {Math.round(getNumberMetadata(generation.metadata, 'durationSeconds') ?? 0)}s</span>}
+            {getNumberMetadata(generation.metadata, 'audioDurationSeconds') !== undefined && <span>Reference duration: {Math.round(getNumberMetadata(generation.metadata, 'audioDurationSeconds') ?? 0)}s</span>}
+            {getNumberMetadata(generation.metadata, 'sampleRate') !== undefined && <span>Sample rate: {getNumberMetadata(generation.metadata, 'sampleRate')} Hz</span>}
+            {getNumberMetadata(generation.metadata, 'bitrate') !== undefined && <span>Bitrate: {Math.round((getNumberMetadata(generation.metadata, 'bitrate') ?? 0) / 1000)} kbps</span>}
           </Box>
         )}
-        {imageUrls.length > 0 && (
+        {isExpiredCoverPreprocess && (
+          <p style={{ fontSize: '0.75rem', color: '#9a3412' }}>
+            This cover feature ID expired. Run Cover Preprocess again before using it for cover generation.
+          </p>
+        )}
+        {isCoverPreprocessGeneration(generation) && !isExpiredCoverPreprocess && (
+          <p style={{ fontSize: '0.75rem', color: '#166534' }}>
+            This intermediate Library record stores the cover feature ID metadata only. Reference audio bytes were not saved.
+          </p>
+        )}
+        {imageAssets.length > 0 && (
           <Box display="grid" gap={3} gridTemplateColumns="repeat(auto-fit, minmax(8rem, 1fr))" mt={2}>
-            {imageUrls.map((url, index) => (
-              <Box key={`${url}-${index}`} border="1px solid" borderColor="blue.100" borderRadius="lg" overflow="hidden" bg="gray.50">
-                <img
-                  src={url}
-                  alt={`Generated image ${index + 1}`}
-                  loading="lazy"
-                  decoding="async"
-                  style={{ width: '100%', aspectRatio: item.aspectRatio ? item.aspectRatio.replace(':', ' / ') : '1 / 1', objectFit: 'cover', display: 'block' }}
-                />
-                <Box display="flex" gap={1} p="0.5rem" flexWrap="wrap">
-                  <Button variant="outline" colorPalette="blue" size="sm" onClick={() => openUrl(url)}>
-                    Open
-                  </Button>
-                  <Button colorPalette="green" size="sm" onClick={() => downloadImageUrl(url, getImageFilename(item, index))}>
-                    Download
-                  </Button>
+            {imageAssets.map((asset, index) => {
+              const assetUrl = getDownloadUrl(generation, asset);
+              const previewUrl = asset.storageType === 'provider_url' && asset.storageRef ? asset.storageRef : assetUrl;
+
+              return (
+                <Box key={asset.id} border="1px solid" borderColor="blue.100" borderRadius="lg" overflow="hidden" bg="gray.50">
+                  <img
+                    src={previewUrl}
+                    alt={`Generated image ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                    style={{ width: '100%', aspectRatio: aspectRatio ? aspectRatio.replace(':', ' / ') : '1 / 1', objectFit: 'cover', display: 'block' }}
+                  />
+                  <Box display="flex" gap={1} p="0.5rem" flexWrap="wrap">
+                    <Button variant="outline" colorPalette="blue" size="sm" onClick={() => openUrl(assetUrl)}>
+                      Open
+                    </Button>
+                    <Button colorPalette="green" size="sm" onClick={() => downloadUrl(assetUrl)}>
+                      Download
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              );
+            })}
           </Box>
         )}
-        {item.type === 'image' && imageUrls.length === 0 && (
+        {generation.kind === 'image' && imageAssets.length === 0 && (
           <p style={{ fontSize: '0.75rem', color: '#9a3412' }}>
-            No image URL is available for this entry. Generate it again to restore access.
+            No downloadable image asset is available for this backend Library record.
           </p>
         )}
-        {(item.type === 'tts' || item.type === 'music') && !canDownload && (
+        {(generation.kind === 'tts' || generation.kind === 'music') && !audioAsset && !isCoverPreprocessGeneration(generation) && (
           <p style={{ fontSize: '0.75rem', color: '#9a3412' }}>
-            No local audio blob or temporary URL is available for this entry. Generate it again to restore downloads.
+            This backend Library record has metadata only and no downloadable audio asset.
           </p>
         )}
 
         <Box display="flex" alignItems="center" gap={2} mt={2}>
-          {item.ttlExpiry && <TTLCounter expiresAt={item.ttlExpiry} label={item.type === 'image' ? 'Image URL TTL' : 'URL TTL'} />}
-          {canRefreshUrl && (
-            <Button
-              variant="outline"
-              colorPalette="blue"
-              size="sm"
-              onClick={() => onRefreshUrl(item)}
-              disabled={isRefreshing}
-            >
-              {isRefreshing ? 'Refreshing...' : 'Refresh URL'}
-            </Button>
-          )}
-          {canDownload && (
-            <Button colorPalette="green" size="sm" onClick={() => onDownload(item)}>
+          {imageAssets[0]?.expiresAt && <TTLCounter expiresAt={imageAssets[0].expiresAt} label="URL TTL" />}
+          {coverExpiresAt && <TTLCounter expiresAt={coverExpiresAt} label="Cover ID TTL" />}
+          {audioAsset && (
+            <Button colorPalette="green" size="sm" onClick={() => downloadUrl(getDownloadUrl(generation, audioAsset))}>
               Download
             </Button>
           )}
-          {(item.type === 'tts' || item.type === 'music') && !canDownload && (
+          {coverGenerationHref && (
+            <a href={coverGenerationHref} style={{ border: '1px solid #16a34a', borderRadius: '0.375rem', color: '#166534', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
+              Use in Cover Generation
+            </a>
+          )}
+          {(generation.kind === 'tts' || generation.kind === 'music') && !audioAsset && !isCoverPreprocessGeneration(generation) && (
             <Button variant="outline" colorPalette="orange" size="sm" disabled>
               Missing audio
             </Button>
           )}
-          <Button variant="destructive" size="sm" onClick={() => onDelete(item)}>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(generation)}>
             Remove
           </Button>
         </Box>
@@ -320,153 +292,77 @@ function LibraryItemCard({ item, onRefreshUrl, onDownload, onDelete, isRefreshin
 }
 
 export default function LibraryPage() {
-  const [items, setItems] = useState<HistoryItem[]>([]);
+  const [generations, setGenerations] = useState<LibraryGenerationDTO[]>([]);
   const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set());
-  const [pendingDeleteItem, setPendingDeleteItem] = useState<HistoryItem | null>(null);
+  const [pendingDeleteGeneration, setPendingDeleteGeneration] = useState<LibraryGenerationDTO | null>(null);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const [actionStatus, setActionStatus] = useState<string | null>(null);
 
-  const loadServerHistory = async (localItems: HistoryItem[]) => {
-    const authHeader = buildAuthHeader();
-    if (!authHeader) return;
-
-    try {
-      const response = await fetch('/api/library/generations?limit=50', {
-        headers: { Authorization: authHeader },
-      });
-      if (!response.ok) return;
-      const data = await response.json() as { generations?: LibraryGenerationDTO[] };
-      const serverItems = (data.generations ?? []).map(mapServerGenerationToHistoryItem);
-      setItems(mergeLibraryItems(localItems, serverItems));
-    } catch {
-      // Browser Library remains usable from local history if server metadata is unavailable.
-    }
-  };
-
-  const loadHistory = () => {
-    const localItems = getHistoryItems();
-    setItems(localItems);
-    void loadServerHistory(localItems);
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
-  const handleRefreshUrl = async (item: HistoryItem) => {
-    if (!item.fileId) return;
-
-    setRefreshingIds((prev) => new Set(prev).add(item.id));
+  const loadGenerations = async () => {
     setError(null);
-    setActionStatus(null);
 
     try {
-      const response = await authFetch(`/api/minimax/async/result/${item.fileId}`);
+      const response = await authFetch('/api/library/generations?limit=50');
 
       if (!response.ok) {
         const err = await parseApiError(response);
-        setError({
-          code: err?.code ?? response.status,
-          message: err?.message ?? `HTTP ${response.status}`,
-        });
+        setError({ code: err?.code ?? response.status, message: err?.message ?? `HTTP ${response.status}` });
         return;
       }
 
-      const data = await response.json();
-
-      // Update item with fresh URL and expiry
-      if (data.downloadUrl) {
-        updateHistoryItemTtl(item.id, data.expiresAt);
-        setItems(getHistoryItems());
-
-        // Open download URL
-        window.open(data.downloadUrl, '_blank');
-        setActionStatus('Temporary download URL refreshed and opened.');
-      }
+      const data = await response.json() as { generations?: LibraryGenerationDTO[] };
+      setGenerations(data.generations ?? []);
     } catch {
-      setError({ code: null, message: 'Failed to refresh URL.' });
-    } finally {
-      setRefreshingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(item.id);
-        return next;
-      });
+      setError({ code: null, message: 'Failed to load backend Library records.' });
     }
   };
 
-  const handleDownload = async (item: HistoryItem) => {
-    if (item.audioUrl) {
-      window.open(item.audioUrl, '_blank');
-      setActionStatus('Download opened from the temporary URL.');
-      return;
+  useEffect(() => {
+    void loadGenerations();
+  }, []);
+
+  const deleteGeneration = async (generation: LibraryGenerationDTO): Promise<boolean> => {
+    const response = await authFetch(`/api/library/generations/${encodeURIComponent(generation.id)}`, { method: 'DELETE' });
+
+    if (!response.ok) {
+      const err = await parseApiError(response);
+      setError({ code: err?.code ?? response.status, message: err?.message ?? `HTTP ${response.status}` });
+      return false;
     }
 
-    if (!item.audioStorageKey) {
-      setActionStatus(null);
-      setError({ code: null, message: 'This Library item has no local audio blob or temporary URL.' });
-      return;
-    }
-
-    setError(null);
-    setActionStatus(null);
-    try {
-      const storedAudio = await getStoredAudio(item.audioStorageKey);
-      if (!storedAudio) {
-        setError({ code: null, message: 'Stored audio is unavailable in this browser.' });
-        return;
-      }
-      downloadBlob(storedAudio.blob, getAudioFilename(item, storedAudio.format));
-      setActionStatus('Download started from locally stored audio.');
-    } catch {
-      setError({ code: null, message: 'Failed to download stored audio.' });
-    }
-  };
-
-  const deleteServerGeneration = async (item: HistoryItem) => {
-    const generationId = getServerGenerationId(item);
-    const authHeader = buildAuthHeader();
-    if (!generationId || !authHeader) return;
-
-    await fetch(`/api/library/generations/${generationId}`, {
-      method: 'DELETE',
-      headers: { Authorization: authHeader },
-    });
+    return true;
   };
 
   const handleConfirmDelete = async () => {
-    if (!pendingDeleteItem) return;
-    const serverGenerationId = getServerGenerationId(pendingDeleteItem);
-    if (pendingDeleteItem.audioStorageKey) {
-      void deleteStoredAudio(pendingDeleteItem.audioStorageKey).catch(() => undefined);
+    if (!pendingDeleteGeneration) return;
+
+    setError(null);
+    setActionStatus(null);
+    const deleted = await deleteGeneration(pendingDeleteGeneration).catch(() => false);
+
+    if (!deleted) {
+      setError({ code: null, message: 'Failed to remove backend Library record.' });
+      return;
     }
-    if (serverGenerationId) {
-      await deleteServerGeneration(pendingDeleteItem).catch(() => undefined);
-    } else {
-      removeHistoryItem(pendingDeleteItem.id);
-    }
-    setItems((prev) => prev.filter((item) => item.id !== pendingDeleteItem.id));
-    setActionStatus(`${getItemTypeLabel(pendingDeleteItem.type)} removed from Library.`);
-    setPendingDeleteItem(null);
+
+    setGenerations((prev) => prev.filter((generation) => generation.id !== pendingDeleteGeneration.id));
+    setActionStatus(`${getItemTypeLabel(pendingDeleteGeneration.kind)} removed from Library.`);
+    setPendingDeleteGeneration(null);
   };
 
-  const handleConfirmClearAll = () => {
-    items.forEach((item) => {
-      if (item.audioStorageKey) {
-        void deleteStoredAudio(item.audioStorageKey).catch(() => undefined);
-      }
-      if (getServerGenerationId(item)) {
-        void deleteServerGeneration(item).catch(() => undefined);
-      }
-    });
-    clearHistory();
-    setItems([]);
-    setActionStatus('Library history cleared.');
+  const handleConfirmClearAll = async () => {
+    setError(null);
+    setActionStatus(null);
+    const results = await Promise.all(generations.map((generation) => deleteGeneration(generation).catch(() => false)));
+    const deletedIds = new Set(generations.filter((_, index) => results[index]).map((generation) => generation.id));
+
+    setGenerations((prev) => prev.filter((generation) => !deletedIds.has(generation.id)));
     setIsClearDialogOpen(false);
+    setActionStatus(deletedIds.size === generations.length ? 'Backend Library records cleared.' : 'Some backend Library records could not be removed.');
   };
 
-  const filteredItems = filter === 'all' ? items : items.filter((item) => item.type === filter);
+  const filteredGenerations = filter === 'all' ? generations : generations.filter((generation) => generation.kind === filter);
 
   return (
     <Box display="grid" gap={6}>
@@ -474,14 +370,14 @@ export default function LibraryPage() {
         <Box>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Library</h1>
           <Box color="gray.600" mt={1}>
-            Your generated audio, music, image, and voice history. Local audio stays in this browser; provider image URLs expire after 24 hours.
+            Your backend Library records from SQLite metadata and server-side asset references.
           </Box>
         </Box>
         <Box display="flex" gap={2}>
-          <Button variant="outline" colorPalette="blue" onClick={loadHistory}>
+          <Button variant="outline" colorPalette="blue" onClick={() => void loadGenerations()}>
             Refresh
           </Button>
-          {items.length > 0 && (
+          {generations.length > 0 && (
             <Button variant="destructive" onClick={() => setIsClearDialogOpen(true)}>
               Clear All
             </Button>
@@ -496,7 +392,7 @@ export default function LibraryPage() {
         </Box>
       )}
 
-      {items.length > 0 && (
+      {generations.length > 0 && (
         <Box display="flex" gap={2} flexWrap="wrap">
           {FILTERS.map((option) => (
             <Button
@@ -513,49 +409,46 @@ export default function LibraryPage() {
       )}
 
       <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}>
-        {filteredItems.map((item) => (
+        {filteredGenerations.map((generation) => (
           <LibraryItemCard
-            key={item.id}
-            item={item}
-            onRefreshUrl={handleRefreshUrl}
-            onDownload={handleDownload}
-            onDelete={setPendingDeleteItem}
-            isRefreshing={refreshingIds.has(item.id)}
+            key={generation.id}
+            generation={generation}
+            onDelete={setPendingDeleteGeneration}
           />
         ))}
-        {items.length === 0 && (
+        {generations.length === 0 && (
           <Card accent="green" style={{ gridColumn: '1 / -1' }}>
             <CardHeader>
-              <CardTitle>No history yet.</CardTitle>
+              <CardTitle>No backend Library records yet.</CardTitle>
               <CardDescription>
-                Generate your first audio clip, track, or image to create a downloadable Library item.
+                Generate audio, music, or images to create SQLite Library records with backend asset references.
               </CardDescription>
             </CardHeader>
           </Card>
         )}
-        {items.length > 0 && filteredItems.length === 0 && (
+        {generations.length > 0 && filteredGenerations.length === 0 && (
           <Card accent="gray" style={{ gridColumn: '1 / -1' }}>
             <CardHeader>
               <CardTitle>No items match this filter</CardTitle>
-              <CardDescription>Switch filters or generate new audio, music, images, and voices to add more Library items.</CardDescription>
+              <CardDescription>Switch filters or generate new audio, music, images, and voices to add more Library records.</CardDescription>
             </CardHeader>
           </Card>
         )}
       </Box>
 
       <ConfirmationDialog
-        open={pendingDeleteItem !== null}
-        onOpenChange={(open) => !open && setPendingDeleteItem(null)}
-        title="Remove library item?"
-        description="This removes the selected history entry from this browser. Generated files and MiniMax voices are not deleted."
+        open={pendingDeleteGeneration !== null}
+        onOpenChange={(open) => !open && setPendingDeleteGeneration(null)}
+        title="Remove library record?"
+        description="This removes the selected backend Library record and any local server asset file attached to it. Provider-hosted MiniMax assets are not deleted."
         confirmLabel="Remove"
         onConfirm={handleConfirmDelete}
       />
       <ConfirmationDialog
         open={isClearDialogOpen}
         onOpenChange={setIsClearDialogOpen}
-        title="Clear all library history?"
-        description="This removes every saved history entry from this browser. This action cannot be undone."
+        title="Clear all backend Library records?"
+        description="This removes every SQLite Library record and attached local server asset file. This action cannot be undone."
         confirmLabel="Clear All"
         onConfirm={handleConfirmClearAll}
       />

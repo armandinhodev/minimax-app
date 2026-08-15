@@ -103,7 +103,7 @@ describe('ImagePage', () => {
     container = null;
   });
 
-  it('generates images and saves temporary URL metadata to Library history', async () => {
+  it('generates images and relies on backend Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -149,18 +149,8 @@ describe('ImagePage', () => {
         responseFormat: 'url',
       }),
     }));
-    expect(historyMocks.saveHistoryItem).toHaveBeenCalledWith({
-      type: 'image',
-      text: 'A premium studio product photo.',
-      imageUrls: ['https://example.com/image-1.png'],
-      source: 'text-to-image',
-      aspectRatio: '16:9',
-      seed: 42,
-      model: 'image-01',
-      promptOptimizer: true,
-      ttlExpiry: 123456,
-    });
-    expect(container!.textContent).toContain('Images generated and saved to Library');
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Images generated and saved to backend Library');
   });
 
   it('blocks empty prompts before calling the API', async () => {
@@ -176,7 +166,7 @@ describe('ImagePage', () => {
     expect(authClientMocks.authFetch).not.toHaveBeenCalled();
   });
 
-  it('keeps generated previews visible when Library storage is unavailable', async () => {
+  it('keeps generated previews visible without browser history storage', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -185,9 +175,6 @@ describe('ImagePage', () => {
         metadata: { successCount: 1, failedCount: 0 },
         expiresAt: 123456,
       }),
-    });
-    historyMocks.saveHistoryItem.mockImplementation(() => {
-      throw new Error('Storage unavailable');
     });
 
     act(() => {
@@ -206,7 +193,8 @@ describe('ImagePage', () => {
     });
 
     expect(container!.querySelector('img')?.getAttribute('src')).toBe('https://example.com/image-2.png');
-    expect(container!.textContent).toContain('Images generated for preview');
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Images generated and saved to backend Library');
     expect(container!.textContent).not.toContain('Failed to generate images');
   });
 });

@@ -170,12 +170,11 @@ describe('TTSPage', () => {
     expect(container!.querySelector('[data-streaming-player]')?.getAttribute('data-text')).toBe('');
   });
 
-  it('stores generated hex audio in IndexedDB and saves only the storage key in history', async () => {
+  it('previews generated hex audio and relies on backend Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ audio: '00010203' }),
     });
-    audioStorageMocks.storeAudioFromHex.mockResolvedValue('audio-key-1');
 
     act(() => {
       root!.render(<TTSPage />);
@@ -193,23 +192,17 @@ describe('TTSPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(audioStorageMocks.storeAudioFromHex).toHaveBeenCalledWith('00010203', 'mp3');
-    expect(historyMocks.saveHistoryItem).toHaveBeenCalledWith({
-      type: 'tts',
-      text: 'Hello from MiniMax',
-      voiceId: 'voice-a',
-      audioStorageKey: 'audio-key-1',
-      format: 'mp3',
-    });
+    expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Audio generated and saved to backend Library');
     expect(container!.querySelector('[data-audio-player]')).not.toBeNull();
   });
 
-  it('still saves history and preview when local audio storage fails', async () => {
+  it('does not depend on browser audio storage for generated previews', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ audio: '00010203' }),
     });
-    audioStorageMocks.storeAudioFromHex.mockRejectedValue(new Error('quota exceeded'));
 
     act(() => {
       root!.render(<TTSPage />);
@@ -227,17 +220,12 @@ describe('TTSPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(historyMocks.saveHistoryItem).toHaveBeenCalledWith({
-      type: 'tts',
-      text: 'Hello from MiniMax',
-      voiceId: 'voice-a',
-      audioStorageKey: undefined,
-      format: 'mp3',
-    });
+    expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
     expect(container!.querySelector('[data-audio-player]')).not.toBeNull();
   });
 
-  it('saves audioUrl and format when MiniMax returns a direct URL', async () => {
+  it('previews audioUrl responses without writing browser history', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ audioUrl: 'https://example.com/audio.mp3' }),
@@ -260,12 +248,7 @@ describe('TTSPage', () => {
     });
 
     expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
-    expect(historyMocks.saveHistoryItem).toHaveBeenCalledWith({
-      type: 'tts',
-      text: 'Hello from MiniMax',
-      voiceId: 'voice-a',
-      audioUrl: 'https://example.com/audio.mp3',
-      format: 'mp3',
-    });
+    expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Audio generated and saved to backend Library');
   });
 });

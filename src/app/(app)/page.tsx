@@ -41,7 +41,7 @@ const PRODUCT_CARDS = [
     title: 'Library',
     href: '/library',
     accent: 'teal' as const,
-    description: 'Review saved metadata and browser-stored assets.',
+    description: 'Review SQLite metadata and backend asset references.',
     metric: null,
   },
 ];

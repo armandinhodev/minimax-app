@@ -53,12 +53,12 @@ describe('SQLiteGenerationRepository', () => {
       metadata: { aspectRatio: '16:9', seed: 42 },
       assets: [
         {
-          kind: 'image',
-          storageType: 'provider_url',
-          storageRef: 'https://example.com/image.png',
-          format: 'png',
-          mimeType: 'image/png',
-          expiresAt: 123,
+          kind: 'audio',
+          storageType: 'local_file',
+          storageRef: 'audio/generation-1.mp3',
+          format: 'mp3',
+          mimeType: 'audio/mpeg',
+          sizeBytes: 4,
         },
       ],
     });
@@ -66,7 +66,8 @@ describe('SQLiteGenerationRepository', () => {
     const summary = repository.getDashboardSummary(5);
 
     expect(created.assets).toHaveLength(1);
-    expect(created.assets[0].storageRef).toBe('https://example.com/image.png');
+    expect(created.assets[0].storageType).toBe('local_file');
+    expect(created.assets[0].storageRef).toBe('audio/generation-1.mp3');
     expect(summary.totalGenerations).toBe(1);
     expect(summary.totalAssets).toBe(1);
     expect(summary.byKind.image).toBe(1);
@@ -96,5 +97,21 @@ describe('SQLiteGenerationRepository', () => {
     expect(assetCount).toBe(0);
     expect(linkCount).toBe(0);
     db.close();
+  });
+
+  it('preserves cover preprocess source records', () => {
+    const repository = new SQLiteGenerationRepository();
+    const created = repository.createGeneration({
+      kind: 'music',
+      source: 'cover-preprocess',
+      title: 'Cover preprocess',
+      providerGenerationId: 'cover-feature-1',
+      metadata: { coverFeatureId: 'cover-feature-1', expiresAt: Date.now() + 86_400_000 },
+      assets: [{ kind: 'metadata', storageType: 'metadata_only', role: 'cover_feature' }],
+    });
+
+    expect(created.source).toBe('cover-preprocess');
+    expect(created.assets[0].kind).toBe('metadata');
+    expect(created.assets[0].storageType).toBe('metadata_only');
   });
 });
