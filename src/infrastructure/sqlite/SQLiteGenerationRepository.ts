@@ -48,6 +48,7 @@ const EMPTY_KIND_COUNTS: Record<LibraryGenerationKind, number> = {
   tts: 0,
   music: 0,
   image: 0,
+  video: 0,
   clone: 0,
   design: 0,
 };
@@ -59,6 +60,9 @@ const GENERATION_SOURCES: ReadonlySet<string> = new Set<LibraryGenerationSource>
   'text-to-music',
   'instrumental-music',
   'cover-preprocess',
+  'video-generation',
+  'video-context-ir',
+  'video-regeneration',
 ]);
 
 function parseGenerationSource(source: string | null): LibraryGenerationSource | null {
@@ -174,6 +178,51 @@ export class SQLiteGenerationRepository implements IGenerationRepository {
       byKind,
       recentGenerations: this.listRecentGenerations(limit),
     };
+  }
+
+  // A single transaction keeps repeated polling and concurrent task queries idempotent.
+  upsertTaskGeneration(input: CreateLibraryGenerationDTO): LibraryGenerationDTO {
+    if (input.kind !== 'video' || !input.providerTaskId?.trim()) {
+      throw new Error('Video task recording requires a provider task ID.');
+    }
+    return this.db.transaction(() => {
+      const row = this.db.prepare("SELECT * FROM generations WHERE kind = 'video' AND provider_task_id = ?")
+        .get(input.providerTaskId) as GenerationRow | undefined;
+      if (!row) return this.createGeneration(input);
+      const current = this.findGeneration(row.id)!;
+      const oldStatus = current.metadata.providerStatus;
+      const newStatus = input.metadata?.providerStatus;
+      const oldTime = current.metadata.providerUpdatedAt;
+      const newTime = input.metadata?.providerUpdatedAt;
+      const isTerminal = oldStatus === 'succeeded' || oldStatus === 'failed' || oldStatus === 'cancelled';
+      if ((isTerminal && oldStatus !== newStatus)
+        || (typeof oldTime === 'number' && typeof newTime === 'number' && newTime < oldTime)) return current;
+
+      const now = Date.now();
+      this.db.prepare(`
+        UPDATE generations SET source = ?, status = ?, title = ?, prompt = ?, model = ?,
+          metadata_json = ?, updated_at = ? WHERE id = ?
+      `).run(
+        input.source ?? current.source, input.status ?? current.status,
+        input.title ?? current.title, input.prompt ?? current.prompt, input.model ?? current.model,
+        stringifyJsonObject({ ...current.metadata, ...input.metadata }), now, current.id,
+      );
+      for (const asset of input.assets ?? []) {
+        const existing = current.assets.find((item) => item.kind === asset.kind);
+        if (!existing) {
+          this.insertAsset(current.id, asset, now);
+          continue;
+        }
+        this.db.prepare(`
+          UPDATE assets SET storage_type = ?, storage_ref = ?, format = ?, mime_type = ?,
+            size_bytes = ?, expires_at = ?, metadata_json = ?, updated_at = ? WHERE id = ?
+        `).run(
+          asset.storageType, asset.storageRef ?? null, asset.format ?? null, asset.mimeType ?? null,
+          asset.sizeBytes ?? null, asset.expiresAt ?? null, stringifyJsonObject(asset.metadata), now, existing.id,
+        );
+      }
+      return this.findGeneration(current.id)!;
+    })();
   }
 
   listRecentGenerations(limit: number): LibraryGenerationDTO[] {

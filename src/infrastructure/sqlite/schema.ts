@@ -117,6 +117,58 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 3,
+    name: 'allow_video_generations_and_assets',
+    up: (db) => {
+      const wasForeignKeysEnabled = db.pragma('foreign_keys', { simple: true }) === 1;
+      db.pragma('foreign_keys = OFF');
+      try {
+        db.transaction(() => {
+          db.exec(`
+            CREATE TABLE generations_video (
+              id TEXT PRIMARY KEY,
+              kind TEXT NOT NULL CHECK (kind IN ('tts', 'music', 'image', 'video', 'clone', 'design')),
+              source TEXT,
+              status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'failed', 'processing')),
+              title TEXT, prompt TEXT, model TEXT,
+              provider_generation_id TEXT, provider_task_id TEXT, provider_file_id TEXT,
+              metadata_json TEXT NOT NULL DEFAULT '{}',
+              created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+            );
+            INSERT INTO generations_video SELECT * FROM generations;
+
+            CREATE TABLE assets_video (
+              id TEXT PRIMARY KEY,
+              kind TEXT NOT NULL CHECK (kind IN ('audio', 'image', 'video', 'voice', 'metadata')),
+              storage_type TEXT NOT NULL CHECK (storage_type IN ('provider_url', 'provider_file', 'local_file', 'browser_indexeddb', 'metadata_only')),
+              storage_ref TEXT, format TEXT, mime_type TEXT, size_bytes INTEGER, expires_at INTEGER,
+              metadata_json TEXT NOT NULL DEFAULT '{}',
+              created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+            );
+            INSERT INTO assets_video SELECT * FROM assets;
+
+            DROP TABLE generations;
+            ALTER TABLE generations_video RENAME TO generations;
+            DROP TABLE assets;
+            ALTER TABLE assets_video RENAME TO assets;
+            CREATE INDEX idx_generations_created_at ON generations(created_at DESC);
+            CREATE INDEX idx_generations_kind_created_at ON generations(kind, created_at DESC);
+            CREATE INDEX idx_generations_status_created_at ON generations(status, created_at DESC);
+            CREATE UNIQUE INDEX idx_video_provider_task ON generations(provider_task_id)
+              WHERE kind = 'video' AND provider_task_id IS NOT NULL;
+            CREATE INDEX idx_assets_kind_created_at ON assets(kind, created_at DESC);
+            CREATE INDEX idx_assets_expires_at ON assets(expires_at);
+          `);
+          if (db.pragma('foreign_key_check').length > 0) {
+            throw new Error('Library migration refused: existing asset links are invalid.');
+          }
+        })();
+      } finally {
+        if (wasForeignKeysEnabled) db.pragma('foreign_keys = ON');
+      }
+    },
+  },
 ];
 
 let connection: DatabaseConnection | null = null;
