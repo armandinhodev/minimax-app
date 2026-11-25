@@ -133,6 +133,7 @@ describe('MusicCoverPreprocessPage', () => {
       ok: true,
       json: async () => ({
         coverFeatureId: 'cover-feature-1',
+        coverPreprocessId: 'library-cover-preprocess-1',
         formattedLyrics: '[Verse]\nCity lights',
         structureResult: '{"sections":["Verse"]}',
         audioDurationSeconds: 42,
@@ -169,8 +170,9 @@ describe('MusicCoverPreprocessPage', () => {
     const coverGenerationLink = container!.querySelector('a[href^="/music?"]') as HTMLAnchorElement;
     const coverGenerationUrl = new URL(coverGenerationLink.getAttribute('href') ?? '', 'http://localhost');
     expect(coverGenerationLink.textContent).toBe('Use in Cover Generation');
-    expect(coverGenerationUrl.searchParams.get('coverFeatureId')).toBe('cover-feature-1');
-    expect(coverGenerationUrl.searchParams.get('lyrics')).toBe('[Verse]\nCity lights');
+    expect(coverGenerationUrl.searchParams.get('coverPreprocessId')).toBe('library-cover-preprocess-1');
+    expect(coverGenerationUrl.searchParams.has('coverFeatureId')).toBe(false);
+    expect(coverGenerationUrl.searchParams.has('lyrics')).toBe(false);
   });
 
   it('converts a local audio upload to base64 without adding persistence calls', async () => {

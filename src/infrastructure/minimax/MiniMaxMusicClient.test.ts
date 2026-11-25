@@ -72,6 +72,7 @@ describe('MiniMaxMusicClient', () => {
       model: 'music-3.0',
       prompt: 'Glossy synth-pop with a bright chorus.',
       lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
+      is_instrumental: false,
       stream: false,
       output_format: 'hex',
       audio_setting: { sample_rate: 44100, bitrate: 256000, format: 'mp3' },
@@ -102,9 +103,86 @@ describe('MiniMaxMusicClient', () => {
     expect(JSON.parse(String(init.body))).toEqual({
       model: 'music-3.0',
       prompt: 'Instrumental cinematic piano.',
+      is_instrumental: true,
       stream: false,
       output_format: 'hex',
       audio_setting: { sample_rate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+  });
+
+  it('maps vocal requests to the documented is_instrumental flag', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 2 },
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MiniMaxMusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop.',
+      lyrics: '[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      is_instrumental: false,
+      lyrics: '[Chorus]\nRise again',
+    });
+  });
+
+  it('omits is_instrumental for cover models because MiniMax rejects it there', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 2 },
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MiniMaxMusicClient().generateMusic({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: '[Verse]\nCity lights',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body).not.toHaveProperty('is_instrumental');
+    expect(body.cover_feature_id).toBe('cover-feature-1');
+  });
+
+  it('reports a music generation that is still running', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { status: 1 },
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await expect(new MiniMaxMusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop.',
+      lyrics: '[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    })).rejects.toMatchObject({
+      name: 'MiniMaxMusicError',
+      status: 502,
+      message: 'MiniMax music generation is still in progress',
     });
   });
 
@@ -352,7 +430,7 @@ describe('MiniMaxMusicClient', () => {
       message: 'Request timed out',
     });
 
-    await vi.advanceTimersByTimeAsync(60_000);
+    await vi.advanceTimersByTimeAsync(180_000);
     expect(signal?.aborted).toBe(false);
 
     await vi.advanceTimersByTimeAsync(120_000);

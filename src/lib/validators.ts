@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 
-import { FilePurposeSchema, ListFilesSchema, UploadFileSchema } from '@/application/dto/FileDTO';
+import { FileDeletePurposeSchema, ListFilesSchema, UploadFileSchema } from '@/application/dto/FileDTO';
 import {
   GenerateImageSchema,
   type GenerateImageRequest,
@@ -113,7 +113,7 @@ export type GetFile = z.infer<typeof GetFileSchema>;
  */
 export const DeleteFileSchema = z.object({
   fileId: z.string().min(1, 'fileId is required'),
-  purpose: FilePurposeSchema,
+  purpose: FileDeletePurposeSchema,
 });
 
 export type DeleteFile = z.infer<typeof DeleteFileSchema>;

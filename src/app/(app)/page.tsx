@@ -11,7 +11,7 @@ const EMPTY_SUMMARY: LibrarySummaryDTO = {
   totalGenerations: 0,
   totalAssets: 0,
   completedGenerations: 0,
-  byKind: { tts: 0, music: 0, image: 0, clone: 0, design: 0 },
+  byKind: { tts: 0, music: 0, image: 0, video: 0, clone: 0, design: 0 },
   recentGenerations: [],
 };
 
@@ -38,6 +38,13 @@ const PRODUCT_CARDS = [
     metric: 'music' as const,
   },
   {
+    title: 'Video',
+    href: '/video',
+    accent: 'blue' as const,
+    description: 'Generate H3 video, enhance prompts and regenerate in 2K.',
+    metric: 'video' as const,
+  },
+  {
     title: 'Library',
     href: '/library',
     accent: 'teal' as const,
@@ -50,6 +57,7 @@ const QUICK_ACTIONS = [
   { href: '/tts', label: 'Generate speech' },
   { href: '/image', label: 'Create image' },
   { href: '/music', label: 'Compose music' },
+  { href: '/video', label: 'Create video' },
   { href: '/library', label: 'Open Library' },
 ];
 
@@ -66,6 +74,7 @@ function getGenerationLabel(generation: LibraryGenerationDTO): string {
   if (generation.kind === 'tts') return 'Speech';
   if (generation.kind === 'music') return 'Music';
   if (generation.kind === 'image') return 'Image';
+  if (generation.kind === 'video') return 'Video';
   if (generation.kind === 'clone') return 'Voice clone';
   return 'Designed voice';
 }
@@ -73,6 +82,7 @@ function getGenerationLabel(generation: LibraryGenerationDTO): string {
 function getGenerationHref(generation: LibraryGenerationDTO): string {
   if (generation.kind === 'music') return '/music';
   if (generation.kind === 'image') return '/image';
+  if (generation.kind === 'video') return '/video';
   if (generation.kind === 'clone' || generation.kind === 'design') return '/voices';
   return '/tts';
 }
@@ -141,7 +151,7 @@ export default function DashboardPage() {
             Create, track, and recover MiniMax outputs from one place.
           </h1>
           <Box color="slate.200" fontSize={{ base: 'md', md: 'lg' }} mt={4} maxW="42rem">
-            Metadata is stored in local SQLite. Large audio and image files stay outside the database as browser blobs or provider URLs.
+            Metadata is stored in local SQLite. Generated audio can be stored on the server; image and video outputs may use temporary provider URLs.
           </Box>
         </Box>
       </Box>

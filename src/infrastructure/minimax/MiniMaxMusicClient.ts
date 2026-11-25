@@ -44,7 +44,7 @@ export class MiniMaxMusicError extends Error {
 }
 
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
-const MUSIC_GENERATION_FETCH_TIMEOUT_MS = 180_000;
+const MUSIC_GENERATION_FETCH_TIMEOUT_MS = 300_000;
 const COVER_PREPROCESS_FETCH_TIMEOUT_MS = 180_000;
 
 function normalizeError(apiError: MiniMaxApiError): MiniMaxMusicError {
@@ -67,6 +67,9 @@ function mapRequestBody(request: GenerateMusicRequest) {
     ...(isCoverModel
       ? request.lyrics?.trim() ? { lyrics: request.lyrics.trim() } : {}
       : request.instrumental ? {} : { lyrics: request.lyrics?.trim() ?? '' }),
+    // `is_instrumental` is only supported by the text-to-music models; cover
+    // models reject the field.
+    ...(isCoverModel ? {} : { is_instrumental: request.instrumental === true }),
     stream: false,
     output_format: request.outputFormat ?? 'hex',
     audio_setting: {
@@ -143,13 +146,17 @@ export class MiniMaxMusicClient {
 
       const audio = data.data?.audio;
       if (typeof audio !== 'string' || audio.trim().length === 0) {
+        // The documented status is 1 while the generation is still running.
+        if (data.data?.status === 1) {
+          throw new MiniMaxMusicError('MiniMax music generation is still in progress', 0, 502);
+        }
         throw new MiniMaxMusicError('MiniMax returned no music audio', 0, 502);
       }
 
       return {
         id: data.trace_id?.trim() || crypto.randomUUID(),
         audio,
-        format: DEFAULT_MUSIC_FORMAT,
+        format: request.audioSetting?.format ?? DEFAULT_MUSIC_FORMAT,
         metadata: {
           status: data.data?.status,
           traceId: data.trace_id,

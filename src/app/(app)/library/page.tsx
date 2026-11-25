@@ -18,6 +18,7 @@ const FILTERS: Array<{ value: LibraryFilter; label: string }> = [
   { value: 'tts', label: 'Audio' },
   { value: 'music', label: 'Music' },
   { value: 'image', label: 'Images' },
+  { value: 'video', label: 'Videos' },
   { value: 'clone', label: 'Cloned voices' },
   { value: 'design', label: 'Designed voices' },
 ];
@@ -65,6 +66,7 @@ function downloadUrl(url: string): void {
 }
 
 function getItemAccent(kind: LibraryGenerationKind): 'green' | 'purple' | 'teal' | 'blue' {
+  if (kind === 'video') return 'purple';
   if (kind === 'image') return 'blue';
   if (kind === 'clone') return 'purple';
   if (kind === 'design') return 'teal';
@@ -72,6 +74,7 @@ function getItemAccent(kind: LibraryGenerationKind): 'green' | 'purple' | 'teal'
 }
 
 function getItemBadgeVariant(kind: LibraryGenerationKind): 'success' | 'purple' | 'info' {
+  if (kind === 'video') return 'info';
   if (kind === 'image') return 'info';
   if (kind === 'music') return 'purple';
   if (kind === 'clone') return 'purple';
@@ -80,6 +83,7 @@ function getItemBadgeVariant(kind: LibraryGenerationKind): 'success' | 'purple' 
 }
 
 function getItemTypeLabel(kind: LibraryGenerationKind): string {
+  if (kind === 'video') return 'Generated video';
   if (kind === 'image') return 'Generated image';
   if (kind === 'music') return 'Generated music';
   if (kind === 'clone') return 'Cloned voice';
@@ -88,6 +92,9 @@ function getItemTypeLabel(kind: LibraryGenerationKind): string {
 }
 
 function getSourceLabel(source: LibraryGenerationSource | null): string | null {
+  if (source === 'video-generation') return 'Video Generation';
+  if (source === 'video-context-ir') return 'Video Context-IR';
+  if (source === 'video-regeneration') return 'Video Regeneration';
   if (source === 'image-to-image') return 'Image to Image';
   if (source === 'text-to-image') return 'Text to Image';
   if (source === 'text-to-music') return 'Text to Music';
@@ -102,6 +109,13 @@ function isCoverPreprocessGeneration(generation: LibraryGenerationDTO): boolean 
 }
 
 function getStorageStatus(generation: LibraryGenerationDTO): { label: string; variant: 'success' | 'info' | 'warning' | 'secondary' } {
+  if (generation.kind === 'video') {
+    if (generation.source === 'video-context-ir' && generation.status === 'completed') return { label: 'Enhanced prompt', variant: 'success' };
+    if (generation.status === 'processing') return { label: 'Processing', variant: 'info' };
+    if (generation.status === 'failed') return { label: getStringMetadata(generation.metadata, 'providerStatus') === 'cancelled' ? 'Cancelled' : 'Failed', variant: 'warning' };
+    if (generation.assets.some((asset) => asset.kind === 'video' && isDownloadable(asset))) return { label: 'Temporary video URL', variant: 'info' };
+    return { label: 'Video unavailable', variant: 'warning' };
+  }
   const audioAsset = generation.assets.find((asset) => asset.kind === 'audio');
   const imageAssets = generation.assets.filter((asset) => asset.kind === 'image');
 
@@ -131,14 +145,12 @@ function isDownloadable(asset: LibraryAssetDTO): boolean {
 
 function getCoverGenerationHref(generation: LibraryGenerationDTO): string | null {
   const coverFeatureId = getStringMetadata(generation.metadata, 'coverFeatureId');
-  const formattedLyrics = getStringMetadata(generation.metadata, 'formattedLyrics');
   const expiresAt = getNumberMetadata(generation.metadata, 'expiresAt');
 
   if (!coverFeatureId || !expiresAt || expiresAt <= Date.now()) return null;
 
   const params = new URLSearchParams({
-    coverFeatureId,
-    lyrics: formattedLyrics ?? '',
+    coverPreprocessId: generation.id,
   });
 
   return `/music?${params.toString()}`;
@@ -150,6 +162,8 @@ interface LibraryItemCardProps {
 }
 
 function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
+  const videoAsset = generation.assets.find((asset) => asset.kind === 'video' && isDownloadable(asset));
+  const enhancedPrompt = generation.kind === 'video' ? getStringMetadata(generation.metadata, 'enhancedPrompt') : undefined;
   const audioAsset = generation.assets.find((asset) => asset.kind === 'audio' && isDownloadable(asset));
   const imageAssets = generation.assets.filter((asset) => asset.kind === 'image' && isDownloadable(asset));
   const storageStatus = getStorageStatus(generation);
@@ -224,6 +238,20 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           <p style={{ fontSize: '0.75rem', color: '#166534' }}>
             This intermediate Library record stores the cover feature ID metadata only. Reference audio bytes were not saved.
           </p>
+        )}
+        {generation.kind === 'video' && (
+          <Box display="grid" gap={2}>
+            <Box fontSize="sm" color="fg.muted">Task: {generation.providerTaskId} · {getStringMetadata(generation.metadata, 'providerStatus') ?? generation.status}</Box>
+            {enhancedPrompt && <Box whiteSpace="pre-wrap" fontSize="sm">{enhancedPrompt}</Box>}
+            {videoAsset?.storageRef && (
+              <>
+                <video controls preload="metadata" src={videoAsset.storageRef} aria-label="Generated video" style={{ width: '100%', borderRadius: '0.5rem' }} />
+                <Box fontSize="xs" color="fg.muted">This provider URL is temporary. Download the video before it expires; an exact expiration time is not provided.</Box>
+                <Button size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
+              </>
+            )}
+            <a href="/video">Open Video Studio</a>
+          </Box>
         )}
         {imageAssets.length > 0 && (
           <Box display="grid" gap={3} gridTemplateColumns="repeat(auto-fit, minmax(8rem, 1fr))" mt={2}>
@@ -421,7 +449,7 @@ export default function LibraryPage() {
             <CardHeader>
               <CardTitle>No backend Library records yet.</CardTitle>
               <CardDescription>
-                Generate audio, music, or images to create SQLite Library records with backend asset references.
+                Generate audio, music, images, or video to create SQLite Library records with backend asset references.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -430,7 +458,7 @@ export default function LibraryPage() {
           <Card accent="gray" style={{ gridColumn: '1 / -1' }}>
             <CardHeader>
               <CardTitle>No items match this filter</CardTitle>
-              <CardDescription>Switch filters or generate new audio, music, images, and voices to add more Library records.</CardDescription>
+              <CardDescription>Switch filters or generate new audio, music, images, video, and voices to add more Library records.</CardDescription>
             </CardHeader>
           </Card>
         )}

@@ -21,7 +21,7 @@ vi.mock('@/infrastructure/assets/LocalAssetStorage', () => ({
   deleteLocalAsset: deleteLocalAssetMock,
 }));
 
-describe('DELETE /api/library/generations/[generationId]', () => {
+describe('/api/library/generations/[generationId]', () => {
   beforeEach(() => {
     process.env.APP_ACCESS_KEY = 'test-key';
     deleteGenerationMock.mockReset();
@@ -38,6 +38,61 @@ describe('DELETE /api/library/generations/[generationId]', () => {
 
     expect(response.status).toBe(401);
     expect(deleteGenerationMock).not.toHaveBeenCalled();
+  });
+
+  it('requires app auth for generation detail reads', async () => {
+    const { GET } = await import('./route');
+
+    const response = await GET(new Request('http://localhost/api/library/generations/generation-1'), {
+      params: Promise.resolve({ generationId: 'generation-1' }),
+    });
+
+    expect(response.status).toBe(401);
+    expect(findGenerationMock).not.toHaveBeenCalled();
+  });
+
+  it('returns a generation detail record', async () => {
+    const { GET } = await import('./route');
+    findGenerationMock.mockReturnValue({
+      id: 'generation-1',
+      kind: 'music',
+      source: 'cover-preprocess',
+      metadata: { coverFeatureId: 'cover-feature-1' },
+      assets: [],
+    });
+
+    const response = await GET(new Request('http://localhost/api/library/generations/generation-1', {
+      headers: { Authorization: 'Bearer test-key' },
+    }), {
+      params: Promise.resolve({ generationId: 'generation-1' }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      generation: {
+        id: 'generation-1',
+        kind: 'music',
+        source: 'cover-preprocess',
+        metadata: { coverFeatureId: 'cover-feature-1' },
+        assets: [],
+      },
+    });
+    expect(findGenerationMock).toHaveBeenCalledWith('generation-1');
+  });
+
+  it('returns 404 when a generation detail record is missing', async () => {
+    const { GET } = await import('./route');
+    findGenerationMock.mockReturnValue(null);
+
+    const response = await GET(new Request('http://localhost/api/library/generations/missing-generation', {
+      headers: { Authorization: 'Bearer test-key' },
+    }), {
+      params: Promise.resolve({ generationId: 'missing-generation' }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: 'Generation not found' });
+    expect(findGenerationMock).toHaveBeenCalledWith('missing-generation');
   });
 
   it('deletes metadata and attached local files', async () => {

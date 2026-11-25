@@ -60,4 +60,19 @@ describe('SubmitAsyncT2AUseCase', () => {
   it('rejects invalid async requests', async () => {
     await expect(useCase.execute({ text: '', voiceId: 'sys_male_english_1' })).rejects.toThrow(SubmitAsyncT2AValidationError);
   });
+
+  it('accepts the documented 100,000 character inline text limit', async () => {
+    await expect(useCase.execute({
+      text: 'a'.repeat(100_000),
+      voiceId: 'sys_male_english_1',
+    })).resolves.toMatchObject({ taskId: 'task_123' });
+  });
+
+  it('rejects inline text beyond the documented MiniMax limit', async () => {
+    await expect(useCase.execute({
+      text: 'a'.repeat(100_001),
+      voiceId: 'sys_male_english_1',
+    })).rejects.toThrow(SubmitAsyncT2AValidationError);
+    expect(mockClient.submitAsync).not.toHaveBeenCalled();
+  });
 });

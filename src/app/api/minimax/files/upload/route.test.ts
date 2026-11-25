@@ -116,4 +116,39 @@ describe('POST /api/minimax/files/upload', () => {
       purpose: 'voice_clone',
     });
   });
+
+  it('accepts the documented media purposes', async () => {
+    const { POST } = await import('./route');
+    const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    const file = createMockFile(bytes, 'reference.jpg', 'image/jpeg');
+
+    for (const purpose of ['video_generation_input', 'image_generation_input']) {
+      executeMock.mockClear();
+
+      const response = await POST(createMockRequest(file, purpose, {
+        authorization: 'Bearer test-key',
+        'content-length': '128',
+      }));
+
+      expect(response.status).toBe(200);
+      expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({ purpose }));
+    }
+  });
+
+  it('rejects a purpose MiniMax does not document for uploads', async () => {
+    const { POST } = await import('./route');
+    const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    const file = createMockFile(bytes, 'reference.jpg', 'image/jpeg');
+
+    const response = await POST(createMockRequest(file, 't2a_async', {
+      authorization: 'Bearer test-key',
+      'content-length': '128',
+    }));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: 'purpose must be one of: voice_clone, prompt_audio, t2a_async_input, video_understanding, video_generation_input, image_generation_input',
+    });
+    expect(executeMock).not.toHaveBeenCalled();
+  });
 });

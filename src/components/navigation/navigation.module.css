@@ -1,13 +1,13 @@
 .sidebar {
-  --sidebar-border: rgba(226, 232, 240, 0.92);
-  --sidebar-text: #0f172a;
-  --sidebar-muted: #64748b;
-  --sidebar-panel: rgba(255, 255, 255, 0.9);
-  --sidebar-panel-strong: rgba(255, 255, 255, 0.96);
+  --sidebar-border: var(--chakra-colors-navigation-border);
+  --sidebar-text: var(--chakra-colors-navigation-text);
+  --sidebar-muted: var(--chakra-colors-navigation-muted);
+  --sidebar-panel: var(--chakra-colors-navigation-panel);
+  --sidebar-panel-strong: var(--chakra-colors-navigation-panel-strong);
   background:
-    radial-gradient(circle at 18% 0%, rgba(99, 102, 241, 0.16), transparent 32%),
-    radial-gradient(circle at 90% 8%, rgba(56, 189, 248, 0.14), transparent 30%),
-    linear-gradient(180deg, #f8fafc 0%, #ffffff 46%, #f1f5f9 100%);
+    radial-gradient(circle at 18% 0%, var(--chakra-colors-product-brand-soft), transparent 32%),
+    radial-gradient(circle at 90% 8%, var(--chakra-colors-navigation-speech-glow), transparent 30%),
+    linear-gradient(180deg, var(--chakra-colors-navigation-bg-start) 0%, var(--chakra-colors-navigation-surface) 46%, var(--chakra-colors-navigation-bg-end) 100%);
   color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
@@ -55,7 +55,7 @@
 
 .brandLink:hover,
 .brandLink:focus-visible {
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--chakra-colors-navigation-hover);
   outline: none;
 }
 
@@ -64,14 +64,14 @@
 .productHeaderButton:focus-visible,
 .navItemLink:focus-visible,
 .mobileHeaderBrand:focus-visible {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.24);
+  box-shadow: 0 0 0 3px var(--chakra-colors-navigation-focus-ring);
 }
 
 .brandMark {
   align-items: center;
-  background: linear-gradient(135deg, #6366f1, #38bdf8);
+  background: linear-gradient(135deg, var(--chakra-colors-product-brand-accent), var(--chakra-colors-product-speech-accent));
   border-radius: 0.95rem;
-  color: #ffffff;
+  color: var(--chakra-colors-navigation-surface);
   display: inline-flex;
   font-size: 1rem;
   font-weight: 900;
@@ -111,21 +111,21 @@
 }
 
 .productSection {
-  --accent: #6366f1;
-  --accent-soft: rgba(99, 102, 241, 0.16);
-  --accent-faint: rgba(99, 102, 241, 0.1);
+  --accent: var(--chakra-colors-product-brand-accent);
+  --accent-soft: var(--chakra-colors-product-brand-soft);
+  --accent-faint: var(--chakra-colors-product-brand-faint);
   background: var(--sidebar-panel);
   border: 1px solid var(--sidebar-border);
   border-radius: 1.1rem;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 14px 34px var(--chakra-colors-navigation-shadow);
   overflow: hidden;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .productSection:hover,
 .productSectionActive {
-  border-color: color-mix(in srgb, var(--accent) 42%, white);
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--chakra-colors-navigation-surface));
+  box-shadow: 0 18px 42px var(--chakra-colors-navigation-shadow-active), inset 0 1px 0 var(--chakra-colors-navigation-highlight);
 }
 
 .productSection:hover {
@@ -133,27 +133,33 @@
 }
 
 .speech {
-  --accent: #38bdf8;
-  --accent-soft: rgba(56, 189, 248, 0.18);
-  --accent-faint: rgba(56, 189, 248, 0.1);
+  --accent: var(--chakra-colors-product-speech-accent);
+  --accent-soft: var(--chakra-colors-product-speech-soft);
+  --accent-faint: var(--chakra-colors-product-speech-faint);
 }
 
 .image {
-  --accent: #a78bfa;
-  --accent-soft: rgba(167, 139, 250, 0.18);
-  --accent-faint: rgba(167, 139, 250, 0.1);
+  --accent: var(--chakra-colors-product-image-accent);
+  --accent-soft: var(--chakra-colors-product-image-soft);
+  --accent-faint: var(--chakra-colors-product-image-faint);
 }
 
 .music {
-  --accent: #f472b6;
-  --accent-soft: rgba(244, 114, 182, 0.18);
-  --accent-faint: rgba(244, 114, 182, 0.1);
+  --accent: var(--chakra-colors-product-music-accent);
+  --accent-soft: var(--chakra-colors-product-music-soft);
+  --accent-faint: var(--chakra-colors-product-music-faint);
 }
 
 .library {
-  --accent: #34d399;
-  --accent-soft: rgba(52, 211, 153, 0.18);
-  --accent-faint: rgba(52, 211, 153, 0.1);
+  --accent: var(--chakra-colors-product-library-accent);
+  --accent-soft: var(--chakra-colors-product-library-soft);
+  --accent-faint: var(--chakra-colors-product-library-faint);
+}
+
+.video {
+  --accent: var(--chakra-colors-product-video-accent);
+  --accent-soft: var(--chakra-colors-product-video-soft);
+  --accent-faint: var(--chakra-colors-product-video-faint);
 }
 
 .productHeaderLink,
@@ -184,7 +190,7 @@
 .productInitials {
   align-items: center;
   background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, white);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--chakra-colors-navigation-surface));
   border-radius: 0.75rem;
   color: var(--accent);
   display: inline-flex;
@@ -215,7 +221,7 @@
 }
 
 .productTitle {
-  color: #111827;
+  color: var(--chakra-colors-navigation-heading);
   font-size: 0.925rem;
   font-weight: 800;
   letter-spacing: -0.015em;
@@ -229,7 +235,7 @@
 }
 
 .productGroups {
-  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  border-top: 1px solid var(--chakra-colors-navigation-divider);
   display: grid;
   gap: 0.65rem;
   padding: 0.65rem;
@@ -241,7 +247,7 @@
 }
 
 .productGroupLabel {
-  color: #94a3b8;
+  color: var(--chakra-colors-navigation-subtle);
   font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -300,7 +306,7 @@
 }
 
 .accountKicker {
-  color: #94a3b8;
+  color: var(--chakra-colors-navigation-subtle);
   font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -308,7 +314,7 @@
 }
 
 .accountTitle {
-  color: #334155;
+  color: var(--chakra-colors-navigation-account);
   font-size: 0.8rem;
   font-weight: 650;
   margin-top: 0.12rem;
@@ -317,8 +323,8 @@
 .mobileHeader {
   align-items: center;
   backdrop-filter: blur(14px);
-  background: rgba(248, 250, 252, 0.92);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.94);
+  background: var(--chakra-colors-navigation-header-bg);
+  border-bottom: 1px solid var(--chakra-colors-navigation-header-border);
   display: flex;
   height: 3.75rem;
   justify-content: space-between;
@@ -330,7 +336,7 @@
 
 .mobileHeaderBrand {
   border-radius: 0.75rem;
-  color: #111827;
+  color: var(--chakra-colors-navigation-heading);
   font-weight: 850;
   letter-spacing: -0.02em;
   padding: 0.35rem 0.5rem;
@@ -347,7 +353,7 @@
 }
 
 .mobileDrawerOverlay {
-  background: rgba(15, 23, 42, 0.46);
+  background: var(--chakra-colors-navigation-overlay);
   border: 0;
   cursor: pointer;
   height: 100%;
@@ -358,8 +364,8 @@
 }
 
 .mobileDrawerPanel {
-  background: #ffffff;
-  box-shadow: 24px 0 60px rgba(15, 23, 42, 0.22);
+  background: var(--chakra-colors-navigation-surface);
+  box-shadow: 24px 0 60px var(--chakra-colors-navigation-drawer-shadow);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -377,8 +383,8 @@
 
 .mobileDrawerHeader {
   align-items: center;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.94);
+  background: var(--chakra-colors-navigation-surface);
+  border-bottom: 1px solid var(--chakra-colors-navigation-header-border);
   display: flex;
   flex: 0 0 auto;
   justify-content: space-between;
@@ -386,7 +392,7 @@
 }
 
 .mobileDrawerTitle {
-  color: #0f172a;
+  color: var(--chakra-colors-navigation-text);
   font-size: 0.95rem;
   font-weight: 800;
 }

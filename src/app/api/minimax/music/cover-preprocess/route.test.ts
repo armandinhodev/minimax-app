@@ -31,6 +31,7 @@ describe('POST /api/minimax/music/cover-preprocess', () => {
     process.env.APP_ACCESS_KEY = 'test-key';
     executeMock.mockReset();
     recordGenerationBestEffortMock.mockReset();
+    recordGenerationBestEffortMock.mockReturnValue({ id: 'library-cover-preprocess-1' });
   });
 
   it('validates and returns cover preprocess metadata', async () => {
@@ -42,6 +43,7 @@ describe('POST /api/minimax/music/cover-preprocess', () => {
       audioDurationSeconds: 42,
       traceId: 'trace-cover-1',
       metadata: { status: 0, message: 'success' },
+      coverPreprocessId: 'library-cover-preprocess-1',
     });
 
     const response = await POST(new Request('http://localhost/api/minimax/music/cover-preprocess', {
@@ -63,6 +65,7 @@ describe('POST /api/minimax/music/cover-preprocess', () => {
       audioDurationSeconds: 42,
       traceId: 'trace-cover-1',
       metadata: { status: 0, message: 'success' },
+      coverPreprocessId: 'library-cover-preprocess-1',
     });
     expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({
       model: 'music-cover',
@@ -134,6 +137,33 @@ describe('POST /api/minimax/music/cover-preprocess', () => {
     const persistedPayload = JSON.stringify(recordGenerationBestEffortMock.mock.calls[0][0]);
     expect(persistedPayload).not.toContain(audioBase64);
     expect(persistedPayload).not.toContain(rawAudio);
+  });
+
+  it('preserves preprocess success when Library recording fails', async () => {
+    const { POST } = await import('./route');
+    recordGenerationBestEffortMock.mockReturnValue(null);
+    executeMock.mockResolvedValue({
+      coverFeatureId: 'cover-feature-1',
+      formattedLyrics: '[Verse]\nCity lights',
+      structureResult: '{"sections":["Verse"]}',
+      audioDurationSeconds: 42,
+      traceId: 'trace-cover-1',
+      metadata: { status: 0, message: 'success' },
+    });
+
+    const response = await POST(new Request('http://localhost/api/minimax/music/cover-preprocess', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer test-key',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ audioUrl: 'https://example.com/reference.mp3' }),
+    }));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.coverFeatureId).toBe('cover-feature-1');
+    expect(body.coverPreprocessId).toBeUndefined();
   });
 
   it('rejects duplicate reference audio sources before calling MiniMax', async () => {

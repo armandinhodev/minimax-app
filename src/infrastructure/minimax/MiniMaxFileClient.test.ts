@@ -461,4 +461,118 @@ describe('MiniMaxFileClient.uploadFile', () => {
 
     await expectation;
   });
+
+  it('keeps int64 file IDs exact instead of truncating them', async () => {
+    // The raw body carries the exact int64 digits; a JS number literal cannot
+    // represent them, which is exactly why the client must not parse them as
+    // IEEE-754 doubles.
+    global.fetch = vi.fn().mockResolvedValue(new Response(
+      '{"file":{"file_id":123456789012345681,"filename":"sample.wav","bytes":4,"created_at":123,"purpose":"voice_clone"}}',
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )) as typeof fetch;
+
+    const client = new MiniMaxFileClient();
+    const uploadPromise = client.uploadFile(Buffer.from([1, 2, 3, 4]), 'sample.wav', 'voice_clone');
+
+    await vi.runAllTimersAsync();
+
+    await expect(uploadPromise).resolves.toMatchObject({ fileId: '123456789012345681' });
+  });
+
+  it('maps the documented filename and bytes fields when listing files', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      files: [{
+        file_id: 'file_123',
+        filename: 'sample.wav',
+        purpose: 'image_generation_input',
+        bytes: 4,
+        created_at: 123,
+      }],
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxFileClient();
+    const listPromise = client.listFiles();
+
+    await vi.runAllTimersAsync();
+
+    await expect(listPromise).resolves.toEqual([{
+      fileId: 'file_123',
+      fileName: 'sample.wav',
+      purpose: 'image_generation_input',
+      size: 4,
+      createdAt: 123,
+    }]);
+  });
+
+  it('maps the documented filename and bytes fields when retrieving a file', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      file: {
+        file_id: 'file_123',
+        filename: 'sample.wav',
+        purpose: 'video_generation_input',
+        bytes: 4,
+        created_at: 123,
+        download_url: 'https://cdn.minimax.io/file_123',
+      },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxFileClient();
+    const getPromise = client.getFile('file_123');
+
+    await vi.runAllTimersAsync();
+
+    await expect(getPromise).resolves.toEqual({
+      fileId: 'file_123',
+      fileName: 'sample.wav',
+      purpose: 'video_generation_input',
+      size: 4,
+      createdAt: 123,
+      downloadUrl: 'https://cdn.minimax.io/file_123',
+    });
+  });
+
+  it('sends the delete file_id as an exact int64 literal', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      file_id: '123456789012345681',
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxFileClient();
+    const deletePromise = client.deleteFile('123456789012345681', 'voice_clone');
+
+    await vi.runAllTimersAsync();
+
+    await expect(deletePromise).resolves.toBeUndefined();
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(String(init.body)).toBe('{"file_id":123456789012345681,"purpose":"voice_clone"}');
+  });
+
+  it('rejects purposes MiniMax does not document for the target endpoint', async () => {
+    global.fetch = vi.fn() as typeof fetch;
+
+    const client = new MiniMaxFileClient();
+
+    await expect(client.listFiles('t2a_async' as never)).rejects.toMatchObject({
+      name: 'MiniMaxFileError',
+      status: 400,
+      message: 'purpose must be one of: voice_clone, prompt_audio, t2a_async_input, video_generation_input, image_generation_input for the list endpoint',
+    });
+    await expect(client.uploadFile(Buffer.from([1]), 'sample.wav', 't2a_async' as never)).rejects.toMatchObject({
+      name: 'MiniMaxFileError',
+      status: 400,
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
 });

@@ -242,6 +242,91 @@ describe('MusicPage', () => {
     }));
   });
 
+  it('hydrates cover generation from coverPreprocessId via backend Library', async () => {
+    const params = new URLSearchParams({
+      coverPreprocessId: 'library-cover-preprocess-1',
+      style: 'Acoustic folk cover with warm vocals.',
+    });
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?${params.toString()}`);
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url === '/api/library/generations/library-cover-preprocess-1') {
+        return Response.json({
+          generation: {
+            id: 'library-cover-preprocess-1',
+            kind: 'music',
+            source: 'cover-preprocess',
+            status: 'completed',
+            title: 'Cover preprocess',
+            prompt: '[Verse]\nCity lights',
+            model: 'music-cover',
+            providerGenerationId: 'cover-feature-1',
+            providerTaskId: null,
+            providerFileId: null,
+            metadata: {
+              coverFeatureId: 'cover-feature-1',
+              formattedLyrics: '[Verse]\nCity lights',
+              expiresAt: Date.now() + 60_000,
+            },
+            assets: [],
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        });
+      }
+
+      return Response.json({ id: 'trace-cover', audio: '00010203', format: 'mp3', metadata: {} });
+    });
+
+    await act(async () => {
+      root!.render(<MusicPage />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/library-cover-preprocess-1');
+    expect(container!.textContent).toContain('Loaded Cover Preprocess record from Library');
+    const coverFeatureId = container!.querySelector('#cover-feature-id') as HTMLInputElement;
+    const prompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;
+    const lyrics = container!.querySelector('#music-lyrics') as HTMLTextAreaElement;
+    expect(coverFeatureId.value).toBe('cover-feature-1');
+    expect(prompt.value).toBe('Acoustic folk cover with warm vocals.');
+    expect(lyrics.value).toBe('[Verse]\nCity lights');
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Cover');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music', expect.objectContaining({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'music-cover',
+        prompt: 'Acoustic folk cover with warm vocals.',
+        lyrics: '[Verse]\nCity lights',
+        instrumental: false,
+        coverFeatureId: 'cover-feature-1',
+        stream: false,
+        outputFormat: 'hex',
+        audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+      }),
+    }));
+  });
+
+  it('does not offer the discontinued free music models and shows the availability notice', async () => {
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    const optionValues = Array.from(container!.querySelectorAll('option')).map((option) => option.value);
+    expect(optionValues).toEqual(['music-3.0', 'music-cover']);
+    expect(optionValues).not.toContain('music-3.0-free');
+    expect(optionValues).not.toContain('music-cover-free');
+    expect(container!.textContent).toContain('existing paying accounts');
+  });
+
   it('blocks vocal generation until lyrics are provided', async () => {
     act(() => {
       root!.render(<MusicPage />);

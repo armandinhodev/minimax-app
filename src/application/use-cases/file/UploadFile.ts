@@ -2,8 +2,8 @@
  * UploadFile use case — generic file upload to MiniMax.
  */
 
-import type { IMiniMaxFileClient, FilePurpose } from '@/domain/interfaces/IMiniMaxFileClient';
-import type { FileMetadataDTO } from '@/application/dto/FileDTO';
+import type { IMiniMaxFileClient } from '@/domain/interfaces/IMiniMaxFileClient';
+import type { FileMetadataDTO, FileUploadPurpose } from '@/application/dto/FileDTO';
 import { UploadFileSchema } from '@/application/dto/FileDTO';
 
 export class UploadFileValidationError extends Error {
@@ -25,7 +25,7 @@ export class UploadFileUseCase {
   async execute(request: {
     fileBuffer: Buffer;
     fileName: string;
-    purpose: FilePurpose;
+    purpose: FileUploadPurpose;
   }): Promise<FileMetadataDTO> {
     const parsed = UploadFileSchema.safeParse({ purpose: request.purpose });
     if (!parsed.success) {

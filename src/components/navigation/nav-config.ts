@@ -1,4 +1,4 @@
-export type ProductAccent = "speech" | "image" | "music" | "library";
+export type ProductAccent = "speech" | "image" | "music" | "video" | "library";
 
 export type NavMatchMode = "exact" | "prefix";
 
@@ -85,17 +85,33 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     ],
   },
   {
+    id: "video",
+    label: "Video",
+    shortLabel: "VI",
+    href: "/video",
+    description: "H3 multimodal video studio",
+    matchPaths: ["/video"],
+    groups: [
+      {
+        label: "Video workflows",
+        items: [
+          { href: "/video", label: "Video Studio", description: "Generate, enhance and regenerate videos" },
+        ],
+      },
+    ],
+  },
+  {
     id: "library",
     label: "Library",
     shortLabel: "LB",
     href: "/library",
-    description: "Saved audio, music, and image assets",
+    description: "Saved audio, music, image, and video assets",
     matchPaths: ["/library"],
     groups: [],
   },
 ];
 
-export const WIDE_CONTENT_MATCH_PATHS = ["/image", "/music"];
+export const WIDE_CONTENT_MATCH_PATHS = ["/image", "/music", "/video"];
 
 export function matchesPath(pathname: string, paths: string[]): boolean {
   return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));

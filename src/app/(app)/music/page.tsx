@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
@@ -12,6 +12,8 @@ import { Select, type SelectOption } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
+import type { LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
+import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/MusicDTO';
 
 const PROMPT_MAX_LENGTH = 2000;
 const COVER_PROMPT_MIN_LENGTH = 10;
@@ -24,13 +26,11 @@ const DEFAULT_BITRATE = 256000;
 
 const MODEL_OPTIONS: SelectOption[] = [
   { value: 'music-3.0', label: 'music-3.0' },
-  { value: 'music-3.0-free', label: 'music-3.0-free' },
   { value: 'music-cover', label: 'music-cover' },
-  { value: 'music-cover-free', label: 'music-cover-free' },
 ];
 
 function isCoverModel(value: string): boolean {
-  return value === 'music-cover' || value === 'music-cover-free';
+  return value === 'music-cover';
 }
 
 function getInitialSearchParams(): URLSearchParams {
@@ -40,7 +40,17 @@ function getInitialSearchParams(): URLSearchParams {
 function getInitialModel(searchParams: URLSearchParams): string {
   const requestedModel = searchParams.get('model') ?? '';
   if (MODEL_OPTIONS.some((option) => option.value === requestedModel)) return requestedModel;
-  return searchParams.get('coverFeatureId') ? 'music-cover' : 'music-3.0';
+  return searchParams.get('coverFeatureId') || searchParams.get('coverPreprocessId') ? 'music-cover' : 'music-3.0';
+}
+
+function getStringMetadata(metadata: Record<string, unknown>, key: string): string | undefined {
+  const value = metadata[key];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function getNumberMetadata(metadata: Record<string, unknown>, key: string): number | undefined {
+  const value = metadata[key];
+  return typeof value === 'number' ? value : undefined;
 }
 
 interface MusicGenerationResult {
@@ -77,12 +87,14 @@ function downloadMusicHex(hex: string, format: string, id: string): void {
 
 export default function MusicPage() {
   const [initialSearchParams] = useState(getInitialSearchParams);
+  const [coverPreprocessId] = useState(() => initialSearchParams.get('coverPreprocessId')?.trim() ?? '');
   const [prompt, setPrompt] = useState(() => initialSearchParams.get('prompt') ?? initialSearchParams.get('style') ?? '');
   const [lyrics, setLyrics] = useState(() => initialSearchParams.get('lyrics') ?? '');
   const [coverFeatureId, setCoverFeatureId] = useState(() => initialSearchParams.get('coverFeatureId') ?? '');
   const [instrumental, setInstrumental] = useState(false);
   const [model, setModel] = useState(() => getInitialModel(initialSearchParams));
   const [isLoading, setIsLoading] = useState(false);
+  const [isHydratingCoverPreprocess, setIsHydratingCoverPreprocess] = useState(false);
   const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
   const [result, setResult] = useState<MusicGenerationResult | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
@@ -96,6 +108,7 @@ export default function MusicPage() {
   const promptCharacters = prompt.length;
   const lyricsCharacters = lyrics.length;
   const validationMessage = (() => {
+    if (isHydratingCoverPreprocess) return 'Loading Cover Preprocess record from Library.';
     if (isCoverMode) {
       if (trimmedCoverFeatureId.length === 0) return 'Add a cover feature ID from Cover Preprocess before generating.';
       if (trimmedPrompt.length < COVER_PROMPT_MIN_LENGTH) return 'Describe the target cover style with at least 10 characters.';
@@ -113,6 +126,81 @@ export default function MusicPage() {
     return null;
   })();
   const canGenerate = !isLoading && validationMessage === null;
+
+  useEffect(() => {
+    if (!coverPreprocessId) return;
+
+    let isCancelled = false;
+
+    const loadCoverPreprocessGeneration = async () => {
+      setIsHydratingCoverPreprocess(true);
+      setError(null);
+      setActionStatus(null);
+
+      try {
+        const response = await authFetch(`/api/library/generations/${encodeURIComponent(coverPreprocessId)}`);
+
+        if (!response.ok) {
+          const err = await parseApiError(response);
+          if (!isCancelled) {
+            const message = err?.message ?? `HTTP ${response.status}`;
+            setError({
+              code: err?.code ?? response.status,
+              message: `Cover Preprocess record is unavailable (${message}). Run Cover Preprocess again from Library or the Cover Preprocess page.`,
+            });
+          }
+          return;
+        }
+
+        const data = await response.json() as { generation?: LibraryGenerationDTO };
+        const generation = data.generation;
+        if (!generation || generation.source !== 'cover-preprocess') {
+          if (!isCancelled) {
+            setError({ code: null, message: 'This Library record is not a Cover Preprocess result.' });
+          }
+          return;
+        }
+
+        const coverFeatureIdFromMetadata = getStringMetadata(generation.metadata, 'coverFeatureId');
+        const formattedLyrics = getStringMetadata(generation.metadata, 'formattedLyrics') ?? '';
+        const expiresAt = getNumberMetadata(generation.metadata, 'expiresAt');
+
+        if (!coverFeatureIdFromMetadata || !expiresAt) {
+          if (!isCancelled) {
+            setError({ code: null, message: 'This Cover Preprocess record is missing the cover feature metadata. Run Cover Preprocess again.' });
+          }
+          return;
+        }
+
+        if (expiresAt <= Date.now()) {
+          if (!isCancelled) {
+            setError({ code: null, message: 'This Cover Preprocess record has expired. Run Cover Preprocess again before generating a cover.' });
+          }
+          return;
+        }
+
+        if (!isCancelled) {
+          setModel(isCoverModel(generation.model ?? '') ? generation.model ?? 'music-cover' : 'music-cover');
+          setInstrumental(false);
+          setCoverFeatureId(coverFeatureIdFromMetadata);
+          setLyrics(formattedLyrics);
+          setActionStatus('Loaded Cover Preprocess record from Library. Add a target cover style to continue.');
+        }
+      } catch {
+        if (!isCancelled) {
+          setError({ code: null, message: 'Failed to load Cover Preprocess record from Library. Check your connection and try again.' });
+        }
+      } finally {
+        if (!isCancelled) setIsHydratingCoverPreprocess(false);
+      }
+    };
+
+    void loadCoverPreprocessGeneration();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [coverPreprocessId]);
 
   const handleModelChange = (nextModel: string) => {
     setModel(nextModel);
@@ -178,6 +266,10 @@ export default function MusicPage() {
         <Box border="1px solid" borderColor="purple.100" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
           Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is stored by the backend when bytes are available.
         </Box>
+      </Box>
+
+      <Box border="1px solid" borderColor="orange.100" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="orange.800" fontSize="sm">
+        {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">

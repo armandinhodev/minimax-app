@@ -13,6 +13,13 @@ import type { Voice } from '@/domain/entities/Voice';
 import type { VoiceId } from '@/domain/value-objects/VoiceId';
 import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL, type T2ARequest } from '@/domain/value-objects/T2APolicy';
 import {
+  isMiniMaxInt64,
+  normalizeMiniMaxId,
+  quoteMiniMaxInt64Fields,
+  rawMiniMaxInt64,
+  stringifyMiniMaxJson,
+} from '@/application/dto/FileDTO';
+import {
   VOICE_CLONE_NOT_VERIFIED_CODE,
   VoiceCloneNotVerifiedError,
 } from '@/application/errors/VoiceCloneNotVerifiedError';
@@ -63,7 +70,7 @@ function buildRequestInit(apiKey: string, body: unknown): RequestInit {
       Authorization: buildAuthHeader(apiKey),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: typeof body === 'string' ? body : JSON.stringify(body),
   };
 }
 
@@ -159,15 +166,75 @@ function readChunkWithTimeout(reader: ReadableStreamDefaultReader<Uint8Array>) {
   });
 }
 
-function parseMiniMaxFileId(fileId: string, fieldName: string): number {
-  const trimmed = fileId.trim();
-  const numericFileId = Number(trimmed);
+/**
+ * Parse a MiniMax JSON body.
+ *
+ * `file_id` and `task_id` are int64 values, so the raw digits are quoted
+ * before parsing to keep them exact instead of losing precision in an
+ * IEEE-754 double.
+ */
+function parseMiniMaxJson<T>(text: string): T & { base_resp?: { status_code: number; status_msg: string } } {
+  return JSON.parse(quoteMiniMaxInt64Fields(text)) as T & { base_resp?: { status_code: number; status_msg: string } };
+}
 
-  if (!/^\d+$/.test(trimmed) || !Number.isSafeInteger(numericFileId) || numericFileId <= 0) {
+/**
+ * Normalize a MiniMax file identifier.
+ * MiniMax identifiers are int64, so the exact decimal digits are kept.
+ */
+function parseMiniMaxFileId(fileId: string, fieldName: string): string {
+  const trimmed = fileId.trim();
+
+  if (!isMiniMaxInt64(trimmed) || Number(trimmed) <= 0) {
     throw new MiniMaxSpeechError(`${fieldName} must be a positive numeric MiniMax file ID`, 0, 400);
   }
 
-  return numericFileId;
+  return trimmed;
+}
+
+/**
+ * Normalize a MiniMax task status.
+ * The documented enum is lowercase (`success`, `failed`, `expired`,
+ * `processing`) while some responses use the capitalized form.
+ */
+function normalizeTaskStatus(status: unknown): TaskStatus {
+  const normalized = typeof status === 'string' ? status.trim().toLowerCase() : '';
+  switch (normalized) {
+    case 'success':
+    case 'failed':
+    case 'expired':
+    case 'processing':
+      return normalized;
+    default:
+      return 'processing';
+  }
+}
+
+/**
+ * Normalize the voice-design trial audio to hex.
+ *
+ * The MiniMax API reference documents `trial_audio` as hex-encoded audio, so
+ * the payload is used as-is. A non-hex payload is still decoded as base64 so a
+ * legacy response keeps working.
+ */
+function toTrialAudioHex(trialAudio?: string): string | undefined {
+  const trimmed = trialAudio?.trim();
+  if (!trimmed) return undefined;
+
+  if (trimmed.length % 2 === 0 && /^[0-9a-fA-F]+$/.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
+  try {
+    const binaryStr = atob(trimmed);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    // If base64 decode fails, leave trialAudioHex undefined
+    return undefined;
+  }
 }
 
 /**
@@ -214,7 +281,7 @@ async function fetchWithRetry<T>(
         throw normalizeError(error);
       }
 
-      const data = await response.json() as T & { base_resp?: { status_code: number; status_msg: string } };
+      const data = parseMiniMaxJson<T>(await response.text());
 
       if (data?.base_resp && typeof data.base_resp.status_code === 'number' && data.base_resp.status_code !== 0) {
         const apiError = parseMiniMaxApplicationError(response.status, data.base_resp);
@@ -380,20 +447,23 @@ export class MiniMaxSpeechClient {
       audio_setting: {
         format,
       },
-      // T2A v2 returns byte_count / duration + either audio (base64) or audio_url
-      // We request hex-encoded audio via the default output format
+      // The app stores the synthesized audio locally, so it always asks for the
+      // hex payload and never the expiring download URL.
+      output_format: 'hex',
     };
 
     const data = await fetchWithRetry<MiniMaxT2AResponse>(url, buildRequestInit(this.apiKey, body), this.apiKey, 'speech.synthesize');
 
-    // MiniMax may return either audio (base64 hex) or audio_url
+    // MiniMax returns the hex payload in data.audio and reports the duration in
+    // extra_info.audio_length (milliseconds).
     const audioHex = data.data?.audio;
     const audioUrl = data.data?.audio_url;
+    const audioLengthMs = data.extra_info?.audio_length;
 
     return {
       id: crypto.randomUUID(),
       format,
-      duration: data.data?.duration,
+      duration: typeof audioLengthMs === 'number' ? audioLengthMs / 1000 : data.data?.duration,
       downloadUrl: audioUrl ?? '',
       expiresAt: audioUrl ? Date.now() + 9 * 60 * 60 * 1000 : undefined,
       audioHex: audioHex ?? undefined,
@@ -509,7 +579,8 @@ export class MiniMaxSpeechClient {
       'speech.submitAsync'
     );
 
-    const taskId = data.data?.task_id?.trim();
+    // The documented response carries task_id at the top level.
+    const taskId = normalizeMiniMaxId(data.task_id) ?? normalizeMiniMaxId(data.data?.task_id);
     if (!taskId) throw new MiniMaxSpeechError('MiniMax returned an empty task ID', 0, 502);
 
     return {
@@ -536,10 +607,13 @@ export class MiniMaxSpeechClient {
       'speech.pollTask'
     );
 
-    const status = (data.data?.status ?? 'processing') as TaskStatus;
+    // The documented response carries status and file_id at the top level.
+    const rawStatus = data.status ?? data.data?.status ?? 'processing';
+    const fileId = normalizeMiniMaxId(data.file_id) ?? normalizeMiniMaxId(data.data?.file_id) ?? undefined;
+
     return {
-      status,
-      fileId: data.data?.file_id,
+      status: normalizeTaskStatus(rawStatus),
+      fileId,
     };
   }
 
@@ -562,12 +636,23 @@ export class MiniMaxSpeechClient {
     );
 
     // Track source array so we can map to correct Voice.type without inferring from voice_id prefix
-    type VoiceEntry = { voice_id: string; name?: string; voice_id_str?: string; created_at?: number };
+    type VoiceEntry = {
+      voice_id: string;
+      name?: string;
+      voice_name?: string;
+      voice_id_str?: string;
+      created_at?: number;
+    };
 
     const allVoices: Array<VoiceEntry & { source: 'system' | 'clone' | 'design' }> = [];
 
     if (data.system_voice) {
-      for (const [, val] of Object.entries(data.system_voice)) {
+      // The documented response is an array of SystemVoiceInfo; older payloads
+      // keyed the system voices by language, so both shapes are accepted.
+      const systemVoices = Array.isArray(data.system_voice)
+        ? data.system_voice
+        : Object.values(data.system_voice);
+      for (const val of systemVoices) {
         if (val && typeof val === 'object' && 'voice_id' in val) {
           allVoices.push({ ...(val as VoiceEntry), source: 'system' });
         }
@@ -586,7 +671,8 @@ export class MiniMaxSpeechClient {
 
     return allVoices.map((v) => ({
       voiceId: v.voice_id ?? v.voice_id_str ?? '',
-      name: v.name ?? v.voice_id ?? '',
+      // The documented display name is `voice_name`; `name` is the legacy field.
+      name: v.voice_name ?? v.name ?? v.voice_id ?? '',
       // Language is only meaningful for system voices (MiniMax prefixes them
       // with a language code like "English_", "Korean_", etc.). User voices
       // (clone / design) get auto-generated IDs from MiniMax that may
@@ -620,18 +706,26 @@ export class MiniMaxSpeechClient {
   ): Promise<Voice> {
     const url = withGroupId('/v1/voice_clone', GROUP_ID);
     const fileId = parseMiniMaxFileId(audioFileId, 'file_id');
-    const body = {
-      file_id: fileId,
+    const promptAudio = options?.optionalClonePrompt
+      ? parseMiniMaxFileId(options.optionalClonePrompt.promptAudio, 'clone_prompt.prompt_audio')
+      : null;
+
+    // `file_id` and `clone_prompt.prompt_audio` are int64 values, so they are
+    // serialized as exact numeric literals instead of lossy doubles.
+    const body = stringifyMiniMaxJson({
+      file_id: rawMiniMaxInt64(fileId),
       voice_id: voiceId,
-      ...(options?.optionalClonePrompt ? {
-        clone_prompt: {
-          prompt_audio: parseMiniMaxFileId(options.optionalClonePrompt.promptAudio, 'clone_prompt.prompt_audio'),
-          prompt_text: options.optionalClonePrompt.promptText,
-        },
-      } : {}),
+      ...(promptAudio
+        ? {
+          clone_prompt: {
+            prompt_audio: rawMiniMaxInt64(promptAudio),
+            prompt_text: options?.optionalClonePrompt?.promptText,
+          },
+        }
+        : {}),
       ...(options?.optionalPreviewText ? { text: options.optionalPreviewText } : {}),
       ...(options?.optionalModel ? { model: options.optionalModel } : {}),
-    };
+    });
 
     const data = await fetchWithRetry<MiniMaxVoiceCloneResponse>(
       url,
@@ -641,6 +735,8 @@ export class MiniMaxSpeechClient {
     );
 
     return {
+      // The documented response does not echo the voice_id, so the requested one
+      // is authoritative.
       voiceId: data.data?.voice_id ?? voiceId,
       name: data.data?.name ?? voiceId,
       type: 'clone',
@@ -651,7 +747,7 @@ export class MiniMaxSpeechClient {
   /**
    * Design a voice (prompt → voice).
    * POST /v1/voice_design
-   * Response: { voice_id, trial_audio (base64), base_resp }
+   * Response: { voice_id, trial_audio (hex), base_resp }
    */
   async designVoice(prompt: string, previewText: string): Promise<Voice & { trialAudioHex?: string }> {
     const url = withGroupId('/v1/voice_design', GROUP_ID);
@@ -667,21 +763,7 @@ export class MiniMaxSpeechClient {
     const voiceId = data.voice_id?.trim();
     if (!voiceId) throw new MiniMaxSpeechError('MiniMax returned an empty designed voice ID', 0, 502);
 
-    const trialAudioBase64 = data.trial_audio;
-    let trialAudioHex: string | undefined;
-    if (trialAudioBase64) {
-      // Convert base64 to hex — atob to get bytes, then to hex
-      try {
-        const binaryStr = atob(trialAudioBase64);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-        trialAudioHex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
-      } catch {
-        // If base64 decode fails, leave trialAudioHex undefined
-      }
-    }
+    const trialAudioHex = toTrialAudioHex(data.trial_audio);
 
     return {
       voiceId,
@@ -718,38 +800,54 @@ interface MiniMaxT2AResponse {
   code: number;
   msg: string;
   data?: {
-    audio?: string;      // base64 hex
+    audio?: string;      // hex-encoded audio
     audio_url?: string;  // download URL
     duration?: number;
+  };
+  extra_info?: {
+    audio_length?: number; // milliseconds
+    audio_sample_rate?: number;
+    audio_size?: number;
+    bitrate?: number;
+    audio_format?: string;
+    audio_channel?: number;
+    usage_characters?: number;
   };
 }
 
 interface MiniMaxAsyncT2AResponse {
   code: number;
   msg: string;
+  task_id?: string | number;
+  file_id?: string | number;
   data?: {
-    task_id: string;
+    task_id?: string | number;
   };
 }
 
 interface MiniMaxPollT2AResponse {
   code: number;
   msg: string;
+  task_id?: string | number;
+  status?: string;
+  file_id?: string | number;
   data?: {
     status: string;
-    file_id?: string;
+    file_id?: string | number;
   };
 }
 
 interface MiniMaxVoiceListResponse {
   base_resp?: { status_code: number; status_msg: string };
-  system_voice?: Record<string, { voice_id: string; name?: string; voice_id_str?: string; created_at?: number }>;
-  voice_cloning?: Array<{ voice_id: string; name?: string; voice_id_str?: string; created_at?: number }>;
-  voice_generation?: Array<{ voice_id: string; name?: string; voice_id_str?: string; created_at?: number }>;
+  system_voice?: Record<string, { voice_id: string; name?: string; voice_name?: string; voice_id_str?: string; created_at?: number }>
+    | Array<{ voice_id: string; name?: string; voice_name?: string; voice_id_str?: string; created_at?: number }>;
+  voice_cloning?: Array<{ voice_id: string; name?: string; voice_name?: string; voice_id_str?: string; created_at?: number }>;
+  voice_generation?: Array<{ voice_id: string; name?: string; voice_name?: string; voice_id_str?: string; created_at?: number }>;
 }
 
 interface MiniMaxVoiceCloneResponse {
   base_resp?: { status_code: number; status_msg: string };
+  demo_audio?: string;
   data?: {
     voice_id?: string;
     name?: string;
@@ -759,5 +857,5 @@ interface MiniMaxVoiceCloneResponse {
 interface MiniMaxVoiceDesignResponse {
   base_resp?: { status_code: number; status_msg: string };
   voice_id?: string;
-  trial_audio?: string; // base64 encoded preview audio
+  trial_audio?: string; // hex-encoded preview audio
 }

@@ -57,10 +57,10 @@ h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--chakra-colors-scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--chakra-colors-scrollbar-thumb-hover);
 }

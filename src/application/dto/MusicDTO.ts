@@ -5,16 +5,25 @@ export const DEFAULT_MUSIC_FORMAT = 'mp3' as const;
 export const DEFAULT_MUSIC_SAMPLE_RATE = 44100 as const;
 export const DEFAULT_MUSIC_BITRATE = 256000 as const;
 export const MUSIC_COVER_MODEL = 'music-cover' as const;
-export const MUSIC_COVER_FREE_MODEL = 'music-cover-free' as const;
 export const MAX_MUSIC_COVER_AUDIO_BYTES = 50 * 1024 * 1024;
 
-export const MusicModelSchema = z.enum(['music-3.0', 'music-3.0-free', MUSIC_COVER_MODEL, MUSIC_COVER_FREE_MODEL]);
+/**
+ * MiniMax discontinued the free music models (`music-3.0-free`,
+ * `music-2.6-free`, `music-cover-free`). Only the paid models remain
+ * selectable, and only for accounts that already have a paying subscription.
+ *
+ * https://platform.minimax.io/docs/api-reference/music-generation
+ */
+export const MUSIC_AVAILABILITY_NOTICE =
+  'MiniMax Music Generation and Lyrics Generation stay available for existing paying accounts. Free music models were discontinued, so this app only offers the paid models.';
+
+export const MusicModelSchema = z.enum(['music-3.0', MUSIC_COVER_MODEL]);
 export const MusicOutputFormatSchema = z.literal('hex');
 export const MusicAudioFormatSchema = z.literal(DEFAULT_MUSIC_FORMAT);
 export const LyricsGenerationModeSchema = z.enum(['write_full_song', 'edit']);
 
 export function isMusicCoverModel(model: z.infer<typeof MusicModelSchema>): boolean {
-  return model === MUSIC_COVER_MODEL || model === MUSIC_COVER_FREE_MODEL;
+  return model === MUSIC_COVER_MODEL;
 }
 
 const AUDIO_DATA_URL_PATTERN = /^data:audio\/[a-z0-9.+-]+;base64,([A-Za-z0-9+/]+={0,2})$/i;
@@ -71,6 +80,11 @@ export const GenerateMusicSchema = z
     coverFeatureId: z.string().trim().optional(),
     instrumental: z.boolean().default(false),
     stream: z.literal(false).default(false),
+    /**
+     * MiniMax documents `hex` and `url`. The app stores the generated audio in
+     * the local Library, which needs the raw bytes, so only `hex` is accepted:
+     * a `url` payload must never reach the hex decoder.
+     */
     outputFormat: MusicOutputFormatSchema.default('hex'),
     audioSetting: MusicAudioSettingSchema.default({
       sampleRate: DEFAULT_MUSIC_SAMPLE_RATE,

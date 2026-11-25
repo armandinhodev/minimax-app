@@ -48,9 +48,10 @@ vi.mock('@/components/ui/label', () => ({
 }));
 
 vi.mock('@/components/ui/switch', () => ({
-  Switch: ({ checked, disabled, onChange }: { checked?: boolean; disabled?: boolean; onChange?: (checked: boolean) => void }) => (
+  Switch: ({ checked, disabled, onChange, id }: { checked?: boolean; disabled?: boolean; id?: string; onChange?: (checked: boolean) => void }) => (
     <input
-      aria-label="Prompt Optimizer"
+      id={id}
+      aria-label="Disable Prompt Enhancement"
       type="checkbox"
       checked={checked}
       disabled={disabled}
@@ -82,6 +83,11 @@ function changeInput(input: HTMLInputElement, value: string) {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
+function clickButton(container: HTMLElement, id: string) {
+  const button = container.querySelector(`#${id}`) as HTMLButtonElement | null;
+  button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+}
+
 describe('ImagePage', () => {
   let container: HTMLDivElement | null = null;
   let root: ReturnType<typeof createRoot> | null = null;
@@ -103,14 +109,29 @@ describe('ImagePage', () => {
     container = null;
   });
 
-  it('generates images and relies on backend Library recording', async () => {
+  it('generates images with the MiniMax-H3-Image contract and relies on backend Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        id: 'generation-1',
-        imageUrls: ['https://example.com/image-1.png'],
-        metadata: { successCount: 1, failedCount: 0 },
-        expiresAt: 123456,
+        id: 'req-1',
+        imageUrls: ['https://example.com/image-1.jpg'],
+        images: [{
+          index: 0,
+          url: 'https://example.com/image-1.jpg',
+          size: '2720x1536',
+          revisedPrompt: 'An enhanced prompt.',
+          error: null,
+        }],
+        metadata: {
+          successCount: 1,
+          failedCount: 0,
+          totalCount: 1,
+          outputFormat: 'jpeg',
+          requestId: 'req-1',
+          created: 1792308678,
+          usage: null,
+        },
+        expiresAt: null,
       }),
     });
 
@@ -120,19 +141,15 @@ describe('ImagePage', () => {
 
     const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
     const count = container!.querySelector('#image-count') as HTMLInputElement;
-    const seed = container!.querySelector('#image-seed') as HTMLInputElement;
-    const optimizer = container!.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    const ratioButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent?.includes('Widescreen'));
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
 
     act(() => {
       changeTextarea(prompt, 'A premium studio product photo.');
       changeInput(count, '2');
-      changeInput(seed, '42');
-      optimizer.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      ratioButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      clickButton(container!, 'image-ratio-16-9');
+      clickButton(container!, 'image-area-2k');
     });
 
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -142,15 +159,160 @@ describe('ImagePage', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: 'A premium studio product photo.',
-        aspectRatio: '16:9',
+        model: 'MiniMax-H3-Image',
         n: 2,
-        seed: 42,
-        promptOptimizer: true,
+        outputFormat: 'jpeg',
         responseFormat: 'url',
+        outputCompression: 95,
+        disablePromptEnhanced: false,
+        aspectRatio: '16:9',
+        area: '2K',
       }),
     }));
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
     expect(container!.textContent).toContain('Images generated and saved to backend Library');
+  });
+
+  it('never sends the legacy image-01 seed option', async () => {
+    authClientMocks.authFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'req-1',
+        imageUrls: [],
+        images: [],
+        metadata: { successCount: 0, failedCount: 0, totalCount: 0, outputFormat: 'jpeg', requestId: null, created: null, usage: null },
+        expiresAt: null,
+      }),
+    });
+
+    act(() => {
+      root!.render(<ImagePage />);
+    });
+
+    const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
+    act(() => {
+      changeTextarea(prompt, 'A premium studio product photo.');
+    });
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const body = JSON.parse(String(authClientMocks.authFetch.mock.calls[0]?.[1]?.body));
+    expect(body).not.toHaveProperty('seed');
+    expect(body).not.toHaveProperty('promptOptimizer');
+    expect(container!.querySelector('#image-seed')).toBeNull();
+  });
+
+  it('sends an explicit width x height size instead of the aspect ratio and area', async () => {
+    authClientMocks.authFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'req-1',
+        imageUrls: [],
+        images: [],
+        metadata: { successCount: 0, failedCount: 0, totalCount: 0, outputFormat: 'jpeg', requestId: null, created: null, usage: null },
+        expiresAt: null,
+      }),
+    });
+
+    act(() => {
+      root!.render(<ImagePage />);
+    });
+
+    const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
+    const size = container!.querySelector('#image-size') as HTMLInputElement;
+
+    act(() => {
+      changeTextarea(prompt, 'A premium studio product photo.');
+      changeInput(size, '2720x1536');
+    });
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const body = JSON.parse(String(authClientMocks.authFetch.mock.calls[0]?.[1]?.body));
+    expect(body.size).toBe('2720x1536');
+    expect(body).not.toHaveProperty('aspectRatio');
+    expect(body).not.toHaveProperty('area');
+  });
+
+  it('blocks disabling prompt enhancement without a fixed ratio or size', async () => {
+    act(() => {
+      root!.render(<ImagePage />);
+    });
+
+    const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
+    const optimizer = container!.querySelector('input[type="checkbox"]') as HTMLInputElement;
+
+    act(() => {
+      changeTextarea(prompt, 'A premium studio product photo.');
+      optimizer.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(authClientMocks.authFetch).not.toHaveBeenCalled();
+    expect(container!.textContent).toContain('Disable prompt enhancement');
+  });
+
+  it('reports per-item failures returned by the provider', async () => {
+    authClientMocks.authFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'req-1',
+        imageUrls: ['https://example.com/image-1.jpg'],
+        images: [
+          {
+            index: 0,
+            url: 'https://example.com/image-1.jpg',
+            size: '2720x1536',
+            revisedPrompt: 'An enhanced prompt.',
+            error: null,
+          },
+          {
+            index: 1,
+            url: null,
+            size: null,
+            revisedPrompt: null,
+            error: { code: '1027', message: 'output image failed content safety check' },
+          },
+        ],
+        metadata: {
+          successCount: 1,
+          failedCount: 1,
+          totalCount: 2,
+          outputFormat: 'jpeg',
+          requestId: 'req-1',
+          created: 1792308678,
+          usage: null,
+        },
+        expiresAt: null,
+      }),
+    });
+
+    act(() => {
+      root!.render(<ImagePage />);
+    });
+
+    const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
+    act(() => {
+      changeTextarea(prompt, 'A premium studio product photo.');
+    });
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(container!.textContent).toContain('output image failed content safety check');
+    expect(container!.querySelector('img')?.getAttribute('src')).toBe('https://example.com/image-1.jpg');
   });
 
   it('blocks empty prompts before calling the API', async () => {
@@ -171,9 +333,24 @@ describe('ImagePage', () => {
       ok: true,
       json: async () => ({
         id: 'generation-2',
-        imageUrls: ['https://example.com/image-2.png'],
-        metadata: { successCount: 1, failedCount: 0 },
-        expiresAt: 123456,
+        imageUrls: ['https://example.com/image-2.jpg'],
+        images: [{
+          index: 0,
+          url: 'https://example.com/image-2.jpg',
+          size: '1024x1024',
+          revisedPrompt: null,
+          error: null,
+        }],
+        metadata: {
+          successCount: 1,
+          failedCount: 0,
+          totalCount: 1,
+          outputFormat: 'jpeg',
+          requestId: 'generation-2',
+          created: null,
+          usage: null,
+        },
+        expiresAt: null,
       }),
     });
 
@@ -192,7 +369,7 @@ describe('ImagePage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(container!.querySelector('img')?.getAttribute('src')).toBe('https://example.com/image-2.png');
+    expect(container!.querySelector('img')?.getAttribute('src')).toBe('https://example.com/image-2.jpg');
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
     expect(container!.textContent).toContain('Images generated and saved to backend Library');
     expect(container!.textContent).not.toContain('Failed to generate images');

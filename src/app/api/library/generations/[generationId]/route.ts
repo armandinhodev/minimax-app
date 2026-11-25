@@ -10,6 +10,20 @@ interface RouteContext {
   params: Promise<{ generationId: string }>;
 }
 
+export async function GET(request: Request, context: RouteContext) {
+  const authError = requireAuth(request);
+  if (authError) return authError;
+
+  const { generationId } = await context.params;
+  const generation = new SQLiteGenerationRepository().findGeneration(generationId);
+
+  if (!generation) {
+    return NextResponse.json({ error: 'Generation not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ generation });
+}
+
 export async function DELETE(request: Request, context: RouteContext) {
   const authError = requireAuth(request);
   if (authError) return authError;

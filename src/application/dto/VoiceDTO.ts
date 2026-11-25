@@ -12,6 +12,10 @@ import { VoiceIdSchema } from '@/domain/value-objects/VoiceId';
  * NOTE: This schema is aligned with @/lib/validators CloneVoiceSchema.
  * Route Handlers should use @/lib/validators CloneVoiceSchema as the single
  * source of truth for inbound request parsing.
+ *
+ * Preview text is capped at 500 characters on purpose: MiniMax allows up to
+ * 1000, and every preview synthesis is billed per character.
+ * https://platform.minimax.io/docs/api-reference/voice-cloning-clone
  */
 export const CloneVoiceSchema = z.object({
   fileId: z.string().min(1, 'fileId is required'),

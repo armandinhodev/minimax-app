@@ -151,6 +151,41 @@ describe('LibraryPage backend source of truth', () => {
     });
   }
 
+  it('shows video playback, temporary URL warning and a video-only filter', async () => {
+    let downloadedUrl = '';
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { downloadedUrl = this.href; });
+    generations = [createGeneration(), createGeneration({
+      id: 'video-1', kind: 'video', source: 'video-generation', model: 'MiniMax-H3',
+      prompt: 'A seaside video', metadata: { providerStatus: 'succeeded' },
+      assets: [{ id: 'video-asset', kind: 'video', storageType: 'provider_url',
+        storageRef: 'https://example.com/video.mp4', format: 'mp4', mimeType: 'video/mp4',
+        sizeBytes: null, expiresAt: null, metadata: { temporaryUrl: true }, createdAt: 1 }],
+    })];
+    await renderPage();
+    expect(container!.querySelector('video')?.getAttribute('src')).toBe('https://example.com/video.mp4');
+    expect(container!.textContent).toContain('Temporary video URL');
+    const download = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download video');
+    act(() => { download!.click(); });
+    expect(downloadedUrl).toBe('https://example.com/video.mp4');
+    click.mockRestore();
+    const filter = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Videos');
+    expect(filter).toBeDefined();
+    act(() => { filter!.click(); });
+    expect(container!.textContent).toContain('A seaside video');
+    expect(container!.textContent).not.toContain('Hello from SQLite');
+  });
+
+  it('shows Context-IR text without offering a nonexistent video download', async () => {
+    generations = [createGeneration({
+      id: 'ir-1', kind: 'video', source: 'video-context-ir', assets: [],
+      metadata: { enhancedPrompt: 'An enhanced cinematic prompt', providerStatus: 'succeeded' },
+    })];
+    await renderPage();
+    expect(container!.textContent).toContain('An enhanced cinematic prompt');
+    expect(container!.querySelector('video')).toBeNull();
+    expect(Array.from(container!.querySelectorAll('button')).some((button) => button.textContent === 'Download')).toBe(false);
+  });
+
   it('loads backend records only and ignores localStorage history', async () => {
     localStorage.setItem('minimax_speech_history', JSON.stringify([{ id: 'local-1', type: 'tts', text: 'Local-only item', createdAt: 1 }]));
     const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
@@ -236,7 +271,11 @@ describe('LibraryPage backend source of truth', () => {
     expect(container!.textContent).toContain('Reference audio bytes were not saved.');
     expect(container!.textContent).toContain('Cover ID TTL');
     const action = Array.from(container!.querySelectorAll('a')).find((anchor) => anchor.textContent === 'Use in Cover Generation');
-    expect(action?.getAttribute('href')).toBe('/music?coverFeatureId=cover-feature-1&lyrics=%5BVerse%5D%0ACity+lights');
+    const actionUrl = new URL(action?.getAttribute('href') ?? '', 'http://localhost');
+    expect(actionUrl.pathname).toBe('/music');
+    expect(actionUrl.searchParams.get('coverPreprocessId')).toBe('cover-preprocess-1');
+    expect(actionUrl.searchParams.has('coverFeatureId')).toBe(false);
+    expect(actionUrl.searchParams.has('lyrics')).toBe(false);
     expect(container!.textContent).not.toContain('Missing audio');
   });
 

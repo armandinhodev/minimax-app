@@ -6,7 +6,19 @@
 
 import 'server-only';
 
-import type { FileMetadata, FilePurpose } from '@/domain/interfaces/IMiniMaxFileClient';
+import type { FileMetadata } from '@/domain/interfaces/IMiniMaxFileClient';
+import {
+  FileDeletePurposeSchema,
+  FileListPurposeSchema,
+  FileUploadPurposeSchema,
+  normalizeMiniMaxId,
+  quoteMiniMaxInt64Fields,
+  rawMiniMaxInt64,
+  stringifyMiniMaxJson,
+  type FileDeletePurpose,
+  type FileListPurpose,
+  type FileUploadPurpose,
+} from '@/application/dto/FileDTO';
 
 import {
   buildAuthHeader,
@@ -56,6 +68,24 @@ function isRetryableFileError(error: unknown): boolean {
 const FETCH_TIMEOUT_MS = 30_000;
 const DEFAULT_RETRY_OPTS = { maxRetries: 3, baseDelayMs: 500, maxDelayMs: 8_000 };
 
+/**
+ * Reject a purpose that MiniMax does not document for the target endpoint.
+ * Each File API endpoint accepts its own purpose subset.
+ */
+function assertPurpose<T extends string>(
+  schema: { options: readonly T[] },
+  purpose: string,
+  endpoint: 'upload' | 'list' | 'delete'
+): void {
+  if (!(schema.options as readonly string[]).includes(purpose)) {
+    throw new MiniMaxFileError(
+      `purpose must be one of: ${schema.options.join(', ')} for the ${endpoint} endpoint`,
+      0,
+      400
+    );
+  }
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -76,6 +106,16 @@ function resolveRetryDelayMs(
 function isJsonResponse(response: Response): boolean {
   const contentType = response.headers.get('content-type') ?? response.headers.get('Content-Type') ?? '';
   return /(^|\s|;|,)(application\/json|[^\s;,]+\+json)(\s|;|,|$)/i.test(contentType);
+}
+
+/**
+ * Parse a MiniMax File API JSON body.
+ *
+ * `file_id` is an int64, so the raw digits are quoted before parsing to keep
+ * them exact instead of losing precision in an IEEE-754 double.
+ */
+function parseFileApiJson<T>(text: string): T & { base_resp?: { status_code: number; status_msg: string } } {
+  return JSON.parse(quoteMiniMaxInt64Fields(text)) as T & { base_resp?: { status_code: number; status_msg: string } };
 }
 
 async function parseApplicationErrorResponse(response: Response): Promise<MiniMaxApiError | undefined> {
@@ -129,7 +169,7 @@ async function fetchWithRetry<T>(
         throw normalizeError(error);
       }
 
-      const data = await response.json() as T & { base_resp?: { status_code: number; status_msg: string } };
+      const data = parseFileApiJson<T>(await response.text());
       if (data?.base_resp && typeof data.base_resp.status_code === 'number' && data.base_resp.status_code !== 0) {
         const apiError = parseMiniMaxApplicationError(response.status, data.base_resp);
         const normalizedError = normalizeError(apiError);
@@ -233,8 +273,7 @@ async function fetchResponseWithRetry(
  * MiniMax File API client.
  * Handles upload, list, retrieve (metadata + URL), and delete.
  */
-export class MiniMaxFileClient {
-  private readonly apiKey: string;
+export class MiniMaxFileClient {  private readonly apiKey: string;
 
   constructor() {
     this.apiKey = requireMiniMaxApiKey();
@@ -247,8 +286,9 @@ export class MiniMaxFileClient {
   async uploadFile(
     fileContent: Buffer,
     fileName: string,
-    purpose: FilePurpose
+    purpose: FileUploadPurpose
   ): Promise<FileMetadata> {
+    assertPurpose(FileUploadPurposeSchema, purpose, 'upload');
     const url = withGroupId('/v1/files/upload', GROUP_ID);
 
     const formData = new FormData();
@@ -269,10 +309,7 @@ export class MiniMaxFileClient {
       { maxRetries: 2, baseDelayMs: 500, maxDelayMs: 5_000 }
     );
 
-    const rawFileId = data.file?.file_id;
-    const fileId = typeof rawFileId === 'string' || typeof rawFileId === 'number'
-      ? String(rawFileId).trim()
-      : '';
+    const fileId = normalizeMiniMaxId(data.file?.file_id);
     if (!fileId) throw new MiniMaxFileError('MiniMax returned an empty file ID', 0, 502);
 
     return {
@@ -288,7 +325,10 @@ export class MiniMaxFileClient {
    * List files, optionally filtered by purpose.
    * GET /v1/files/list?purpose=<purpose>
    */
-  async listFiles(purpose?: FilePurpose): Promise<FileMetadata[]> {
+  async listFiles(purpose?: FileListPurpose): Promise<FileMetadata[]> {
+    if (purpose !== undefined) {
+      assertPurpose(FileListPurposeSchema, purpose, 'list');
+    }
     const params = new URLSearchParams();
     if (purpose) params.set('purpose', purpose);
     if (GROUP_ID) params.set('group_id', GROUP_ID);
@@ -302,10 +342,10 @@ export class MiniMaxFileClient {
     );
 
     return (data.files ?? []).map((f) => ({
-      fileId: f.file_id,
-      fileName: f.file_name,
-      purpose: f.purpose as FilePurpose,
-      size: f.file_size ?? 0,
+      fileId: normalizeMiniMaxId(f.file_id) ?? '',
+      fileName: f.filename ?? f.file_name ?? '',
+      purpose: (f.purpose ?? '') as FileMetadata['purpose'],
+      size: f.bytes ?? f.file_size ?? 0,
       createdAt: f.created_at ?? Date.now(),
     }));
   }
@@ -341,7 +381,7 @@ export class MiniMaxFileClient {
           throw normalizeError(error);
         }
 
-        const data = await response.json() as MiniMaxFileRetrieveResponse;
+        const data = parseFileApiJson<MiniMaxFileRetrieveResponse>(await response.text());
         if (data?.base_resp && typeof data.base_resp.status_code === 'number' && data.base_resp.status_code !== 0) {
           const apiError = parseMiniMaxApplicationError(response.status, data.base_resp);
           const normalizedError = normalizeError(apiError);
@@ -365,10 +405,10 @@ export class MiniMaxFileClient {
         if (!downloadUrl) throw new MiniMaxFileError('MiniMax returned an empty download URL', 0, 502);
 
         return {
-          fileId: data.file?.file_id ?? fileId,
-          fileName: data.file?.file_name ?? '',
-          purpose: data.file?.purpose as FilePurpose,
-          size: data.file?.file_size ?? 0,
+          fileId: normalizeMiniMaxId(data.file?.file_id) ?? fileId,
+          fileName: data.file?.filename ?? data.file?.file_name ?? '',
+          purpose: (data.file?.purpose ?? '') as FileMetadata['purpose'],
+          size: data.file?.bytes ?? data.file?.file_size ?? 0,
           createdAt: data.file?.created_at ?? Date.now(),
           downloadUrl,
         };
@@ -392,9 +432,14 @@ export class MiniMaxFileClient {
    * Delete a file.
    * POST /v1/files/delete with { file_id, purpose }
    */
-  async deleteFile(fileId: string, purpose: FilePurpose): Promise<void> {
+  async deleteFile(fileId: string, purpose: FileDeletePurpose): Promise<void> {
+    assertPurpose(FileDeletePurposeSchema, purpose, 'delete');
     const url = withGroupId('/v1/files/delete', GROUP_ID);
-    const body = { file_id: fileId, purpose };
+    const rawFileId = rawMiniMaxInt64(fileId);
+    if (!rawFileId) {
+      throw new MiniMaxFileError('file_id must be a positive numeric MiniMax file ID', 0, 400);
+    }
+    const body = stringifyMiniMaxJson({ file_id: rawFileId, purpose });
 
     await fetchWithRetry<Record<string, unknown>>(
       url,
@@ -404,7 +449,7 @@ export class MiniMaxFileClient {
           Authorization: buildAuthHeader(this.apiKey),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body,
       },
       this.apiKey,
       'file.delete'
@@ -442,8 +487,10 @@ interface MiniMaxFileUploadResponse {
   base_resp?: { status_code: number; status_msg: string };
   file?: {
     file_id?: string | number | null;
-    filename: string;
-    bytes: number;
+    filename?: string;
+    file_name?: string;
+    bytes?: number;
+    file_size?: number;
     created_at: number;
     purpose: string;
   };
@@ -452,10 +499,12 @@ interface MiniMaxFileUploadResponse {
 interface MiniMaxFileListResponse {
   base_resp?: { status_code: number; status_msg: string };
   files?: Array<{
-    file_id: string;
-    file_name: string;
+    file_id: string | number;
+    filename?: string;
+    file_name?: string;
     purpose: string;
-    file_size: number;
+    bytes?: number;
+    file_size?: number;
     created_at: number;
   }>;
 }
@@ -463,10 +512,12 @@ interface MiniMaxFileListResponse {
 interface MiniMaxFileRetrieveResponse {
   base_resp?: { status_code: number; status_msg: string };
   file?: {
-    file_id: string;
-    file_name: string;
+    file_id: string | number;
+    filename?: string;
+    file_name?: string;
     purpose: string;
-    file_size: number;
+    bytes?: number;
+    file_size?: number;
     created_at: number;
     download_url: string;
   };

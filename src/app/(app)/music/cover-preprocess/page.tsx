@@ -30,6 +30,7 @@ const ALLOWED_AUDIO_MIME_TYPES = new Set([
 const ALLOWED_AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg']);
 
 interface CoverPreprocessResult {
+  coverPreprocessId?: string;
   coverFeatureId: string;
   formattedLyrics: string;
   structureResult: string;
@@ -129,10 +130,9 @@ function readFileAsBase64(file: File): Promise<string> {
 }
 
 function buildCoverGenerationHref(result: CoverPreprocessResult): string {
-  const params = new URLSearchParams({ coverFeatureId: result.coverFeatureId });
-  if (result.formattedLyrics.trim().length > 0) {
-    params.set('lyrics', result.formattedLyrics);
-  }
+  const params = new URLSearchParams(result.coverPreprocessId
+    ? { coverPreprocessId: result.coverPreprocessId }
+    : { coverFeatureId: result.coverFeatureId });
   return `/music?${params.toString()}`;
 }
 

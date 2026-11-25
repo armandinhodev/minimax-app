@@ -112,6 +112,16 @@ describe('AppLayout navigation', () => {
     ]));
   });
 
+  it('exposes the video studio without changing the existing active navigation', () => {
+    navigationMocks.pathname = '/video';
+    renderLayout();
+    expect(getSectionToggle('video')?.getAttribute('aria-expanded')).toBe('true');
+    expect(getLinks()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ href: '/video', text: expect.stringContaining('Video Studio') }),
+    ]));
+    expect(getLinks().filter((link) => link.current === 'page')).toHaveLength(1);
+  });
+
   it('expands an inactive section without changing the active page', () => {
     navigationMocks.pathname = '/music/lyrics';
     renderLayout();

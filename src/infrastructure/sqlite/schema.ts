@@ -160,7 +160,7 @@ const MIGRATIONS: Migration[] = [
             CREATE INDEX idx_assets_kind_created_at ON assets(kind, created_at DESC);
             CREATE INDEX idx_assets_expires_at ON assets(expires_at);
           `);
-          if (db.pragma('foreign_key_check').length > 0) {
+          if ((db.pragma('foreign_key_check') as unknown[]).length > 0) {
             throw new Error('Library migration refused: existing asset links are invalid.');
           }
         })();

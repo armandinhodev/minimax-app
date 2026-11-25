@@ -6,27 +6,56 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 
-const PROMPT_MAX_LENGTH = 1500;
-const MAX_REFERENCE_IMAGE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_REFERENCE_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
+const PROMPT_MAX_LENGTH = 32_000;
+const MAX_IMAGE_COUNT = 10;
+const MAX_REFERENCE_IMAGES = 16;
+const MAX_REFERENCE_BYTES = 64 * 1024 * 1024;
+const ALLOWED_REFERENCE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+]);
 
-const ASPECT_RATIO_OPTIONS = [
-  { value: '1:1', label: 'Square', size: '1024 x 1024', hint: 'Profile and social crops' },
-  { value: '16:9', label: 'Widescreen', size: '1280 x 720', hint: 'Hero images' },
-  { value: '4:3', label: 'Classic', size: '1152 x 864', hint: 'Editorial frames' },
-  { value: '3:2', label: 'Photo', size: '1248 x 832', hint: 'Portrait sessions' },
-  { value: '2:3', label: 'Portrait', size: '832 x 1248', hint: 'Posters' },
-  { value: '3:4', label: 'Tall card', size: '864 x 1152', hint: 'Profile cards' },
-  { value: '9:16', label: 'Story', size: '720 x 1280', hint: 'Mobile stories' },
-  { value: '21:9', label: 'Cinematic', size: '1344 x 576', hint: 'Banners' },
+const MODEL_OPTIONS = [
+  { value: 'MiniMax-H3-Image', id: 'image-edit-model-standard', label: 'MiniMax-H3-Image', hint: 'Balanced quality' },
+  { value: 'MiniMax-H3-Image-Highspeed', id: 'image-edit-model-highspeed', label: 'MiniMax-H3-Image-Highspeed', hint: 'Faster, same limits' },
 ] as const;
 
+const ASPECT_RATIO_OPTIONS = [
+  { value: 'auto', label: 'Auto', hint: 'Chosen by MiniMax' },
+  { value: '1:1', label: 'Square', hint: 'Profile and social crops' },
+  { value: '16:9', label: 'Widescreen', hint: 'Hero images' },
+  { value: '4:3', label: 'Classic', hint: 'Editorial frames' },
+  { value: '3:2', label: 'Photo', hint: 'Portrait sessions' },
+  { value: '2:3', label: 'Portrait', hint: 'Posters' },
+  { value: '3:4', label: 'Tall card', hint: 'Profile cards' },
+  { value: '9:16', label: 'Story', hint: 'Mobile stories' },
+  { value: '21:9', label: 'Cinematic', hint: 'Banners' },
+] as const;
+
+const AREA_OPTIONS = [
+  { value: '1K', label: '1K', hint: '1024 x 1024 target' },
+  { value: '2K', label: '2K', hint: '2048 x 2048 target' },
+  { value: '4K', label: '4K', hint: '4096 x 4096 target' },
+] as const;
+
+const OUTPUT_FORMAT_OPTIONS = [
+  { value: 'jpeg', label: 'JPEG', hint: 'Default' },
+  { value: 'png', label: 'PNG', hint: 'Lossless' },
+  { value: 'webp', label: 'WEBP', hint: 'Small files' },
+] as const;
+
+type Model = (typeof MODEL_OPTIONS)[number]['value'];
 type AspectRatio = (typeof ASPECT_RATIO_OPTIONS)[number]['value'];
+type Area = (typeof AREA_OPTIONS)[number]['value'];
+type OutputFormat = (typeof OUTPUT_FORMAT_OPTIONS)[number]['value'];
 
 interface ReferenceImage {
   name: string;
@@ -34,15 +63,37 @@ interface ReferenceImage {
   dataUrl: string;
 }
 
+interface ImageResultItem {
+  index: number;
+  url: string | null;
+  size: string | null;
+  revisedPrompt: string | null;
+  error: { code: string | null; message: string } | null;
+}
+
 interface ImageGenerationResult {
   id: string;
   imageUrls: string[];
-  aspectRatio: AspectRatio;
+  images: ImageResultItem[];
   metadata: {
     successCount: number;
     failedCount: number;
+    totalCount: number;
+    outputFormat: string;
+    requestId: string | null;
   };
-  expiresAt: number;
+  expiresAt: number | null;
+}
+
+function toDisplayItems(result: ImageGenerationResult): ImageResultItem[] {
+  if (result.images?.length) return result.images;
+  return result.imageUrls.map((url, index) => ({
+    index,
+    url,
+    size: null,
+    revisedPrompt: null,
+    error: null,
+  }));
 }
 
 function formatBytes(bytes: number): string {
@@ -51,10 +102,10 @@ function formatBytes(bytes: number): string {
 
 function validateReferenceFile(file: File): string | null {
   if (!ALLOWED_REFERENCE_MIME_TYPES.has(file.type)) {
-    return 'Reference image must be a JPG, JPEG, or PNG file.';
+    return 'Reference images must be JPG, JPEG, PNG, WEBP, HEIC or HEIF files.';
   }
-  if (file.size >= MAX_REFERENCE_IMAGE_BYTES) {
-    return `Reference image must be smaller than 10MB. Selected file is ${formatBytes(file.size)}.`;
+  if (file.size >= MAX_REFERENCE_BYTES) {
+    return `Reference images must be smaller than 64MB. Selected file is ${formatBytes(file.size)}.`;
   }
   return null;
 }
@@ -80,12 +131,15 @@ function downloadImageUrl(url: string, filename: string): void {
 }
 
 export default function ImageToImagePage() {
-  const [referenceImage, setReferenceImage] = useState<ReferenceImage | null>(null);
+  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [prompt, setPrompt] = useState('');
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
+  const [model, setModel] = useState<Model>('MiniMax-H3-Image');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
+  const [area, setArea] = useState<Area>('4K');
+  const [customSize, setCustomSize] = useState('');
   const [imageCount, setImageCount] = useState(1);
-  const [seed, setSeed] = useState('');
-  const [promptOptimizer, setPromptOptimizer] = useState(false);
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>('jpeg');
+  const [outputCompression, setOutputCompression] = useState(95);
   const [isLoading, setIsLoading] = useState(false);
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
@@ -93,37 +147,52 @@ export default function ImageToImagePage() {
   const [actionStatus, setActionStatus] = useState<string | null>(null);
 
   const remainingCharacters = PROMPT_MAX_LENGTH - prompt.length;
-  const selectedRatio = ASPECT_RATIO_OPTIONS.find((option) => option.value === aspectRatio) ?? ASPECT_RATIO_OPTIONS[0];
-  const resultRatio = result
-    ? ASPECT_RATIO_OPTIONS.find((option) => option.value === result.aspectRatio) ?? selectedRatio
-    : selectedRatio;
+  const trimmedSize = customSize.trim();
+  const usesCustomSize = trimmedSize.length > 0;
+  const resultRatio = ASPECT_RATIO_OPTIONS.find((option) => option.value === aspectRatio) ?? ASPECT_RATIO_OPTIONS[0];
+  const displayItems = result ? toDisplayItems(result) : [];
+  const successfulItems = displayItems.filter((item) => item.url !== null);
+  const failedItems = displayItems.filter((item) => item.error !== null);
 
-  const handleReferenceImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0] ?? null;
+  const handleReferenceImagesChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? []);
     setResult(null);
     setActionStatus(null);
 
-    if (!file) {
-      setReferenceImage(null);
+    if (files.length === 0) {
+      setReferenceImages([]);
       return;
     }
 
-    const validationError = validateReferenceFile(file);
-    if (validationError) {
-      setReferenceImage(null);
-      setError({ code: null, message: validationError });
+    if (files.length > MAX_REFERENCE_IMAGES) {
+      setReferenceImages([]);
+      setError({ code: null, message: `You can attach at most ${MAX_REFERENCE_IMAGES} reference images.` });
       event.currentTarget.value = '';
       return;
+    }
+
+    for (const file of files) {
+      const validationError = validateReferenceFile(file);
+      if (validationError) {
+        setReferenceImages([]);
+        setError({ code: null, message: validationError });
+        event.currentTarget.value = '';
+        return;
+      }
     }
 
     setIsReadingFile(true);
     setError(null);
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setReferenceImage({ name: file.name, size: file.size, dataUrl });
+      const loaded = await Promise.all(files.map(async (file) => ({
+        name: file.name,
+        size: file.size,
+        dataUrl: await readFileAsDataUrl(file),
+      })));
+      setReferenceImages(loaded);
     } catch {
-      setReferenceImage(null);
-      setError({ code: null, message: 'Could not read the reference image. Choose another file and try again.' });
+      setReferenceImages([]);
+      setError({ code: null, message: 'Could not read the reference images. Choose other files and try again.' });
     } finally {
       setIsReadingFile(false);
     }
@@ -131,26 +200,29 @@ export default function ImageToImagePage() {
 
   const handleGenerate = async () => {
     const trimmedPrompt = prompt.trim();
-    const parsedSeed = seed.trim() ? Number(seed.trim()) : undefined;
 
-    if (!referenceImage) {
-      setError({ code: null, message: 'Upload a reference portrait before generating.' });
+    if (referenceImages.length === 0) {
+      setError({ code: null, message: 'Attach at least one reference image before generating.' });
       return;
     }
     if (!trimmedPrompt) {
-      setError({ code: null, message: 'Please describe how MiniMax should transform the reference image.' });
+      setError({ code: null, message: 'Please describe how MiniMax should transform the reference images.' });
       return;
     }
     if (trimmedPrompt.length > PROMPT_MAX_LENGTH) {
-      setError({ code: null, message: 'Prompt exceeds 1,500 characters.' });
+      setError({ code: null, message: 'Prompt exceeds 32,000 characters.' });
       return;
     }
-    if (!Number.isInteger(imageCount) || imageCount < 1 || imageCount > 9) {
-      setError({ code: null, message: 'Choose between 1 and 9 images.' });
+    if (!Number.isInteger(imageCount) || imageCount < 1 || imageCount > MAX_IMAGE_COUNT) {
+      setError({ code: null, message: `Choose between 1 and ${MAX_IMAGE_COUNT} images.` });
       return;
     }
-    if (parsedSeed !== undefined && !Number.isInteger(parsedSeed)) {
-      setError({ code: null, message: 'Seed must be a whole number.' });
+    if (!Number.isInteger(outputCompression) || outputCompression < 0 || outputCompression > 100) {
+      setError({ code: null, message: 'Output compression must be a whole number between 0 and 100.' });
+      return;
+    }
+    if (usesCustomSize && !/^\d+x\d+$/.test(trimmedSize)) {
+      setError({ code: null, message: 'Custom size must use the WIDTHxHEIGHT format, for example 2720x1536.' });
       return;
     }
 
@@ -159,19 +231,29 @@ export default function ImageToImagePage() {
     setIsLoading(true);
     setResult(null);
 
+    const body: Record<string, unknown> = {
+      prompt: trimmedPrompt,
+      model,
+      n: imageCount,
+      outputFormat,
+      responseFormat: 'url',
+      outputCompression,
+    };
+
+    if (usesCustomSize) {
+      body.size = trimmedSize;
+    } else {
+      body.aspectRatio = aspectRatio;
+      body.area = area;
+    }
+
+    body.images = referenceImages.map((reference) => ({ imageUrl: reference.dataUrl }));
+
     try {
       const response = await authFetch('/api/minimax/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: trimmedPrompt,
-          aspectRatio,
-          n: imageCount,
-          seed: parsedSeed,
-          promptOptimizer,
-          responseFormat: 'url',
-          subjectReference: [{ type: 'character', imageFile: referenceImage.dataUrl }],
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -180,10 +262,9 @@ export default function ImageToImagePage() {
         return;
       }
 
-      const data = await response.json() as Omit<ImageGenerationResult, 'aspectRatio'>;
-      const generatedResult = { ...data, aspectRatio };
-      setResult(generatedResult);
-      setActionStatus('Images generated and saved to backend Library. MiniMax image URLs expire after 24 hours, so download final assets soon.');
+      const data = await response.json() as ImageGenerationResult;
+      setResult(data);
+      setActionStatus('Images generated and saved to backend Library. Provider URLs are not guaranteed to stay available, so download the final assets.');
     } catch {
       setError({ code: null, message: 'Failed to generate images. Check your connection and try again.' });
     } finally {
@@ -197,47 +278,47 @@ export default function ImageToImagePage() {
         <Box maxW="50rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Image to Image</h1>
           <Box color="gray.600" mt={1}>
-            Transform a reference portrait with MiniMax Image while keeping uploads and API keys server-safe.
+            Transform 1 to 16 reference images with MiniMax-H3-Image while keeping uploads and API keys server-safe.
           </Box>
         </Box>
         <Box border="1px solid" borderColor="blue.100" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
-          Best results come from one clear, front-facing portrait. Generated URL results expire after 24 hours.
+          Image edits always apply prompt enhancement. Reference images are forwarded to MiniMax, never fetched by this server.
         </Box>
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.25fr)' }} gap={6} alignItems="start">
         <Card accent="blue">
           <CardHeader>
-            <CardTitle>Reference and Direction</CardTitle>
+            <CardTitle>References and Direction</CardTitle>
             <CardDescription>
-              Upload a JPG or PNG portrait under 10MB, then describe the transformation, style, composition, and mood.
+              Attach JPG, PNG, WEBP, HEIC or HEIF images under 64MB each, then describe the transformation, style, composition, and mood.
             </CardDescription>
           </CardHeader>
           <CardContent display="grid" gap={4}>
             <Box display="grid" gap={2}>
-              <Label htmlFor="reference-image">Reference Image</Label>
+              <Label htmlFor="reference-images">Reference Images</Label>
               <Input
-                id="reference-image"
+                id="reference-images"
                 type="file"
-                accept="image/jpeg,image/png"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                 disabled={isLoading || isReadingFile}
-                onChange={handleReferenceImageChange}
+                onChange={handleReferenceImagesChange}
               />
               <Box color="gray.600" fontSize="sm">
-                Use a single front-facing portrait for the most reliable character reference.
+                Attach between 1 and {MAX_REFERENCE_IMAGES} images. The upload order is the picture number used in your prompt.
               </Box>
             </Box>
 
-            {referenceImage && (
+            {referenceImages.length > 0 && (
               <Box border="1px solid" borderColor="blue.100" borderRadius="xl" overflow="hidden" bg="white">
-                <img
-                  src={referenceImage.dataUrl}
-                  alt="Reference portrait preview"
-                  style={{ width: '100%', maxHeight: '22rem', objectFit: 'contain', display: 'block', backgroundColor: '#f8fafc' }}
-                />
-                <Box display="flex" justifyContent="space-between" gap={2} p="0.75rem" color="gray.600" fontSize="sm" flexWrap="wrap">
-                  <span>{referenceImage.name}</span>
-                  <span>{formatBytes(referenceImage.size)}</span>
+                <Box display="grid" gap={2} p="0.75rem">
+                  {referenceImages.map((reference, index) => (
+                    <Box key={`${reference.name}-${index}`} display="flex" alignItems="center" justifyContent="space-between" gap={2} color="gray.600" fontSize="sm">
+                      <span>{index + 1}. {reference.name}</span>
+                      <span>{formatBytes(reference.size)}</span>
+                    </Box>
+                  ))}
                 </Box>
               </Box>
             )}
@@ -256,27 +337,81 @@ export default function ImageToImagePage() {
                 disabled={isLoading}
                 maxLength={PROMPT_MAX_LENGTH + 100}
                 minH="9rem"
-                placeholder="Example: Keep the same person, create a premium editorial portrait with soft studio lighting, navy tailoring, clean beige backdrop, natural skin texture, refined magazine style."
+                placeholder="Example: Replace the cat in picture 1 with the Shiba Inu in picture 2, keep the background and lighting unchanged."
               />
             </Box>
 
             <Box display="grid" gap={2}>
-              <Label>Aspect Ratio</Label>
+              <Label>Model</Label>
               <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)' }}>
+                {MODEL_OPTIONS.map((option) => {
+                  const isSelected = option.value === model;
+                  return (
+                    <Button
+                      key={option.value}
+                      id={option.id}
+                      variant={isSelected ? 'solid' : 'outline'}
+                      colorPalette={isSelected ? 'blue' : 'gray'}
+                      aria-pressed={isSelected}
+                      onClick={() => setModel(option.value)}
+                      disabled={isLoading}
+                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                    >
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                        <strong>{option.label}</strong>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
+                      </span>
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+
+            <Box display="grid" gap={2}>
+              <Label>Aspect Ratio</Label>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, 1fr)' }}>
                 {ASPECT_RATIO_OPTIONS.map((option) => {
                   const isSelected = option.value === aspectRatio;
                   return (
                     <Button
                       key={option.value}
+                      id={`image-edit-ratio-${option.value.replace(':', '-')}`}
                       variant={isSelected ? 'solid' : 'outline'}
                       colorPalette={isSelected ? 'blue' : 'gray'}
+                      aria-pressed={isSelected}
                       onClick={() => setAspectRatio(option.value)}
-                      disabled={isLoading}
+                      disabled={isLoading || usesCustomSize}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
                       <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
                         <strong>{option.label} ({option.value})</strong>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.size} · {option.hint}</span>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
+                      </span>
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+
+            <Box display="grid" gap={2}>
+              <Label>Area Level</Label>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, 1fr)' }}>
+                {AREA_OPTIONS.map((option) => {
+                  const isSelected = option.value === area;
+                  return (
+                    <Button
+                      key={option.value}
+                      id={`image-edit-area-${option.value.toLowerCase()}`}
+                      variant={isSelected ? 'solid' : 'outline'}
+                      colorPalette={isSelected ? 'blue' : 'gray'}
+                      aria-pressed={isSelected}
+                      onClick={() => setArea(option.value)}
+                      disabled={isLoading || usesCustomSize}
+                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                    >
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                        <strong>{option.label}</strong>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
                     </Button>
                   );
@@ -286,39 +421,69 @@ export default function ImageToImagePage() {
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
               <Box display="grid" gap={2}>
+                <Label htmlFor="image-edit-size">Custom Size (optional)</Label>
+                <Input
+                  id="image-edit-size"
+                  value={customSize}
+                  disabled={isLoading}
+                  placeholder="2720x1536"
+                  onChange={(event) => setCustomSize(event.currentTarget.value)}
+                />
+                <Box color="gray.600" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
+              </Box>
+              <Box display="grid" gap={2}>
                 <Label htmlFor="image-edit-count">Images</Label>
                 <Input
                   id="image-edit-count"
                   type="number"
                   min={1}
-                  max={9}
+                  max={MAX_IMAGE_COUNT}
                   value={imageCount}
                   disabled={isLoading}
                   onChange={(event) => setImageCount(Number(event.currentTarget.value))}
                 />
-                <Box color="gray.600" fontSize="xs">Generate 1 to 9 variations.</Box>
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="image-edit-seed">Seed (optional)</Label>
-                <Input
-                  id="image-edit-seed"
-                  type="number"
-                  inputMode="numeric"
-                  value={seed}
-                  disabled={isLoading}
-                  placeholder="Random"
-                  onChange={(event) => setSeed(event.currentTarget.value)}
-                />
-                <Box color="gray.600" fontSize="xs">Reuse a seed for more reproducible directions.</Box>
+                <Box color="gray.600" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
               </Box>
             </Box>
 
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="blue.100" borderRadius="lg" p="0.75rem" bg="white">
-              <Box>
-                <Label htmlFor="image-edit-prompt-optimizer">Prompt Optimizer</Label>
-                <Box color="gray.600" fontSize="sm">Let MiniMax refine the transformation prompt.</Box>
+            <Box display="grid" gap={2}>
+              <Label>Output Format</Label>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, 1fr)' }}>
+                {OUTPUT_FORMAT_OPTIONS.map((option) => {
+                  const isSelected = option.value === outputFormat;
+                  return (
+                    <Button
+                      key={option.value}
+                      id={`image-edit-format-${option.value}`}
+                      variant={isSelected ? 'solid' : 'outline'}
+                      colorPalette={isSelected ? 'blue' : 'gray'}
+                      aria-pressed={isSelected}
+                      onClick={() => setOutputFormat(option.value)}
+                      disabled={isLoading}
+                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                    >
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                        <strong>{option.label}</strong>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
+                      </span>
+                    </Button>
+                  );
+                })}
               </Box>
-              <Switch checked={promptOptimizer} onChange={setPromptOptimizer} disabled={isLoading} />
+            </Box>
+
+            <Box display="grid" gap={2}>
+              <Label htmlFor="image-edit-compression">Output Compression</Label>
+              <Input
+                id="image-edit-compression"
+                type="number"
+                min={0}
+                max={100}
+                value={outputCompression}
+                disabled={isLoading || outputFormat === 'png'}
+                onChange={(event) => setOutputCompression(Number(event.currentTarget.value))}
+              />
+              <Box color="gray.600" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
             </Box>
 
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
@@ -328,8 +493,8 @@ export default function ImageToImagePage() {
               </Box>
             )}
 
-            <Button onClick={handleGenerate} disabled={isLoading || isReadingFile || !referenceImage || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH} colorPalette="blue">
-              {isLoading ? 'Generating images...' : isReadingFile ? 'Preparing reference...' : 'Generate Images'}
+            <Button onClick={handleGenerate} disabled={isLoading || isReadingFile || referenceImages.length === 0 || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH} colorPalette="blue">
+              {isLoading ? 'Generating images...' : isReadingFile ? 'Preparing references...' : 'Generate Images'}
             </Button>
           </CardContent>
         </Card>
@@ -346,39 +511,49 @@ export default function ImageToImagePage() {
           <CardContent display="grid" gap={4}>
             {isLoading && (
               <Box border="1px dashed" borderColor="blue.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
-                Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} from your reference portrait...
+                Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} from your reference images...
               </Box>
             )}
 
             {!isLoading && !result && (
               <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
-                Upload a clean portrait, describe the desired direction, then generate. Results are saved to backend Library automatically.
+                Attach your reference images, describe the desired direction, then generate. Results are saved to backend Library automatically.
               </Box>
             )}
 
-            {result && (
+            {result && successfulItems.length > 0 && (
               <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
-                {result.imageUrls.map((url, index) => (
-                  <Box key={`${url}-${index}`} border="1px solid" borderColor="green.100" borderRadius="xl" overflow="hidden" bg="white" boxShadow="sm">
+                {successfulItems.map((item) => (
+                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="green.100" borderRadius="xl" overflow="hidden" bg="white" boxShadow="sm">
                     <img
-                      src={url}
-                      alt={`Generated image ${index + 1}`}
+                      src={item.url ?? ''}
+                      alt={`Generated image ${item.index + 1}`}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: '100%', aspectRatio: result.aspectRatio.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: '#f9fafb' }}
+                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: '#f9fafb' }}
                     />
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
-                      <Box color="gray.600" fontSize="sm">Image {index + 1}</Box>
+                      <Box color="gray.600" fontSize="sm">Image {item.index + 1}{item.size ? ` · ${item.size}` : ''}</Box>
                       <Box display="flex" gap={2}>
-                        <Button variant="outline" colorPalette="blue" size="sm" onClick={() => window.open(url, '_blank')}>
+                        <Button variant="outline" colorPalette="blue" size="sm" onClick={() => window.open(item.url ?? '', '_blank')}>
                           Open
                         </Button>
-                        <Button colorPalette="green" size="sm" onClick={() => downloadImageUrl(url, `minimax-image-edit-${result.id}-${index + 1}.png`)}>
+                        <Button colorPalette="green" size="sm" onClick={() => downloadImageUrl(item.url ?? '', `minimax-image-edit-${result.id}-${item.index + 1}.jpg`)}>
                           Download
                         </Button>
                       </Box>
                     </Box>
                   </Box>
+                ))}
+              </Box>
+            )}
+
+            {result && failedItems.length > 0 && (
+              <Box border="1px solid" borderColor="red.100" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="white" p="0.75rem" color="red.800" fontSize="sm" display="grid" gap="0.25rem">
+                {failedItems.map((item) => (
+                  <span key={`failure-${item.index}`}>
+                    Image {item.index + 1} failed{item.error?.code ? ` (${item.error.code})` : ''}: {item.error?.message}
+                  </span>
                 ))}
               </Box>
             )}

@@ -4,7 +4,7 @@
 
 import type { IMiniMaxFileClient } from '@/domain/interfaces/IMiniMaxFileClient';
 import { DeleteFileSchema } from '@/lib/validators';
-import type { FilePurpose } from '@/application/dto/FileDTO';
+import type { FileDeletePurpose } from '@/application/dto/FileDTO';
 
 export class DeleteFileValidationError extends Error {
   constructor(message: string) {
@@ -24,7 +24,7 @@ export class DeleteFileUseCase {
    */
   async execute(request: {
     fileId: string;
-    purpose: FilePurpose;
+    purpose: FileDeletePurpose;
   }): Promise<void> {
     const parsed = DeleteFileSchema.safeParse(request);
     if (!parsed.success) {

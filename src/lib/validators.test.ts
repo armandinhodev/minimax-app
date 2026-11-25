@@ -106,17 +106,17 @@ describe('AsyncT2ASubmitSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts text up to 1,000,000 characters', () => {
+  it('accepts inline text up to 100,000 characters', () => {
     const result = AsyncT2ASubmitSchema.safeParse({
-      text: 'a'.repeat(1_000_000),
+      text: 'a'.repeat(100_000),
       voiceId: 'sys_male_english_1',
     });
     expect(result.success).toBe(true);
   });
 
-  it('rejects text exceeding 1,000,000 characters', () => {
+  it('rejects inline text exceeding 100,000 characters', () => {
     const result = AsyncT2ASubmitSchema.safeParse({
-      text: 'a'.repeat(1_000_001),
+      text: 'a'.repeat(100_001),
       voiceId: 'sys_male_english_1',
     });
     expect(result.success).toBe(false);
@@ -133,11 +133,11 @@ describe('GenerateImageRequestSchema', () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.model).toBe('image-01');
-      expect(result.data.aspectRatio).toBe('1:1');
+      expect(result.data.model).toBe('MiniMax-H3-Image');
+      expect(result.data.aspectRatio).toBeUndefined();
       expect(result.data.responseFormat).toBe('url');
       expect(result.data.n).toBe(1);
-      expect(result.data.promptOptimizer).toBe(false);
+      expect(result.data.disablePromptEnhanced).toBe(false);
     }
   });
 
@@ -146,33 +146,32 @@ describe('GenerateImageRequestSchema', () => {
       prompt: 'A cinematic landscape with soft sunrise lighting.',
       aspectRatio: '21:9',
       n: 9,
-      seed: 12345,
-      promptOptimizer: true,
+      disablePromptEnhanced: true,
     });
 
     expect(result.success).toBe(true);
   });
 
-  it('accepts a MiniMax image-to-image subject reference Data URL', () => {
+  it('accepts an H3 image edit reference Data URL', () => {
     const result = GenerateImageRequestSchema.safeParse({
       prompt: 'Create an editorial portrait with soft studio lighting.',
-      subjectReference: [{ type: 'character', imageFile: referenceImageDataUrl }],
+      images: [{ imageUrl: referenceImageDataUrl }],
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.subjectReference).toEqual([{ type: 'character', imageFile: referenceImageDataUrl }]);
+      expect(result.data.images).toEqual([{ imageUrl: referenceImageDataUrl }]);
     }
   });
 
-  it('rejects invalid image-to-image reference inputs', () => {
+  it('rejects invalid or unsupported legacy image reference inputs', () => {
     expect(GenerateImageRequestSchema.safeParse({
       prompt: 'test',
-      subjectReference: [{ type: 'character', imageFile: 'https://example.com/portrait.jpg' }],
+      images: [{ imageUrl: 'javascript:alert(1)' }],
     }).success).toBe(false);
     expect(GenerateImageRequestSchema.safeParse({
       prompt: 'test',
-      subjectReference: [{ type: 'character', imageFile: `data:image/gif;base64,${Buffer.from('portrait').toString('base64')}` }],
+      images: [{ imageUrl: `data:image/gif;base64,${Buffer.from('portrait').toString('base64')}` }],
     }).success).toBe(false);
     expect(GenerateImageRequestSchema.safeParse({
       prompt: 'test',
@@ -180,14 +179,14 @@ describe('GenerateImageRequestSchema', () => {
     }).success).toBe(false);
     expect(GenerateImageRequestSchema.safeParse({
       prompt: 'test',
-      subjectReference: [{ type: 'character', imageFile: `data:image/png;base64,${'a'.repeat(13_981_016)}` }],
+      images: [],
     }).success).toBe(false);
   });
 
 
-  it('rejects prompts exceeding 1,500 characters', () => {
+  it('rejects prompts exceeding 32,000 characters', () => {
     const result = GenerateImageRequestSchema.safeParse({
-      prompt: 'a'.repeat(1501),
+      prompt: 'a'.repeat(32001),
     });
 
     expect(result.success).toBe(false);
@@ -202,10 +201,11 @@ describe('GenerateImageRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('requires width and height together and divisible by 8', () => {
+  it('validates the H3 size format and rejects obsolete dimension properties', () => {
     expect(GenerateImageRequestSchema.safeParse({ prompt: 'test', width: 1024 }).success).toBe(false);
     expect(GenerateImageRequestSchema.safeParse({ prompt: 'test', width: 1025, height: 1024 }).success).toBe(false);
-    expect(GenerateImageRequestSchema.safeParse({ prompt: 'test', width: 1024, height: 1024 }).success).toBe(true);
+    expect(GenerateImageRequestSchema.safeParse({ prompt: 'test', size: '1024x1024' }).success).toBe(true);
+    expect(GenerateImageRequestSchema.safeParse({ prompt: 'test', size: '1024x1024', aspectRatio: '1:1' }).success).toBe(false);
   });
 });
 

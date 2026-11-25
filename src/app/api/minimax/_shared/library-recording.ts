@@ -1,14 +1,15 @@
-import type { CreateLibraryAssetDTO, CreateLibraryGenerationDTO } from '@/application/dto/LibraryDTO';
+import type { CreateLibraryAssetDTO, CreateLibraryGenerationDTO, LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
 import { RecordGenerationUseCase } from '@/application/use-cases/library/RecordGeneration';
 import { decodeAssetPayload, writeLocalAsset } from '@/infrastructure/assets/LocalAssetStorage';
 import { SQLiteGenerationRepository } from '@/infrastructure/sqlite/SQLiteGenerationRepository';
 
-export function recordGenerationBestEffort(input: CreateLibraryGenerationDTO): void {
+export function recordGenerationBestEffort(input: CreateLibraryGenerationDTO): LibraryGenerationDTO | null {
   try {
     const useCase = new RecordGenerationUseCase(new SQLiteGenerationRepository());
-    useCase.execute(input);
+    return useCase.execute(input);
   } catch (error) {
     console.error('Failed to persist generation metadata.', error);
+    return null;
   }
 }
 

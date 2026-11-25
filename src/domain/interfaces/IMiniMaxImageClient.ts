@@ -1,4 +1,9 @@
-import type { GenerateImageRequest, GenerateImageResponse } from '@/application/dto/ImageDTO';
+import type {
+  GenerateImageRequest,
+  GenerateImageResponse,
+  ImageContextIRRequest,
+  ImageContextIRResponse,
+} from '@/application/dto/ImageDTO';
 
 /**
  * Port interface for MiniMax image generation operations.
@@ -6,4 +11,5 @@ import type { GenerateImageRequest, GenerateImageResponse } from '@/application/
  */
 export interface IMiniMaxImageClient {
   generateImage(request: GenerateImageRequest): Promise<GenerateImageResponse>;
+  enhanceImagePrompt(request: ImageContextIRRequest): Promise<ImageContextIRResponse>;
 }

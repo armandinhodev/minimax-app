@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const result = await useCase.execute(parsed.data);
     const expiresAt = Date.now() + COVER_FEATURE_TTL_MS;
 
-    recordGenerationBestEffort({
+    const libraryGeneration = recordGenerationBestEffort({
       kind: 'music',
       source: 'cover-preprocess',
       title: 'Cover preprocess',
@@ -92,7 +92,10 @@ export async function POST(request: Request) {
       ],
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      coverPreprocessId: libraryGeneration?.id,
+    });
   } catch (error) {
     return createMiniMaxRouteErrorResponse(error, {
       endpoint: '/api/minimax/music/cover-preprocess',

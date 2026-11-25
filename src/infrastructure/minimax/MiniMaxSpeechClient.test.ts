@@ -528,4 +528,152 @@ describe('MiniMaxSpeechClient', () => {
       message: 'MiniMax returned an empty designed voice ID',
     });
   });
+
+  it('reads the documented top-level task_id from an async submit response', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      task_id: 95157322514444,
+      task_token: 'eyJhbGciOiJSUz',
+      file_id: 95157322514444,
+      usage_characters: 101,
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.submitAsync({
+      text: 'hello',
+      voiceId: 'sys_voice_1',
+    })).resolves.toMatchObject({ taskId: '95157322514444' });
+  });
+
+  it('reads the documented top-level status and file_id from an async query response', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      task_id: 95157322514444,
+      status: 'Success',
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.pollTask('95157322514444')).resolves.toEqual({
+      status: 'success',
+      fileId: undefined,
+    });
+  });
+
+  it('normalizes a capitalized task status from the documented enum', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      task_id: 95157322514444,
+      status: 'Processing',
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.pollTask('95157322514444')).resolves.toMatchObject({
+      status: 'processing',
+    });
+  });
+
+  it('keeps the int64 file_id of a completed async task exact', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(
+      '{"task_id":95157322514444,"status":"success","file_id":123456789012345681,"base_resp":{"status_code":0,"status_msg":"success"}}',
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.pollTask('95157322514444')).resolves.toEqual({
+      status: 'success',
+      fileId: '123456789012345681',
+    });
+  });
+
+  it('reports the duration from the documented extra_info.audio_length', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: 'abcd', status: 2 },
+      extra_info: { audio_length: 11124, audio_sample_rate: 32000, audio_size: 179926 },
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.synthesize({ text: 'hello', voiceId: 'sys_voice_1' })).resolves.toMatchObject({
+      audioHex: 'abcd',
+      duration: 11.124,
+    });
+  });
+
+  it('maps the documented system voice array and voice_name display names', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      system_voice: [
+        { voice_id: 'English_Friendly_Guy', voice_name: 'Friendly Guy', description: [], created_time: '1970-01-01' },
+      ],
+      voice_cloning: [
+        { voice_id: 'my_clone_voice', description: [], created_time: '2025-08-20' },
+      ],
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const voices = await new MiniMaxSpeechClient().getVoices();
+
+    expect(voices.map(({ voiceId, name, language, type }) => ({ voiceId, name, language, type }))).toEqual([
+      { voiceId: 'English_Friendly_Guy', name: 'Friendly Guy', language: 'English', type: 'system' },
+      { voiceId: 'my_clone_voice', name: 'my_clone_voice', language: undefined, type: 'clone' },
+    ]);
+  });
+
+  it('passes the documented hex trial audio through unchanged', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      voice_id: 'ttv-voice-2025060717322425-xxxxxxxx',
+      trial_audio: '00010203ff',
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.designVoice('a prompt', 'a preview')).resolves.toMatchObject({
+      voiceId: 'ttv-voice-2025060717322425-xxxxxxxx',
+      trialAudioHex: '00010203ff',
+    });
+  });
+
+  it('sends an int64 clone file_id as an exact numeric literal', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const client = new MiniMaxSpeechClient();
+
+    await expect(client.cloneVoice('123456789012345681', 'maricel0001')).resolves.toMatchObject({
+      voiceId: 'maricel0001',
+      type: 'clone',
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(String(init.body)).toBe('{"file_id":123456789012345681,"voice_id":"maricel0001"}');
+  });
 });
