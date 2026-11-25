@@ -38,7 +38,7 @@ export function ErrorDisplay({
   const showDetails = details && (details.upstreamStatus !== undefined || details.upstreamMessage);
 
   return (
-    <Alert variant="destructive">
+    <Alert variant="destructive" role="alert" aria-live="assertive">
       <AlertTitle>{displayTitle}</AlertTitle>
       <AlertDescription>{displayMessage}</AlertDescription>
       {showDetails && (

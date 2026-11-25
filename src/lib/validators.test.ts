@@ -333,6 +333,23 @@ describe('GenerateLyricsRequestSchema', () => {
     expect(GenerateLyricsRequestSchema.safeParse({ mode: 'write_full_song', prompt: 'a'.repeat(2001) }).success).toBe(false);
     expect(GenerateLyricsRequestSchema.safeParse({ mode: 'edit', lyrics: 'a'.repeat(3501) }).success).toBe(false);
   });
+
+  it('requires a prompt to write a full song and lyrics to edit', () => {
+    const emptySong = GenerateLyricsRequestSchema.safeParse({ mode: 'write_full_song' });
+    expect(emptySong.success).toBe(false);
+    if (!emptySong.success) {
+      expect(emptySong.error.issues.map((issue) => issue.path.join('.'))).toContain('prompt');
+    }
+
+    const emptyEdit = GenerateLyricsRequestSchema.safeParse({
+      mode: 'edit',
+      prompt: 'Make the chorus stronger.',
+    });
+    expect(emptyEdit.success).toBe(false);
+    if (!emptyEdit.success) {
+      expect(emptyEdit.error.issues.map((issue) => issue.path.join('.'))).toContain('lyrics');
+    }
+  });
 });
 
 describe('MusicCoverPreprocessRequestSchema', () => {

@@ -8,6 +8,7 @@
 import {
   VIDEO_MODEL_CAPABILITIES,
   VIDEO_MODELS,
+  VIDEO_PROMPT_EXPANSION_MODES,
   VIDEO_RATIOS,
   type VideoModel,
 } from '@/application/dto/VideoDTO';
@@ -42,6 +43,19 @@ export const VIDEO_MODEL_OPTIONS: VideoOption[] = VIDEO_MODELS.map((model) => ({
   value: model,
   label: model,
 }));
+
+const PROMPT_EXPANSION_LABELS = {
+  disabled: 'Disabled',
+  balanced: 'Balanced',
+  quality: 'Quality',
+} as const;
+
+/**
+ * Prompt expansion modes, exposed only by `MiniMax-H3-Max`.
+ */
+export const VIDEO_PROMPT_EXPANSION_OPTIONS: VideoOption[] = VIDEO_PROMPT_EXPANSION_MODES.map(
+  (mode) => ({ value: mode, label: PROMPT_EXPANSION_LABELS[mode] }),
+);
 
 export function videoResolutionOptions(model: VideoModel): VideoOption[] {
   return VIDEO_MODEL_CAPABILITIES[model].resolutions.map((resolution) => ({

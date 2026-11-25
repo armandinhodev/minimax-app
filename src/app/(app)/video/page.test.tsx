@@ -427,4 +427,69 @@ describe('VideoPage', () => {
 
     expect(queryCalls('/api/minimax/video/tasks/424010985738629')).toHaveLength(pollsBeforeUnmount);
   });
+
+  it('offers prompt expansion only for MiniMax-H3-Max', async () => {
+    await act(async () => {
+      root!.render(<VideoPage />);
+    });
+
+    expect(container!.querySelector('#video-generation-prompt-expansion')).toBeNull();
+
+    const model = container!.querySelector('#video-generation-model') as HTMLSelectElement;
+    await act(async () => {
+      changeSelect(model, 'MiniMax-H3-Max');
+    });
+
+    const expansion = container!.querySelector('#video-generation-prompt-expansion') as HTMLSelectElement | null;
+    expect(expansion).not.toBeNull();
+    expect(Array.from(expansion!.options).map((option) => option.value)).toEqual([
+      'disabled',
+      'balanced',
+      'quality',
+    ]);
+  });
+
+  it('reports a single guidance message when 2K regeneration has no source', async () => {
+    await act(async () => {
+      root!.render(<VideoPage />);
+    });
+
+    await act(async () => {
+      findButton(container!, 'Regenerate in 2K').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const message = container!.textContent ?? '';
+    expect(message).toContain('Provide either a source task ID or a base video');
+    expect(message).not.toContain('Task ID is required');
+    expect(message).not.toContain('Task ID contains unsupported characters');
+    expect(queryCalls('/api/minimax/video/regeneration')).toHaveLength(0);
+  });
+
+  it('re-scrolls the error banner when the same validation error repeats', async () => {
+    const scrollSpy = vi.fn();
+    const original = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scrollSpy as unknown as typeof Element.prototype.scrollIntoView;
+
+    try {
+      await act(async () => {
+        root!.render(<VideoPage />);
+      });
+
+      const button = findButton(container!, 'Generate Video');
+      await act(async () => {
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+      await act(async () => {
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+
+      expect(scrollSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      if (original) {
+        Element.prototype.scrollIntoView = original;
+      } else {
+        delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+      }
+    }
+  });
 });

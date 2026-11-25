@@ -42,6 +42,7 @@ coverage/
 # Local AI/tooling metadata
 .atl/
 openspec/
+.playwright-mcp/
 
 # Vite
 vite.config.js.timestamp-*

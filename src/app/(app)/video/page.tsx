@@ -9,7 +9,7 @@
  * with the same schema the server uses.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import {
   VIDEO_TASK_STATUSES,
   VIDEO_TASK_TYPES,
   type VideoModel,
+  type VideoPromptExpansionMode,
   type VideoResolution,
   type VideoTaskDTO,
   type VideoTaskStatus,
@@ -42,6 +43,7 @@ import {
   EMPTY_VIDEO_MEDIA,
   splitMediaReferences,
   VIDEO_MODEL_OPTIONS,
+  VIDEO_PROMPT_EXPANSION_OPTIONS,
   videoDurationRange,
   videoResolutionOptions,
   type VideoMediaValues,
@@ -96,6 +98,8 @@ export default function VideoPage() {
   const [resolution, setResolution] = useState<VideoResolution>('2K');
   const [duration, setDuration] = useState(5);
   const [prompt, setPrompt] = useState('');
+  const [promptExpansionMode, setPromptExpansionMode] = useState<VideoPromptExpansionMode>('disabled');
+  const errorBannerRef = useRef<HTMLDivElement | null>(null);
 
   const [contextPrompt, setContextPrompt] = useState('');
   const [contextDuration, setContextDuration] = useState(5);
@@ -113,6 +117,7 @@ export default function VideoPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorNonce, setErrorNonce] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
 
   const composition = useVideoComposition(model);
@@ -122,9 +127,25 @@ export default function VideoPage() {
   const durationRange = videoDurationRange(model);
   const resolutionOptions = videoResolutionOptions(model);
 
-  const reportFailure = (caught: unknown, fallback: string) => {
-    setError(caught instanceof VideoRequestError ? caught.message : fallback);
+  const reportError = (message: string) => {
+    setError(message);
+    setErrorNonce((value) => value + 1);
   };
+
+  const reportFailure = (caught: unknown, fallback: string) => {
+    reportError(caught instanceof VideoRequestError ? caught.message : fallback);
+  };
+
+  // The banner lives above the forms, so a submit near the bottom would leave
+  // the message off-screen. Bring it back into view whenever it changes —
+  // including a repeated identical message, hence the nonce.
+  useEffect(() => {
+    if (errorNonce === 0) return;
+    const node = errorBannerRef.current;
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [errorNonce]);
 
   const submit = async (path: Parameters<typeof createVideoTask>[0], body: unknown) => {
     setError(null);
@@ -149,11 +170,12 @@ export default function VideoPage() {
       resolution,
       duration,
       ratio: composition.ratio,
+      ...(model === 'MiniMax-H3-Max' ? { promptExpansionMode } : {}),
     };
 
     const parsed = CreateVideoGenerationSchema.safeParse(body);
     if (!parsed.success) {
-      setError(parsed.error.issues.map((issue) => issue.message).join('; '));
+      reportError(parsed.error.issues.map((issue) => issue.message).join('; '));
       return;
     }
 
@@ -170,7 +192,7 @@ export default function VideoPage() {
 
     const parsed = CreateVideoContextIRSchema.safeParse(body);
     if (!parsed.success) {
-      setError(parsed.error.issues.map((issue) => issue.message).join('; '));
+      reportError(parsed.error.issues.map((issue) => issue.message).join('; '));
       return;
     }
 
@@ -187,13 +209,18 @@ export default function VideoPage() {
       ]
       : undefined;
 
+    const trimmedSourceTaskId = sourceTaskId.trim();
     const body = regenerationMode === 'task'
-      ? { model: 'MiniMax-H3', sourceTaskId: sourceTaskId.trim(), resolution: '2K' }
+      ? {
+        model: 'MiniMax-H3',
+        ...(trimmedSourceTaskId.length > 0 ? { sourceTaskId: trimmedSourceTaskId } : {}),
+        resolution: '2K',
+      }
       : { model: 'MiniMax-H3', content, resolution: '2K' };
 
     const parsed = CreateVideoRegenerationSchema.safeParse(body);
     if (!parsed.success) {
-      setError(parsed.error.issues.map((issue) => issue.message).join('; '));
+      reportError(parsed.error.issues.map((issue) => issue.message).join('; '));
       return;
     }
 
@@ -241,7 +268,11 @@ export default function VideoPage() {
         </Box>
       </Box>
 
-      {error && <ErrorDisplay message={error} />}
+      {error && (
+        <div ref={errorBannerRef}>
+          <ErrorDisplay message={error} />
+        </div>
+      )}
       {notice && !error && (
         <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
           {notice}
@@ -338,6 +369,19 @@ export default function VideoPage() {
                 disabled={isCreating}
                 onChange={composition.updateMedia}
               />
+
+              {model === 'MiniMax-H3-Max' && (
+                <Box display="grid" gap={2}>
+                  <Label htmlFor="video-generation-prompt-expansion">Prompt expansion</Label>
+                  <Select
+                    id="video-generation-prompt-expansion"
+                    value={promptExpansionMode}
+                    options={VIDEO_PROMPT_EXPANSION_OPTIONS}
+                    disabled={isCreating}
+                    onValueChange={(value) => setPromptExpansionMode(value as VideoPromptExpansionMode)}
+                  />
+                </Box>
+              )}
 
               <Button onClick={handleGenerate} disabled={isCreating} colorPalette="blue">
                 {isCreating ? 'Creating task...' : 'Generate Video'}

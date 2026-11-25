@@ -162,22 +162,40 @@ export interface GenerateMusicResponse {
   };
 }
 
-export const GenerateLyricsSchema = z.object({
-  mode: LyricsGenerationModeSchema,
-  prompt: z
-    .string()
-    .trim()
-    .max(2000, 'Prompt must be at most 2,000 characters')
-    .optional()
-    .default(''),
-  lyrics: z
-    .string()
-    .trim()
-    .max(3500, 'Lyrics must be at most 3,500 characters')
-    .optional()
-    .default(''),
-  title: z.string().trim().max(200, 'Title must be at most 200 characters').optional().default(''),
-});
+export const GenerateLyricsSchema = z
+  .object({
+    mode: LyricsGenerationModeSchema,
+    prompt: z
+      .string()
+      .trim()
+      .max(2000, 'Prompt must be at most 2,000 characters')
+      .optional()
+      .default(''),
+    lyrics: z
+      .string()
+      .trim()
+      .max(3500, 'Lyrics must be at most 3,500 characters')
+      .optional()
+      .default(''),
+    title: z.string().trim().max(200, 'Title must be at most 200 characters').optional().default(''),
+  })
+  .superRefine((value, ctx) => {
+    if (value.mode === 'write_full_song' && value.prompt.length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['prompt'],
+        message: 'Prompt is required to write a full song',
+      });
+    }
+
+    if (value.mode === 'edit' && value.lyrics.length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['lyrics'],
+        message: 'Existing lyrics are required to edit',
+      });
+    }
+  });
 
 export type GenerateLyricsRequest = z.infer<typeof GenerateLyricsSchema>;
 

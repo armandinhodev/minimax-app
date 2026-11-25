@@ -50,6 +50,7 @@ export default function LyricsGenerationPage() {
   const validationMessage = (() => {
     if (prompt.length > PROMPT_MAX_LENGTH) return 'Prompt exceeds 2,000 characters.';
     if (lyrics.length > LYRICS_MAX_LENGTH) return 'Lyrics exceed 3,500 characters.';
+    if (mode === 'write_full_song' && prompt.trim().length === 0) return 'Write a prompt describing the song you want.';
     if (mode === 'edit' && lyrics.trim().length === 0) return 'Paste the lyrics you want MiniMax to edit.';
     return null;
   })();
