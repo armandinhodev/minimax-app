@@ -20,7 +20,7 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
-import { CreateVideoContextIRSchema, CreateVideoGenerationSchema, CreateVideoRegenerationSchema, VIDEO_TASK_STATUSES, VIDEO_TASK_TYPES, type VideoModel, type VideoPromptExpansionMode, type VideoResolution, type VideoTaskDTO, type VideoTaskStatus, type VideoTaskType } from '@/application/dto/minimax/video/VideoDTO';
+import { CreateVideoContextIRSchema, CreateVideoGenerationSchema, CreateVideoRegenerationSchema, VIDEO_TASK_STATUSES, VIDEO_TASK_TYPES, supportsPromptExpansionMode, type VideoModel, type VideoPromptExpansionMode, type VideoResolution, type VideoTaskDTO, type VideoTaskStatus, type VideoTaskType } from '@/application/dto/minimax/video/VideoDTO';
 
 import { VideoMediaFields } from './VideoMediaFields';
 import { VideoTaskResult } from './VideoTaskResult';
@@ -150,7 +150,7 @@ export default function VideoPage() {
       resolution,
       duration,
       ratio: composition.ratio,
-      ...(model === 'MiniMax-H3-Max' ? { promptExpansionMode } : {}),
+      ...(supportsPromptExpansionMode(model) ? { promptExpansionMode } : {}),
     };
 
     const parsed = CreateVideoGenerationSchema.safeParse(body);
@@ -350,7 +350,7 @@ export default function VideoPage() {
                 onChange={composition.updateMedia}
               />
 
-              {model === 'MiniMax-H3-Max' && (
+              {supportsPromptExpansionMode(model) && (
                 <Box display="grid" gap={2}>
                   <Label htmlFor="video-generation-prompt-expansion">Prompt expansion</Label>
                   <Select

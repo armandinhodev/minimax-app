@@ -53,6 +53,99 @@ describe('CreateVideoGenerationSchema', () => {
     expect(messages.join(' ')).toContain('MiniMax-H3-Max supports 5 to 15 second clips');
   });
 
+  it('accepts 480P on MiniMax-H3, which serves it through RunningHub', () => {
+    const parsed = CreateVideoGenerationSchema.safeParse({
+      model: 'MiniMax-H3',
+      content: [{ type: 'text', text: 'A boy playing basketball by the sea' }],
+      resolution: '480P',
+      duration: 5,
+      ratio: '16:9',
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it('accepts 2K and rejects 480P on MiniMax-H3-MG', () => {
+    const at2K = issueMessages(
+      CreateVideoGenerationSchema.safeParse({
+        model: 'MiniMax-H3-MG',
+        content: [{ type: 'text', text: 'A boy playing basketball by the sea' }],
+        resolution: '2K',
+        duration: 5,
+        ratio: '16:9',
+      }),
+    );
+    const at480P = issueMessages(
+      CreateVideoGenerationSchema.safeParse({
+        model: 'MiniMax-H3-MG',
+        content: [{ type: 'text', text: 'A boy playing basketball by the sea' }],
+        resolution: '480P',
+        duration: 5,
+        ratio: '16:9',
+      }),
+    );
+
+    expect(at2K).toEqual([]);
+    expect(at480P.join(' ')).toContain('MiniMax-H3-MG supports 768P and 2K resolution only');
+  });
+
+  it('rejects a 4 second clip on MiniMax-H3-Max-Turbo', () => {
+    const messages = issueMessages(
+      CreateVideoGenerationSchema.safeParse({
+        model: 'MiniMax-H3-Max-Turbo',
+        content: [{ type: 'text', text: 'A boy playing basketball by the sea' }],
+        resolution: '480P',
+        duration: 4,
+        ratio: '16:9',
+      }),
+    );
+
+    expect(messages.join(' ')).toContain('MiniMax-H3-Max-Turbo supports 5 to 15 second clips');
+  });
+
+  it('requires a concrete ratio for reference-to-video on MiniMax-H3-NC', () => {
+    const messages = issueMessages(
+      CreateVideoGenerationSchema.safeParse({
+        model: 'MiniMax-H3-NC',
+        content: [
+          { type: 'text', text: 'A boy playing basketball by the sea' },
+          { type: 'image_url', url: HTTP_IMAGE, role: 'reference_image' },
+        ],
+        resolution: '480P',
+        duration: 5,
+        ratio: 'adaptive',
+      }),
+    );
+
+    expect(messages.join(' ')).toContain('MiniMax-H3-NC requires a concrete aspect ratio');
+  });
+
+  it('accepts prompt expansion on MiniMax-H3-Max-Turbo but not on MiniMax-H3', () => {
+    const onTurbo = issueMessages(
+      CreateVideoGenerationSchema.safeParse({
+        model: 'MiniMax-H3-Max-Turbo',
+        content: [{ type: 'text', text: 'A boy playing basketball by the sea' }],
+        resolution: '480P',
+        duration: 5,
+        ratio: '16:9',
+        promptExpansionMode: 'quality',
+      }),
+    );
+    const onH3 = issueMessages(
+      CreateVideoGenerationSchema.safeParse({
+        model: 'MiniMax-H3',
+        content: [{ type: 'text', text: 'A boy playing basketball by the sea' }],
+        resolution: '2K',
+        duration: 5,
+        ratio: '16:9',
+        promptExpansionMode: 'quality',
+      }),
+    );
+
+    expect(onTurbo).toEqual([]);
+    expect(onH3.join(' ')).toContain('Prompt expansion mode is only supported by');
+  });
+
   it('requires an explicit non-adaptive ratio for text-to-video', () => {
     const missing = issueMessages(
       CreateVideoGenerationSchema.safeParse({

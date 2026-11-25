@@ -15,14 +15,26 @@ The Video Studio targets the MiniMax video V2 endpoints: `POST /v2/video_generat
 
 ## Supported models
 
-| Model | Generation | Context IR | Regeneration | Resolutions | Duration |
-| --- | --- | --- | --- | --- | --- |
-| `MiniMax-H3` | yes | yes | yes | `768P`, `2K` | 4–15 s |
-| `MiniMax-H3-Highspeed` | yes | no | no | `480P`, `768P` | 4–15 s |
-| `MiniMax-H3-Lite` | yes | no | no | `480P`, `768P` | 4–15 s |
-| `MiniMax-H3-Max` | yes | no | no | `480P`, `768P` | 5–15 s |
+| Model | Generation | Context IR | Regeneration | Resolutions | Duration | `adaptive` ratio |
+| --- | --- | --- | --- | --- | --- | --- |
+| `MiniMax-H3` | yes | yes | yes | `480P`, `768P`, `2K` | 4–15 s | yes |
+| `MiniMax-H3-Highspeed` | yes | no | no | `480P`, `768P` | 4–15 s | yes |
+| `MiniMax-H3-Lite` | yes | no | no | `480P`, `768P` | 4–15 s | no |
+| `MiniMax-H3-Max` | yes | no | no | `480P`, `768P` | 5–15 s | yes |
+| `MiniMax-H3-Max-Turbo` | yes | no | no | `480P`, `768P` | 5–15 s | yes |
+| `MiniMax-H3-MG` | yes | no | no | `768P`, `2K` | 4–15 s | yes |
+| `MiniMax-H3-NC` | yes | no | no | `480P`, `768P` | 4–15 s | no |
 
-`MiniMax-H3` is the default in the app and the only model that reaches 2K. `MiniMax-H3-Max` also accepts `extra.prompt_expansion_mode` (`disabled`, `balanced`, `quality`); the field is rejected for every other model instead of being ignored.
+`MiniMax-H3` is the default in the app. It reaches 2K and also serves `480P`
+through RunningHub: keep `model` as `MiniMax-H3` and set `resolution` to `480P`.
+`MiniMax-H3-MG` reaches 2K but no `480P`.
+
+`MiniMax-H3-Max` and `MiniMax-H3-Max-Turbo` accept `extra.prompt_expansion_mode`
+(`disabled`, `balanced`, `quality`); the field is rejected for every other model
+instead of being ignored.
+
+`MiniMax-H3-Lite` and `MiniMax-H3-NC` do not support the `adaptive` ratio, so
+reference-to-video requests with them need a concrete ratio.
 
 ## Scenario rules
 

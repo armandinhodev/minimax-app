@@ -26,6 +26,9 @@ export const VIDEO_MODELS = [
   'MiniMax-H3-Highspeed',
   'MiniMax-H3-Lite',
   'MiniMax-H3-Max',
+  'MiniMax-H3-Max-Turbo',
+  'MiniMax-H3-MG',
+  'MiniMax-H3-NC',
 ] as const;
 
 export type VideoModel = (typeof VIDEO_MODELS)[number];
@@ -103,12 +106,14 @@ export interface VideoModelCapabilities {
 
 /**
  * Capability matrix taken verbatim from the create-task documentation.
- * `MiniMax-H3` is the only model that reaches 2K, and `MiniMax-H3-Max`
- * refuses 4 second clips.
+ *
+ * `MiniMax-H3` reaches 2K and also serves 480P; `MiniMax-H3-MG` reaches 2K
+ * but no 480P; `MiniMax-H3-Max` and `MiniMax-H3-Max-Turbo` refuse 4 second
+ * clips; `MiniMax-H3-Lite` and `MiniMax-H3-NC` refuse the `adaptive` ratio.
  */
 export const VIDEO_MODEL_CAPABILITIES: Record<VideoModel, VideoModelCapabilities> = {
   'MiniMax-H3': {
-    resolutions: ['768P', '2K'],
+    resolutions: ['480P', '768P', '2K'],
     minDuration: 4,
     maxDuration: 15,
     supportsAdaptiveRatio: true,
@@ -131,7 +136,37 @@ export const VIDEO_MODEL_CAPABILITIES: Record<VideoModel, VideoModelCapabilities
     maxDuration: 15,
     supportsAdaptiveRatio: true,
   },
+  'MiniMax-H3-Max-Turbo': {
+    resolutions: ['480P', '768P'],
+    minDuration: 5,
+    maxDuration: 15,
+    supportsAdaptiveRatio: true,
+  },
+  'MiniMax-H3-MG': {
+    resolutions: ['768P', '2K'],
+    minDuration: 4,
+    maxDuration: 15,
+    supportsAdaptiveRatio: true,
+  },
+  'MiniMax-H3-NC': {
+    resolutions: ['480P', '768P'],
+    minDuration: 4,
+    maxDuration: 15,
+    supportsAdaptiveRatio: false,
+  },
 };
+
+/**
+ * Models that accept `extra.prompt_expansion_mode`.
+ */
+export const VIDEO_PROMPT_EXPANSION_MODELS: readonly VideoModel[] = [
+  'MiniMax-H3-Max',
+  'MiniMax-H3-Max-Turbo',
+];
+
+export function supportsPromptExpansionMode(model: VideoModel): boolean {
+  return VIDEO_PROMPT_EXPANSION_MODELS.includes(model);
+}
 
 /** The only model that exposes the H3-Context-IR and regeneration endpoints. */
 export const VIDEO_CONTEXT_IR_MODEL: VideoModel = 'MiniMax-H3';
@@ -530,11 +565,11 @@ export const CreateVideoGenerationSchema = GenerationBaseSchema.superRefine((val
     });
   }
 
-  if (value.promptExpansionMode && value.model !== 'MiniMax-H3-Max') {
+  if (value.promptExpansionMode && !supportsPromptExpansionMode(value.model)) {
     ctx.addIssue({
       code: 'custom',
       path: ['promptExpansionMode'],
-      message: 'Prompt expansion mode is only supported by MiniMax-H3-Max',
+      message: `Prompt expansion mode is only supported by ${VIDEO_PROMPT_EXPANSION_MODELS.join(' and ')}`,
     });
   }
 
