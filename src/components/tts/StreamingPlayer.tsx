@@ -5,7 +5,7 @@
  * This avoids attempting to decode incomplete MP3 frames and avoids replacing active sources.
  */
 
-import { memo, useEffect, useRef, useState, useCallback } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -141,7 +141,7 @@ export const StreamingPlayer = memo(function StreamingPlayer({ text, voiceId, mo
     setTotalBytes(0);
 
     try {
-      const response = await fetch('/api/minimax/tts/stream', {
+      const response = await fetch('/api/minimax/speech/t2a/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

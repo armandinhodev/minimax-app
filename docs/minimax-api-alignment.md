@@ -74,6 +74,28 @@ Lyrics Generation pages show an availability notice. Cover generation is kept be
 reference still documents `/v1/music_cover_preprocess` and the `music-cover` model, even though the
 FAQ treats cover as retired.
 
+## Cobertura de endpoints
+
+Cada endpoint upstream implementado tiene una ruta de la app, sobre el eje de
+dominios. El mapa completo está en
+[architecture/api-organization.md](architecture/api-organization.md).
+
+| Dominio | Endpoints upstream cubiertos | Ruta de la app |
+| --- | --- | --- |
+| Speech | `/v1/t2a_v2`, `/v1/t2a_async_v2`, `/v1/query/t2a_async_query_v2` | `/api/minimax/speech/t2a/**` |
+| Voice | `/v1/voice_clone`, `/v1/voice_design`, `/v1/get_voice`, `/v1/delete_voice` | `/api/minimax/speech/voices/**` |
+| Files | `/v1/files/upload`, `/list`, `/retrieve`, `/retrieve_content`, `/delete` | `/api/minimax/files/**` |
+| Image | `/v1/images/generations`, `/v1/images/edits`, `/v1/h3_image_context_ir` | `/api/minimax/image/**` |
+| Video | `/v2/video_generation`, `/v2/h3_context_ir`, `/v2/video_regeneration`, `/v2/query/video_generation[/{id}]`, `DELETE /v2/video_generation/{id}` | `/api/minimax/video/**` |
+| Music | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` | `/api/minimax/music/**` |
+
+**Endpoints vigentes aún sin implementar** (pendientes de la unidad W2 en
+adelante): `POST /v1/speech_to_text` (ASR), `POST /v1/text/chatcompletion_v2`
+y las superficies OpenAI / Anthropic / Responses, `GET /v1/models` y
+`/v1/models/{model}`, `POST /v1/video_template_generation` y
+`GET /v1/query/video_template_generation` (Video Agent), y el TTS por WebSocket
+(`wss://api.minimax.io/ws/v1/t2a_v2`).
+
 ## Deliberate deviations
 
 | Deviation | Reason |
@@ -85,8 +107,11 @@ FAQ treats cover as retired.
 
 ## Notes for the parent
 
-- `src/lib/validators.test.ts` asserts that async T2A accepts 1,000,000 characters. The documented
-  limit for inline text is 100,000, so those two assertions need to be updated to 100,000 / 100,001.
+- The schema unit tests that used to live in `src/lib/validators.test.ts` were
+  redistributed to the DTO that owns each schema (`SpeechDTO.test.ts`,
+  `VoiceDTO.test.ts`, `FileDTO.test.ts`, `ImageDTO.test.ts`, `MusicDTO.test.ts`).
+  The shared `src/lib/validators.ts` barrel was removed: the DTO is now the
+  single source of truth for request schemas.
 - `src/lib/upload-policy.ts` still carries a `t2a_async` upload entry. MiniMax does not document
   `t2a_async` as an upload purpose (it is a delete purpose), so the upload endpoint now rejects it.
   Widening `FilePurposeSchema` to the full documented set also requires new entries in

@@ -1,19 +1,16 @@
 /**
- * POST /api/minimax/music/cover-preprocess
+ * POST /api/minimax/music/generations/cover-preprocess
  * Preprocesses reference audio for MiniMax Music Cover while keeping MINIMAX_API_KEY server-side.
  */
 
 import { NextResponse } from 'next/server';
-import { PreprocessMusicCoverUseCase } from '@/application/use-cases/music/PreprocessMusicCover';
-import { MiniMaxMusicClient } from '@/infrastructure/minimax/MiniMaxMusicClient';
-import { MusicCoverPreprocessRequestSchema } from '@/lib/validators';
+import { PreprocessMusicCoverUseCase } from '@/application/use-cases/minimax/music/PreprocessMusicCover';
+import { MusicClient } from '@/infrastructure/minimax/music/MusicClient';
+import { MusicCoverPreprocessSchema } from '@/application/dto/minimax/music/MusicDTO';
+
 import { requireAuth } from '../../../_shared/auth';
 import { recordGenerationBestEffort } from '../../_shared/library-recording';
-import {
-  createInvalidJsonResponse,
-  createMiniMaxRouteErrorResponse,
-  createValidationErrorResponse,
-} from '../../_shared/route-error';
+import { createInvalidJsonResponse, createMiniMaxRouteErrorResponse, createValidationErrorResponse } from '../../_shared/route-error';
 
 export const runtime = 'nodejs';
 
@@ -51,13 +48,13 @@ export async function POST(request: Request) {
     return createInvalidJsonResponse();
   }
 
-  const parsed = MusicCoverPreprocessRequestSchema.safeParse(body);
+  const parsed = MusicCoverPreprocessSchema.safeParse(body);
   if (!parsed.success) {
     return createValidationErrorResponse(parsed.error);
   }
 
   try {
-    const useCase = new PreprocessMusicCoverUseCase(new MiniMaxMusicClient());
+    const useCase = new PreprocessMusicCoverUseCase(new MusicClient());
     const result = await useCase.execute(parsed.data);
     const expiresAt = Date.now() + COVER_FEATURE_TTL_MS;
 
@@ -98,7 +95,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     return createMiniMaxRouteErrorResponse(error, {
-      endpoint: '/api/minimax/music/cover-preprocess',
+      endpoint: '/api/minimax/music/generations/cover-preprocess',
       method: 'POST',
       statusCode: 500,
     });

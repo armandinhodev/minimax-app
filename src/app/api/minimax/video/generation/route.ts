@@ -8,14 +8,11 @@
 
 import { NextResponse } from 'next/server';
 
-import { CreateVideoGenerationSchema } from '@/application/dto/VideoDTO';
-import { CreateVideoGenerationUseCase } from '@/application/use-cases/video/CreateVideoGeneration';
-import { MiniMaxVideoClient } from '@/infrastructure/minimax/MiniMaxVideoClient';
+import { CreateVideoGenerationSchema } from '@/application/dto/minimax/video/VideoDTO';
+import { CreateVideoGenerationUseCase } from '@/application/use-cases/minimax/video/CreateVideoGeneration';
+import { VideoClient } from '@/infrastructure/minimax/video/VideoClient';
 import { requireAuth } from '../../../_shared/auth';
-import {
-  createInvalidJsonResponse,
-  createValidationErrorResponse,
-} from '../../_shared/route-error';
+import { createInvalidJsonResponse, createValidationErrorResponse } from '../../_shared/route-error';
 import { recordVideoTaskBestEffort } from '../../_shared/video-library-recording';
 import { createVideoRouteErrorResponse } from '../_shared/video-route-error';
 import { extractVideoPrompt } from '../_shared/video-prompt';
@@ -39,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const useCase = new CreateVideoGenerationUseCase(new MiniMaxVideoClient());
+    const useCase = new CreateVideoGenerationUseCase(new VideoClient());
     const result = await useCase.execute(parsed.data);
 
     recordVideoTaskBestEffort(

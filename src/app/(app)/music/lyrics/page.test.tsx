@@ -122,7 +122,7 @@ describe('LyricsGenerationPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/lyrics', expect.objectContaining({
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/generations/lyrics', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

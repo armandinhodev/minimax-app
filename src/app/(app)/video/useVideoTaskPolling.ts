@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { VideoTaskDTO, VideoTaskStatus } from '@/application/dto/VideoDTO';
+import type { VideoTaskDTO, VideoTaskStatus } from '@/application/dto/minimax/video/VideoDTO';
 
-import { queryVideoTask, VideoRequestError } from './video-api';
+import { VideoRequestError, queryVideoTask } from './video-api';
 
 /** Bounded polling: the loop never runs longer than this many attempts. */
 const POLL_INTERVAL_MS = 3_000;

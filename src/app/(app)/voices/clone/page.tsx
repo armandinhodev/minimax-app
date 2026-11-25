@@ -18,7 +18,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import { VoiceUpload } from '@/components/voice/VoiceUpload';
 import { saveHistoryItem } from '@/lib/history';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import { MAX_UPLOAD_FILE_SIZE_MB, VOICE_UPLOAD_DURATION_LIMITS } from '@/lib/upload-policy';
 
 // TTL for cloned voices: 168 hours (7 days) from MiniMax
@@ -59,7 +59,7 @@ export default function CloneVoicePage() {
     setIsLoading(true);
 
     try {
-      const response = await authFetch('/api/minimax/voices/clone', {
+      const response = await authFetch('/api/minimax/speech/voices/clone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileId: uploadedFileId, voiceId: voiceId.trim() }),

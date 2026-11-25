@@ -1,0 +1,491 @@
+/** @vitest-environment node */
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { MusicClient } from './MusicClient';
+
+vi.mock('server-only', () => ({}));
+
+describe('MusicClient', () => {
+  const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    process.env.MINIMAX_API_KEY = 'test-minimax-key';
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('sends MiniMax music_generation payload using hex MP3 output', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 'Success' },
+      trace_id: 'trace-1',
+      extra_info: {
+        music_duration: 118000,
+        music_sample_rate: 44100,
+        music_channel: 2,
+        bitrate: 256000,
+        music_size: 123456,
+      },
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const result = await new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop with a bright chorus.',
+      lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    expect(result).toEqual({
+      id: 'trace-1',
+      audio: '00010203',
+      format: 'mp3',
+      metadata: {
+        status: 'Success',
+        traceId: 'trace-1',
+        durationSeconds: 118,
+        sampleRate: 44100,
+        channels: 2,
+        bitrate: 256000,
+        sizeBytes: 123456,
+      },
+    });
+
+    const [url, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.minimax.io/v1/music_generation');
+    expect(init.headers).toMatchObject({
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer test-minimax-key',
+    });
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop with a bright chorus.',
+      lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
+      is_instrumental: false,
+      stream: false,
+      output_format: 'hex',
+      audio_setting: { sample_rate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+  });
+
+  it('omits lyrics for instrumental music', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 'Success' },
+      trace_id: 'trace-instrumental',
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Instrumental cinematic piano.',
+      lyrics: '',
+      instrumental: true,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'music-3.0',
+      prompt: 'Instrumental cinematic piano.',
+      is_instrumental: true,
+      stream: false,
+      output_format: 'hex',
+      audio_setting: { sample_rate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+  });
+
+  it('maps vocal requests to the documented is_instrumental flag', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 2 },
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop.',
+      lyrics: '[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      is_instrumental: false,
+      lyrics: '[Chorus]\nRise again',
+    });
+  });
+
+  it('omits is_instrumental for cover models because MiniMax rejects it there', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 2 },
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MusicClient().generateMusic({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: '[Verse]\nCity lights',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body).not.toHaveProperty('is_instrumental');
+    expect(body.cover_feature_id).toBe('cover-feature-1');
+  });
+
+  it('reports a music generation that is still running', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { status: 1 },
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await expect(new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop.',
+      lyrics: '[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    })).rejects.toMatchObject({
+      name: 'MiniMaxMusicError',
+      status: 502,
+      message: 'MiniMax music generation is still in progress',
+    });
+  });
+
+  it('sends cover generation payload with cover_feature_id and optional lyrics', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '00010203', status: 'Success' },
+      trace_id: 'trace-cover-generation',
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MusicClient().generateMusic({
+      model: 'music-cover',
+      coverFeatureId: 'cover-feature-1',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      lyrics: '[Verse]\nCity lights',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+
+    const [url, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.minimax.io/v1/music_generation');
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'music-cover',
+      prompt: 'Acoustic folk cover with warm vocals.',
+      cover_feature_id: 'cover-feature-1',
+      lyrics: '[Verse]\nCity lights',
+      stream: false,
+      output_format: 'hex',
+      audio_setting: { sample_rate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+  });
+
+  it('does not retry transient generation failures to avoid duplicate music jobs', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        base_resp: { status_code: 429, status_msg: 'Slow down' },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        data: { audio: '00010203', status: 'Success' },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })) as typeof fetch;
+
+    await expect(new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop.',
+      lyrics: '[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    })).rejects.toMatchObject({ status: 429, code: 429 });
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects empty music audio responses with a 502-like client error', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: '' },
+      trace_id: 'trace-empty',
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await expect(new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop.',
+      lyrics: '[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    })).rejects.toMatchObject({
+      name: 'MiniMaxMusicError',
+      status: 502,
+      message: 'MiniMax returned no music audio',
+    });
+  });
+
+  it('sends lyrics_generation payload and maps the response', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      song_title: 'Neon Afterglow',
+      style_tags: ['synth-pop', 'uplifting'],
+      lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const result = await new MusicClient().generateLyrics({
+      mode: 'write_full_song',
+      prompt: 'Hopeful synth-pop.',
+      lyrics: '',
+      title: 'Neon Afterglow',
+    });
+
+    expect(result).toEqual({
+      songTitle: 'Neon Afterglow',
+      styleTags: ['synth-pop', 'uplifting'],
+      lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
+      metadata: { status: 0, message: 'success' },
+    });
+
+    const [url, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.minimax.io/v1/lyrics_generation');
+    expect(init.headers).toMatchObject({
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer test-minimax-key',
+    });
+    expect(JSON.parse(String(init.body))).toEqual({
+      mode: 'write_full_song',
+      prompt: 'Hopeful synth-pop.',
+      title: 'Neon Afterglow',
+    });
+  });
+
+  it('sends music_cover_preprocess URL payload and maps the response', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      cover_feature_id: 'cover-feature-1',
+      formatted_lyrics: '[Verse]\nCity lights',
+      structure_result: '{"sections":["Verse"]}',
+      audio_duration: 42,
+      trace_id: 'trace-cover-1',
+      base_resp: { status_code: 0, status_msg: 'success' },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    const result = await new MusicClient().preprocessMusicCover({
+      model: 'music-cover',
+      audioUrl: 'https://example.com/reference.mp3',
+      audioBase64: '',
+    });
+
+    expect(result).toEqual({
+      coverFeatureId: 'cover-feature-1',
+      formattedLyrics: '[Verse]\nCity lights',
+      structureResult: '{"sections":["Verse"]}',
+      audioDurationSeconds: 42,
+      traceId: 'trace-cover-1',
+      metadata: { status: 0, message: 'success' },
+    });
+
+    const [url, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.minimax.io/v1/music_cover_preprocess');
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'music-cover',
+      audio_url: 'https://example.com/reference.mp3',
+    });
+  });
+
+  it('strips data URL prefixes from cover preprocess base64 payloads', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      cover_feature_id: 'cover-feature-base64',
+      audio_duration: 12,
+      base_resp: { status_code: 0 },
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+
+    await new MusicClient().preprocessMusicCover({
+      model: 'music-cover',
+      audioUrl: '',
+      audioBase64: 'data:audio/mpeg;base64,AAEC',
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'music-cover',
+      audio_base64: 'AAEC',
+    });
+  });
+
+  it('uses a longer timeout for cover preprocess requests', async () => {
+    let signal: AbortSignal | undefined;
+    global.fetch = vi.fn((_url, init) => {
+      signal = init?.signal as AbortSignal;
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => {
+          const error = new Error('Aborted');
+          error.name = 'AbortError';
+          reject(error);
+        });
+      });
+    }) as typeof fetch;
+
+    const request = new MusicClient().preprocessMusicCover({
+      model: 'music-cover',
+      audioUrl: 'https://example.com/reference.mp3',
+      audioBase64: '',
+    });
+    const requestExpectation = expect(request).rejects.toMatchObject({
+      name: 'MiniMaxMusicError',
+      status: 408,
+      message: 'Request timed out',
+    });
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(signal?.aborted).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(120_000);
+    await requestExpectation;
+    expect(signal?.aborted).toBe(true);
+  });
+
+  it('uses a longer timeout for music generation requests', async () => {
+    let signal: AbortSignal | undefined;
+    global.fetch = vi.fn((_url, init) => {
+      signal = init?.signal as AbortSignal;
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => {
+          const error = new Error('Aborted');
+          error.name = 'AbortError';
+          reject(error);
+        });
+      });
+    }) as typeof fetch;
+
+    const request = new MusicClient().generateMusic({
+      model: 'music-3.0',
+      prompt: 'Glossy synth-pop with a bright chorus.',
+      lyrics: '[Verse]\nCity lights\n[Chorus]\nRise again',
+      instrumental: false,
+      stream: false,
+      outputFormat: 'hex',
+      audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
+    });
+    const requestExpectation = expect(request).rejects.toMatchObject({
+      name: 'MiniMaxMusicError',
+      status: 408,
+      message: 'Request timed out',
+    });
+
+    await vi.advanceTimersByTimeAsync(180_000);
+    expect(signal?.aborted).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(120_000);
+    await requestExpectation;
+    expect(signal?.aborted).toBe(true);
+  });
+
+  it('treats non-zero lyrics base_resp as an application error without retrying', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        base_resp: { status_code: 429, status_msg: 'Slow down' },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        lyrics: '[Chorus]\nRise again',
+        base_resp: { status_code: 0 },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })) as typeof fetch;
+
+    await expect(new MusicClient().generateLyrics({
+      mode: 'write_full_song',
+      prompt: 'Hopeful synth-pop.',
+      lyrics: '',
+      title: '',
+    })).rejects.toMatchObject({ status: 429, code: 429 });
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats non-zero cover preprocess base_resp as an application error without retrying', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        base_resp: { status_code: 500, status_msg: 'Upstream busy' },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        cover_feature_id: 'cover-feature-1',
+        base_resp: { status_code: 0 },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })) as typeof fetch;
+
+    await expect(new MusicClient().preprocessMusicCover({
+      model: 'music-cover',
+      audioUrl: 'https://example.com/reference.mp3',
+      audioBase64: '',
+    })).rejects.toMatchObject({ status: 500, code: 500 });
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});

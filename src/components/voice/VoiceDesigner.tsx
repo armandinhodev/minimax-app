@@ -17,7 +17,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { saveHistoryItem } from '@/lib/history';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 
 interface VoiceDesignerProps {
   onAccept?: (voice: VoiceDTO) => void;
@@ -67,7 +67,7 @@ export function VoiceDesigner({
     setIsLoading(true);
 
     try {
-      const response = await authFetch('/api/minimax/voices/design', {
+      const response = await authFetch('/api/minimax/speech/voices/design', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt.trim(), previewText: previewText.trim() }),

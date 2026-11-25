@@ -9,14 +9,10 @@
 
 import { NextResponse } from 'next/server';
 
-import {
-  VideoTaskIdSchema,
-  VideoTaskTypeSchema,
-  type VideoTaskType,
-} from '@/application/dto/VideoDTO';
-import { CancelVideoTaskUseCase } from '@/application/use-cases/video/CancelVideoTask';
-import { QueryVideoTaskUseCase } from '@/application/use-cases/video/QueryVideoTask';
-import { MiniMaxVideoClient } from '@/infrastructure/minimax/MiniMaxVideoClient';
+import { VideoTaskIdSchema, VideoTaskTypeSchema, type VideoTaskType } from '@/application/dto/minimax/video/VideoDTO';
+import { CancelVideoTaskUseCase } from '@/application/use-cases/minimax/video/CancelVideoTask';
+import { QueryVideoTaskUseCase } from '@/application/use-cases/minimax/video/QueryVideoTask';
+import { VideoClient } from '@/infrastructure/minimax/video/VideoClient';
 import { requireAuth } from '../../../../_shared/auth';
 import { createValidationErrorResponse } from '../../../_shared/route-error';
 import { recordVideoTaskBestEffort } from '../../../_shared/video-library-recording';
@@ -67,7 +63,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   try {
-    const useCase = new QueryVideoTaskUseCase(new MiniMaxVideoClient());
+    const useCase = new QueryVideoTaskUseCase(new VideoClient());
     const result = await useCase.execute(parsedTaskId.data);
 
     recordVideoTaskBestEffort(result.task);
@@ -95,7 +91,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   }
 
   try {
-    const useCase = new CancelVideoTaskUseCase(new MiniMaxVideoClient());
+    const useCase = new CancelVideoTaskUseCase(new VideoClient());
     const result = await useCase.execute({ taskId: parsedTaskId.data, taskType });
 
     // A cancelled task is still part of the local history, so it is recorded

@@ -156,7 +156,7 @@ describe('MusicCoverPreprocessPage', () => {
       button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/cover-preprocess', expect.objectContaining({
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/generations/cover-preprocess', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

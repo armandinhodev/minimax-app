@@ -11,12 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import {
-  MAX_UPLOAD_FILE_SIZE_BYTES,
-  MAX_UPLOAD_FILE_SIZE_MB,
-  VOICE_UPLOAD_DURATION_LIMITS,
-  VOICE_UPLOAD_POLICY,
-} from '@/lib/upload-policy';
+import { MAX_UPLOAD_FILE_SIZE_BYTES, MAX_UPLOAD_FILE_SIZE_MB, VOICE_UPLOAD_DURATION_LIMITS, VOICE_UPLOAD_POLICY } from '@/lib/upload-policy';
 
 interface VoiceUploadProps {
   onFileSelected?: (file: File) => void;
@@ -220,7 +215,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
         formData.append('file', f);
         formData.append('purpose', 'voice_clone');
 
-        const response = await authFetch('/api/minimax/files/upload', {
+        const response = await authFetch('/api/minimax/files', {
           method: 'POST',
           body: formData,
         });

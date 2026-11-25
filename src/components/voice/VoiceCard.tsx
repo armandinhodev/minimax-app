@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TTLCounter } from '@/components/shared/TTLCounter';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import { FLAG_SIZE_CARD, getFlagUrl, getLanguageInfo } from '@/lib/language-flags';
 
 interface VoiceCardProps {

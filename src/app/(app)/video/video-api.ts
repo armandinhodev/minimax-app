@@ -8,7 +8,7 @@
  */
 
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import type { VideoTaskDTO, VideoTaskStatus, VideoTaskType } from '@/application/dto/VideoDTO';
+import type { VideoTaskDTO, VideoTaskStatus, VideoTaskType } from '@/application/dto/minimax/video/VideoDTO';
 
 export class VideoRequestError extends Error {
   constructor(message: string, readonly code: number | null) {

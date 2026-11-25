@@ -1,7 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import VoicesPage from './page';
 
 const authFetchMock = vi.hoisted(() => vi.fn());
@@ -162,7 +162,7 @@ describe('VoicesPage destructive confirmations', () => {
     });
 
     expect(authFetchMock).toHaveBeenCalledTimes(2);
-    expect(authFetchMock).toHaveBeenLastCalledWith('/api/minimax/voices', {
+    expect(authFetchMock).toHaveBeenLastCalledWith('/api/minimax/speech/voices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ voiceId: 'user-voice-1', voiceType: 'voice_cloning' }),

@@ -8,17 +8,17 @@ const { executeMock } = vi.hoisted(() => ({
   executeMock: vi.fn(),
 }));
 
-vi.mock('@/application/use-cases/music/GenerateLyrics', () => ({
+vi.mock('@/application/use-cases/minimax/music/GenerateLyrics', () => ({
   GenerateLyricsUseCase: vi.fn().mockImplementation(() => ({
     execute: executeMock,
   })),
 }));
 
-vi.mock('@/infrastructure/minimax/MiniMaxMusicClient', () => ({
-  MiniMaxMusicClient: vi.fn().mockImplementation(() => ({})),
+vi.mock('@/infrastructure/minimax/music/MusicClient', () => ({
+  MusicClient: vi.fn().mockImplementation(() => ({})),
 }));
 
-describe('POST /api/minimax/music/lyrics', () => {
+describe('POST /api/minimax/music/generations/lyrics', () => {
   beforeEach(() => {
     process.env.APP_ACCESS_KEY = 'test-key';
     executeMock.mockReset();

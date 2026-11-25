@@ -12,21 +12,21 @@ const { recordGenerationBestEffortMock } = vi.hoisted(() => ({
   recordGenerationBestEffortMock: vi.fn(),
 }));
 
-vi.mock('@/application/use-cases/music/PreprocessMusicCover', () => ({
+vi.mock('@/application/use-cases/minimax/music/PreprocessMusicCover', () => ({
   PreprocessMusicCoverUseCase: vi.fn().mockImplementation(() => ({
     execute: executeMock,
   })),
 }));
 
-vi.mock('@/infrastructure/minimax/MiniMaxMusicClient', () => ({
-  MiniMaxMusicClient: vi.fn().mockImplementation(() => ({})),
+vi.mock('@/infrastructure/minimax/music/MusicClient', () => ({
+  MusicClient: vi.fn().mockImplementation(() => ({})),
 }));
 
 vi.mock('../../_shared/library-recording', () => ({
   recordGenerationBestEffort: recordGenerationBestEffortMock,
 }));
 
-describe('POST /api/minimax/music/cover-preprocess', () => {
+describe('POST /api/minimax/music/generations/cover-preprocess', () => {
   beforeEach(() => {
     process.env.APP_ACCESS_KEY = 'test-key';
     executeMock.mockReset();

@@ -10,16 +10,16 @@ const { queryMock, cancelMock, recordMock } = vi.hoisted(() => ({
   recordMock: vi.fn(),
 }));
 
-vi.mock('@/application/use-cases/video/QueryVideoTask', () => ({
+vi.mock('@/application/use-cases/minimax/video/QueryVideoTask', () => ({
   QueryVideoTaskUseCase: vi.fn().mockImplementation(() => ({ execute: queryMock })),
 }));
 
-vi.mock('@/application/use-cases/video/CancelVideoTask', () => ({
+vi.mock('@/application/use-cases/minimax/video/CancelVideoTask', () => ({
   CancelVideoTaskUseCase: vi.fn().mockImplementation(() => ({ execute: cancelMock })),
 }));
 
-vi.mock('@/infrastructure/minimax/MiniMaxVideoClient', () => ({
-  MiniMaxVideoClient: vi.fn().mockImplementation(() => ({})),
+vi.mock('@/infrastructure/minimax/video/VideoClient', () => ({
+  VideoClient: vi.fn().mockImplementation(() => ({})),
 }));
 
 vi.mock('@/app/api/minimax/_shared/video-library-recording', () => ({

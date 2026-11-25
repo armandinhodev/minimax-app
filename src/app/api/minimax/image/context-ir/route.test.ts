@@ -8,7 +8,7 @@ const { executeMock } = vi.hoisted(() => ({
   executeMock: vi.fn(),
 }));
 
-vi.mock('@/application/use-cases/image/EnhanceImagePrompt', () => ({
+vi.mock('@/application/use-cases/minimax/image/EnhanceImagePrompt', () => ({
   EnhanceImagePromptUseCase: vi.fn().mockImplementation(() => ({
     execute: executeMock,
   })),

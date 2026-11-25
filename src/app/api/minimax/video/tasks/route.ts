@@ -7,9 +7,9 @@
 
 import { NextResponse } from 'next/server';
 
-import { VideoListTasksQuerySchema } from '@/application/dto/VideoDTO';
-import { ListVideoTasksUseCase } from '@/application/use-cases/video/ListVideoTasks';
-import { MiniMaxVideoClient } from '@/infrastructure/minimax/MiniMaxVideoClient';
+import { VideoListTasksQuerySchema } from '@/application/dto/minimax/video/VideoDTO';
+import { ListVideoTasksUseCase } from '@/application/use-cases/minimax/video/ListVideoTasks';
+import { VideoClient } from '@/infrastructure/minimax/video/VideoClient';
 import { requireAuth } from '../../../_shared/auth';
 import { createValidationErrorResponse } from '../../_shared/route-error';
 import { recordVideoTaskBestEffort } from '../../_shared/video-library-recording';
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     : undefined;
 
   try {
-    const useCase = new ListVideoTasksUseCase(new MiniMaxVideoClient());
+    const useCase = new ListVideoTasksUseCase(new VideoClient());
     const result = await useCase.execute({
       page: parsed.data.page,
       pageSize: parsed.data.pageSize,

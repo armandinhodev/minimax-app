@@ -7,7 +7,7 @@
  * Degrades gracefully if Web Audio API is unavailable.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

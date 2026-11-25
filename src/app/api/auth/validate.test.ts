@@ -7,7 +7,7 @@
  * testing library. Here we test the core auth logic that the route handler delegates to.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // Mock server-only to prevent actual server-only imports from failing in test env
 vi.mock('server-only', () => ({}));

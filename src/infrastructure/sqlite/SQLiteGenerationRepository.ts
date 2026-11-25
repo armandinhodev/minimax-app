@@ -2,16 +2,8 @@ import 'server-only';
 
 import { randomUUID } from 'node:crypto';
 import type Database from 'better-sqlite3';
-import type {
-  CreateLibraryAssetDTO,
-  CreateLibraryGenerationDTO,
-  LibraryAssetDTO,
-  LibraryGenerationDTO,
-  LibraryGenerationKind,
-  LibraryGenerationSource,
-  LibrarySummaryDTO,
-} from '@/application/dto/LibraryDTO';
-import type { IGenerationRepository } from '@/domain/interfaces/IGenerationRepository';
+import type { CreateLibraryAssetDTO, CreateLibraryGenerationDTO, LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource, LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
+import type { IGenerationRepository } from '@/domain/interfaces/library/IGenerationRepository';
 import { getDatabase } from './schema';
 
 interface GenerationRow {

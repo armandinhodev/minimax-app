@@ -7,11 +7,11 @@
  */
 
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { MobileNavDrawer, MobileNavHeader } from '@/components/navigation/MobileNavDrawer';
-import { matchesPath, WIDE_CONTENT_MATCH_PATHS } from '@/components/navigation/nav-config';
+import { WIDE_CONTENT_MATCH_PATHS, matchesPath } from '@/components/navigation/nav-config';
 import { AppKeyGate } from '@/components/shared/AppKeyGate';
 
 export default function AppLayout({ children }: { children: ReactNode }) {

@@ -1,11 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import {
-  NonRetryableStreamError,
-  base64ToUint8Array,
-  parseStreamingAudioPayload,
-  shouldFailCompletedStream,
-  shouldRetryStreamFailure,
-} from './StreamingPlayer';
+import { describe, expect, it } from 'vitest';
+import { NonRetryableStreamError, base64ToUint8Array, parseStreamingAudioPayload, shouldFailCompletedStream, shouldRetryStreamFailure } from './StreamingPlayer';
 
 describe('base64ToUint8Array', () => {
   it('decodes a complete base64 chunk', () => {

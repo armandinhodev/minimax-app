@@ -4,15 +4,8 @@
  * updateHistoryItemTtl, clearHistory, getHistoryItem, and non-secret storage behavior.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  getHistoryItems,
-  saveHistoryItem,
-  removeHistoryItem,
-  updateHistoryItemTtl,
-  clearHistory,
-  getHistoryItem,
-} from './history';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearHistory, getHistoryItem, getHistoryItems, removeHistoryItem, saveHistoryItem, updateHistoryItemTtl } from './history';
 
 const STORAGE_KEY = 'minimax_speech_history';
 

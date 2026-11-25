@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { LibraryAssetKind } from '@/application/dto/LibraryDTO';
+import type { LibraryAssetKind } from '@/application/dto/library/LibraryDTO';
 
 const DEFAULT_ASSETS_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'assets');
 const TEST_ASSETS_DIR = path.join(os.tmpdir(), 'minimax-assets-test');

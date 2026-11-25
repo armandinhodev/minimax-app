@@ -8,14 +8,11 @@
 
 import { NextResponse } from 'next/server';
 import { requireAuth } from '../../_shared/auth';
-import { GenerateImageRequestSchema } from '@/lib/validators';
-import { GenerateImageUseCase, GenerateImageValidationError } from '@/application/use-cases/image/GenerateImage';
-import { MiniMaxImageClient, MiniMaxImageError } from '@/infrastructure/minimax/MiniMaxImageClient';
-import {
-  createInvalidJsonResponse,
-  createMiniMaxRouteErrorResponse,
-  createValidationErrorResponse,
-} from '../_shared/route-error';
+import { GenerateImageSchema } from '@/application/dto/minimax/image/ImageDTO';
+
+import { GenerateImageUseCase, GenerateImageValidationError } from '@/application/use-cases/minimax/image/GenerateImage';
+import { ImageClient, MiniMaxImageError } from '@/infrastructure/minimax/image/ImageClient';
+import { createInvalidJsonResponse, createMiniMaxRouteErrorResponse, createValidationErrorResponse } from '../_shared/route-error';
 import { recordGenerationBestEffort } from '../_shared/library-recording';
 
 export const runtime = 'nodejs';
@@ -64,13 +61,13 @@ export async function POST(request: Request) {
     return createInvalidJsonResponse();
   }
 
-  const parsed = GenerateImageRequestSchema.safeParse(body);
+  const parsed = GenerateImageSchema.safeParse(body);
   if (!parsed.success) {
     return createValidationErrorResponse(parsed.error);
   }
 
   try {
-    const useCase = new GenerateImageUseCase(new MiniMaxImageClient());
+    const useCase = new GenerateImageUseCase(new ImageClient());
     const result = await useCase.execute(parsed.data);
     const outputFormat = result.metadata.outputFormat;
 

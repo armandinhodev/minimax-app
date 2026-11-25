@@ -2,17 +2,17 @@
 
 /**
  * VoiceSelector — voice dropdown with search.
- * Fetches voices from GET /api/minimax/voices and renders a searchable select.
+ * Fetches voices from GET /api/minimax/speech/voices and renders a searchable select.
  */
 
-import { memo, useEffect, useId, useState, useMemo } from 'react';
+import { memo, useEffect, useId, useMemo, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { getLanguageInfo } from '@/lib/language-flags';
 import { getHistoryItems } from '@/lib/history';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 
 const USER_VOICE_TTL_MS = 168 * 60 * 60 * 1000;
 
@@ -55,7 +55,7 @@ export const VoiceSelector = memo(function VoiceSelector({
       setIsLoading(true);
       setError(null);
       try {
-        const response = await authFetch('/api/minimax/voices');
+        const response = await authFetch('/api/minimax/speech/voices');
         if (!response.ok) {
           const err = await parseApiError(response);
           setError(err?.message ?? `HTTP ${response.status}`);

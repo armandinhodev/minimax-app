@@ -2,7 +2,7 @@ import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { VoiceGroupSection } from './VoiceGroupSection';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 
 vi.mock('@/components/voice/VoiceCard', () => ({
   VoiceCard: ({ voice }: { voice: VoiceDTO }) => <div data-voice-card={voice.voiceId} />,

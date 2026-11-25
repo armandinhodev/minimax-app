@@ -1,5 +1,5 @@
-import type { LibrarySummaryDTO } from '@/application/dto/LibraryDTO';
-import type { IGenerationRepository } from '@/domain/interfaces/IGenerationRepository';
+import type { LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
+import type { IGenerationRepository } from '@/domain/interfaces/library/IGenerationRepository';
 
 export class GetLibraryDashboardUseCase {
   constructor(private readonly repository: IGenerationRepository) {}

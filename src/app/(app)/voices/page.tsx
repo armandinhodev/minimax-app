@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import Link from 'next/link';
 import { VoiceCard } from '@/components/voice/VoiceCard';
 import { VoiceGroupSection } from '@/components/voice/VoiceGroupSection';
@@ -38,7 +38,7 @@ export default function VoicesPage() {
     setActionStatus(null);
 
     try {
-      const response = await authFetch('/api/minimax/voices');
+      const response = await authFetch('/api/minimax/speech/voices');
 
       if (!response.ok) {
         const err = await parseApiError(response);
@@ -69,7 +69,7 @@ export default function VoicesPage() {
 
     setDeletingId(voiceId);
     try {
-      const response = await authFetch('/api/minimax/voices', {
+      const response = await authFetch('/api/minimax/speech/voices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceId, voiceType: voice.type === 'design' ? 'voice_generation' : 'voice_cloning' }),

@@ -1,7 +1,7 @@
 /** @vitest-environment node */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
+import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 
 vi.mock('server-only', () => ({}));
 

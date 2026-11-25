@@ -12,7 +12,7 @@ const { recordGenerationBestEffortMock } = vi.hoisted(() => ({
   recordGenerationBestEffortMock: vi.fn(),
 }));
 
-vi.mock('@/application/use-cases/image/GenerateImage', () => ({
+vi.mock('@/application/use-cases/minimax/image/GenerateImage', () => ({
   GenerateImageUseCase: vi.fn().mockImplementation(() => ({
     execute: executeMock,
   })),
@@ -143,7 +143,7 @@ describe('POST /api/minimax/image', () => {
 
   it('keeps the shared retryable response for upstream server failures', async () => {
     const { POST } = await import('./route');
-    const { MiniMaxImageError } = await import('@/infrastructure/minimax/MiniMaxImageClient');
+    const { MiniMaxImageError } = await import('@/infrastructure/minimax/image/ImageClient');
     executeMock.mockRejectedValue(new MiniMaxImageError('internal error (1000)', 500, 500));
 
     const response = await POST(imageRequest({ prompt: 'A polished product photo.' }));
@@ -195,7 +195,7 @@ describe('POST /api/minimax/image', () => {
 
   it('surfaces provider validation errors with the upstream status and message', async () => {
     const { POST } = await import('./route');
-    const { MiniMaxImageError } = await import('@/infrastructure/minimax/MiniMaxImageClient');
+    const { MiniMaxImageError } = await import('@/infrastructure/minimax/image/ImageClient');
     executeMock.mockRejectedValue(new MiniMaxImageError(
       'invalid params, size 4096x1024: aspect ratio must be within 1:3 and 3:1 (2013)',
       400,

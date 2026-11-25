@@ -2,14 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import type { VideoModel, VideoRatio } from '@/application/dto/VideoDTO';
+import type { VideoModel, VideoRatio } from '@/application/dto/minimax/video/VideoDTO';
 
-import {
-  detectVideoScenario,
-  EMPTY_VIDEO_MEDIA,
-  videoRatioOptions,
-  type VideoMediaValues,
-} from './video-options';
+import { EMPTY_VIDEO_MEDIA, detectVideoScenario, type VideoMediaValues, videoRatioOptions } from './video-options';
 
 /**
  * Keeps the media references, the derived scenario and the aspect ratio of a

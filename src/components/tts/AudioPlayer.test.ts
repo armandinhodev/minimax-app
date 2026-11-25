@@ -3,7 +3,7 @@
  * Tests the hexToArrayBuffer and hexToUint8Array utilities exported from AudioPlayer.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { hexToArrayBuffer, hexToUint8Array } from '@/components/tts/AudioPlayer';
 
 describe('hexToArrayBuffer', () => {

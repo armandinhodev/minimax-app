@@ -1,4 +1,4 @@
-import { FILE_PURPOSE_OPTIONS, type FilePurpose } from '@/application/dto/FileDTO';
+import { FILE_PURPOSE_OPTIONS, type FilePurpose } from '@/application/dto/minimax/files/FileDTO';
 
 export const MAX_UPLOAD_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 export const MAX_UPLOAD_FILE_SIZE_MB = 20;

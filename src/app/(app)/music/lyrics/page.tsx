@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/MusicDTO';
+import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
 
 const PROMPT_MAX_LENGTH = 2000;
 const LYRICS_MAX_LENGTH = 3500;
@@ -68,7 +68,7 @@ export default function LyricsGenerationPage() {
     setResult(null);
 
     try {
-      const response = await authFetch('/api/minimax/music/lyrics', {
+      const response = await authFetch('/api/minimax/music/generations/lyrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

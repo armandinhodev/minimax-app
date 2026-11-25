@@ -4,7 +4,7 @@ import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
 
-import { isSafeHttpUrl, type VideoTaskDTO } from '@/application/dto/VideoDTO';
+import { isSafeHttpUrl, type VideoTaskDTO } from '@/application/dto/minimax/video/VideoDTO';
 
 export interface VideoTaskResultProps {
   task: VideoTaskDTO | null;

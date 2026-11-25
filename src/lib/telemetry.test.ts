@@ -4,8 +4,8 @@
  * Telemetry unit tests — getUserSafeMessage and captureServerError behavior.
  */
 
-import { afterEach, describe, it, expect, vi } from 'vitest';
-import { getUserSafeMessage, captureServerError, recordUploadFailure, setTelemetryReporterForTests, type TelemetryEvent } from './telemetry';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { captureServerError, getUserSafeMessage, recordUploadFailure, setTelemetryReporterForTests, type TelemetryEvent } from './telemetry';
 import { VoiceCloneNotVerifiedError } from '@/application/errors/VoiceCloneNotVerifiedError';
 
 // Mock server-only to prevent import failures in test env
@@ -98,7 +98,7 @@ describe('captureServerError', () => {
   it('does not throw when called with valid inputs', () => {
     expect(() =>
       captureServerError(new Error('test'), {
-        endpoint: '/api/minimax/tts',
+        endpoint: '/api/minimax/speech/t2a',
         method: 'POST',
         statusCode: 500,
       })
@@ -114,7 +114,7 @@ describe('captureServerError', () => {
       status: 429,
       retryAfterSeconds: 6,
     }), {
-      endpoint: '/api/minimax/tts',
+      endpoint: '/api/minimax/speech/t2a',
       method: 'POST',
       statusCode: 429,
       miniMaxMessage: 'Rate limited',
@@ -128,7 +128,7 @@ describe('captureServerError', () => {
     expect(event).toMatchObject({
       service: 'minimax-api',
       eventType: 'route_error',
-      endpoint: '/api/minimax/tts',
+      endpoint: '/api/minimax/speech/t2a',
       method: 'POST',
       operation: 'sync-tts',
       statusCode: 429,
@@ -144,7 +144,7 @@ describe('captureServerError', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     captureServerError(new Error('Bearer super-secret-token failed'), {
-      endpoint: '/api/minimax/tts',
+      endpoint: '/api/minimax/speech/t2a',
       method: 'POST',
       statusCode: 500,
       miniMaxMessage: 'authorization=abc123',
@@ -166,7 +166,7 @@ describe('captureServerError', () => {
     setTelemetryReporterForTests({ report });
 
     captureServerError(new Error('totally unknown failure'), {
-      endpoint: '/api/minimax/tts',
+      endpoint: '/api/minimax/speech/t2a',
       method: 'POST',
       statusCode: 500,
     });
@@ -191,7 +191,7 @@ describe('recordUploadFailure', () => {
     setTelemetryReporterForTests({ report });
 
     recordUploadFailure(new Error('upload exploded'), {
-      endpoint: '/api/minimax/files/upload',
+      endpoint: '/api/minimax/files',
       method: 'POST',
       statusCode: 500,
       operation: 'file.upload',
@@ -201,7 +201,7 @@ describe('recordUploadFailure', () => {
     const event = report.mock.calls[0][0] as TelemetryEvent;
     expect(event).toMatchObject({
       eventType: 'upload_failure',
-      endpoint: '/api/minimax/files/upload',
+      endpoint: '/api/minimax/files',
       method: 'POST',
       operation: 'file.upload',
       statusCode: 500,
@@ -217,7 +217,7 @@ describe('recordUploadFailure', () => {
     setTelemetryReporterForTests({ report });
 
     recordUploadFailure(new Error('boom'), {
-      endpoint: '/api/minimax/files/upload',
+      endpoint: '/api/minimax/files',
       method: 'POST',
       statusCode: 500,
     });
@@ -234,7 +234,7 @@ describe('recordUploadFailure', () => {
       code: 4001,
       status: 400,
     }), {
-      endpoint: '/api/minimax/files/upload',
+      endpoint: '/api/minimax/files',
       method: 'POST',
       statusCode: 500,
       miniMaxCode: 4001,

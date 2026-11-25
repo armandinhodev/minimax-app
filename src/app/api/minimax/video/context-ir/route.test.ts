@@ -9,12 +9,12 @@ const { executeMock, recordMock } = vi.hoisted(() => ({
   recordMock: vi.fn(),
 }));
 
-vi.mock('@/application/use-cases/video/CreateVideoContextIR', () => ({
+vi.mock('@/application/use-cases/minimax/video/CreateVideoContextIR', () => ({
   CreateVideoContextIRUseCase: vi.fn().mockImplementation(() => ({ execute: executeMock })),
 }));
 
-vi.mock('@/infrastructure/minimax/MiniMaxVideoClient', () => ({
-  MiniMaxVideoClient: vi.fn().mockImplementation(() => ({})),
+vi.mock('@/infrastructure/minimax/video/VideoClient', () => ({
+  VideoClient: vi.fn().mockImplementation(() => ({})),
 }));
 
 vi.mock('@/app/api/minimax/_shared/video-library-recording', () => ({

@@ -1,4 +1,4 @@
-import type { CreateLibraryAssetDTO, CreateLibraryGenerationDTO, LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
+import type { CreateLibraryAssetDTO, CreateLibraryGenerationDTO, LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 import { RecordGenerationUseCase } from '@/application/use-cases/library/RecordGeneration';
 import { decodeAssetPayload, writeLocalAsset } from '@/infrastructure/assets/LocalAssetStorage';
 import { SQLiteGenerationRepository } from '@/infrastructure/sqlite/SQLiteGenerationRepository';

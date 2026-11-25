@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Badge } from '@/components/ui/badge';
 import { VoiceCard } from '@/components/voice/VoiceCard';
-import type { VoiceDTO } from '@/application/dto/VoiceDTO';
+import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import { FLAG_SIZE_HEADER, getFlagUrl, getLanguageInfo } from '@/lib/language-flags';
 
 interface VoiceGroupSectionProps {

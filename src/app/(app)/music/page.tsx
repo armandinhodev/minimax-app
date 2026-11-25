@@ -12,8 +12,8 @@ import { Select, type SelectOption } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import type { LibraryGenerationDTO } from '@/application/dto/LibraryDTO';
-import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/MusicDTO';
+import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
+import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
 
 const PROMPT_MAX_LENGTH = 2000;
 const COVER_PROMPT_MIN_LENGTH = 10;
@@ -219,7 +219,7 @@ export default function MusicPage() {
     setResult(null);
 
     try {
-      const response = await authFetch('/api/minimax/music', {
+      const response = await authFetch('/api/minimax/music/generations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

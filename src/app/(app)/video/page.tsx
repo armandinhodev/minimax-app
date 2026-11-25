@@ -20,34 +20,14 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
-import {
-  CreateVideoContextIRSchema,
-  CreateVideoGenerationSchema,
-  CreateVideoRegenerationSchema,
-  VIDEO_TASK_STATUSES,
-  VIDEO_TASK_TYPES,
-  type VideoModel,
-  type VideoPromptExpansionMode,
-  type VideoResolution,
-  type VideoTaskDTO,
-  type VideoTaskStatus,
-  type VideoTaskType,
-} from '@/application/dto/VideoDTO';
+import { CreateVideoContextIRSchema, CreateVideoGenerationSchema, CreateVideoRegenerationSchema, VIDEO_TASK_STATUSES, VIDEO_TASK_TYPES, type VideoModel, type VideoPromptExpansionMode, type VideoResolution, type VideoTaskDTO, type VideoTaskStatus, type VideoTaskType } from '@/application/dto/minimax/video/VideoDTO';
 
 import { VideoMediaFields } from './VideoMediaFields';
 import { VideoTaskResult } from './VideoTaskResult';
 import { useVideoComposition } from './useVideoComposition';
 import { useVideoTaskPolling } from './useVideoTaskPolling';
-import { cancelVideoTask, createVideoTask, listVideoTasks, VideoRequestError } from './video-api';
-import {
-  EMPTY_VIDEO_MEDIA,
-  splitMediaReferences,
-  VIDEO_MODEL_OPTIONS,
-  VIDEO_PROMPT_EXPANSION_OPTIONS,
-  videoDurationRange,
-  videoResolutionOptions,
-  type VideoMediaValues,
-} from './video-options';
+import { VideoRequestError, cancelVideoTask, createVideoTask, listVideoTasks } from './video-api';
+import { EMPTY_VIDEO_MEDIA, VIDEO_MODEL_OPTIONS, VIDEO_PROMPT_EXPANSION_OPTIONS, splitMediaReferences, type VideoMediaValues, videoDurationRange, videoResolutionOptions } from './video-options';
 
 const PROMPT_MAX_LENGTH = 7000;
 const REGENERATION_PROMPT_MAX_LENGTH = 40000;

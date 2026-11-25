@@ -8,15 +8,12 @@
 
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/api/_shared/auth';
-import { GetFileUseCase } from '@/application/use-cases/file/GetFile';
-import { DeleteFileUseCase } from '@/application/use-cases/file/DeleteFile';
-import { MiniMaxFileClient } from '@/infrastructure/minimax/MiniMaxFileClient';
-import { DeleteFileSchema, GetFileSchema } from '@/lib/validators';
-import {
-  createInvalidJsonResponse,
-  createMiniMaxRouteErrorResponse,
-  createValidationErrorResponse,
-} from '../../_shared/route-error';
+import { GetFileUseCase } from '@/application/use-cases/minimax/files/GetFile';
+import { DeleteFileUseCase } from '@/application/use-cases/minimax/files/DeleteFile';
+import { FileClient } from '@/infrastructure/minimax/files/FileClient';
+import { DeleteFileSchema, GetFileSchema } from '@/application/dto/minimax/files/FileDTO';
+
+import { createInvalidJsonResponse, createMiniMaxRouteErrorResponse, createValidationErrorResponse } from '../../_shared/route-error';
 
 export async function GET(
   _request: Request,
@@ -31,7 +28,7 @@ export async function GET(
   }
 
   try {
-    const useCase = new GetFileUseCase(new MiniMaxFileClient());
+    const useCase = new GetFileUseCase(new FileClient());
     const result = await useCase.execute(parsed.data);
     return NextResponse.json(result);
   } catch (error) {
@@ -69,7 +66,7 @@ export async function DELETE(
   }
 
   try {
-    const useCase = new DeleteFileUseCase(new MiniMaxFileClient());
+    const useCase = new DeleteFileUseCase(new FileClient());
     await useCase.execute(parsed.data);
     return NextResponse.json({ ok: true });
   } catch (error) {

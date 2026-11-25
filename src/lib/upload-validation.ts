@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import type { FilePurpose } from '@/application/dto/FileDTO';
-import {
-  ALL_UPLOAD_PURPOSES,
-  MAX_MULTIPART_OVERHEAD_BYTES,
-  MAX_UPLOAD_FILE_SIZE_BYTES,
-  MAX_UPLOAD_FILE_SIZE_MB,
-  UPLOAD_POLICY_BY_PURPOSE,
-} from '@/lib/upload-policy';
+import type { FilePurpose } from '@/application/dto/minimax/files/FileDTO';
+import { ALL_UPLOAD_PURPOSES, MAX_MULTIPART_OVERHEAD_BYTES, MAX_UPLOAD_FILE_SIZE_BYTES, MAX_UPLOAD_FILE_SIZE_MB, UPLOAD_POLICY_BY_PURPOSE } from '@/lib/upload-policy';
 
 const AUDIO_PURPOSES = new Set<FilePurpose>(['voice_clone', 'prompt_audio']);
 const AUDIO_MIME_TYPES = new Set(

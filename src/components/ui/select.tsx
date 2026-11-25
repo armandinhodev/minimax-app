@@ -14,16 +14,8 @@
  * descending and then label ascending.
  */
 
-import { memo, useEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  Box,
-  Combobox,
-  Portal,
-  Select as ChakraSelect,
-  createListCollection,
-  useFilter,
-  useListCollection,
-} from '@chakra-ui/react';
+import { memo, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { Box, Combobox, Portal, Select as ChakraSelect, createListCollection, useFilter, useListCollection } from '@chakra-ui/react';
 import { getFlagUrl } from '@/lib/language-flags';
 import type { LanguageInfo } from '@/lib/language-flags';
 

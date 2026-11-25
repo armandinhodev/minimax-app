@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getFlagUrl, getLanguageInfo, LANGUAGE_INFO } from './language-flags';
+import { LANGUAGE_INFO, getFlagUrl, getLanguageInfo } from './language-flags';
 
 const expectedCountryCodes: Record<string, string> = {
   Portuguese: 'pt', Korean: 'kr', Spanish: 'es', English: 'gb',

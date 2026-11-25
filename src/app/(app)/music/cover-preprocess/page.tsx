@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent } from 'react';
+import { type ChangeEvent, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { Button } from '@/components/ui/button';
@@ -206,7 +206,7 @@ export default function MusicCoverPreprocessPage() {
     setResult(null);
 
     try {
-      const response = await authFetch('/api/minimax/music/cover-preprocess', {
+      const response = await authFetch('/api/minimax/music/generations/cover-preprocess', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

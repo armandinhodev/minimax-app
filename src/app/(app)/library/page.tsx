@@ -9,7 +9,7 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/LibraryDTO';
+import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
 
 type LibraryFilter = 'all' | LibraryGenerationKind;
 

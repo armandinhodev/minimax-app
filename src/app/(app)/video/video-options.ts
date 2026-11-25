@@ -5,13 +5,7 @@
  * the browser and the server always agree on what MiniMax accepts.
  */
 
-import {
-  VIDEO_MODEL_CAPABILITIES,
-  VIDEO_MODELS,
-  VIDEO_PROMPT_EXPANSION_MODES,
-  VIDEO_RATIOS,
-  type VideoModel,
-} from '@/application/dto/VideoDTO';
+import { VIDEO_MODELS, VIDEO_MODEL_CAPABILITIES, VIDEO_PROMPT_EXPANSION_MODES, VIDEO_RATIOS, type VideoModel } from '@/application/dto/minimax/video/VideoDTO';
 
 export interface VideoOption {
   value: string;

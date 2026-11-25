@@ -143,7 +143,7 @@ describe('MusicPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music', expect.objectContaining({
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/generations', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -185,7 +185,7 @@ describe('MusicPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music', expect.objectContaining({
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/generations', expect.objectContaining({
       body: expect.stringContaining('"instrumental":true'),
     }));
     expect(JSON.parse(authClientMocks.authFetch.mock.calls[0][1].body)).toMatchObject({
@@ -226,7 +226,7 @@ describe('MusicPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music', expect.objectContaining({
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/generations', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -299,7 +299,7 @@ describe('MusicPage', () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music', expect.objectContaining({
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/music/generations', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

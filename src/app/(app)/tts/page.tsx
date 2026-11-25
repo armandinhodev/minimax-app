@@ -76,7 +76,7 @@ export default function TTSPage() {
     setAudioHex(null);
 
     try {
-      const response = await authFetch('/api/minimax/tts', {
+      const response = await authFetch('/api/minimax/speech/t2a', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: generateText, voiceId: generateVoiceId, model, format }),

@@ -6,14 +6,10 @@
 
 import { NextResponse } from 'next/server';
 import { requireAuth } from '../../../_shared/auth';
-import { ImageContextIRRequestSchema } from '@/application/dto/ImageDTO';
-import { EnhanceImagePromptUseCase, EnhanceImagePromptValidationError } from '@/application/use-cases/image/EnhanceImagePrompt';
-import { MiniMaxImageClient, MiniMaxImageError } from '@/infrastructure/minimax/MiniMaxImageClient';
-import {
-  createInvalidJsonResponse,
-  createMiniMaxRouteErrorResponse,
-  createValidationErrorResponse,
-} from '../../_shared/route-error';
+import { ImageContextIRRequestSchema } from '@/application/dto/minimax/image/ImageDTO';
+import { EnhanceImagePromptUseCase, EnhanceImagePromptValidationError } from '@/application/use-cases/minimax/image/EnhanceImagePrompt';
+import { ImageClient, MiniMaxImageError } from '@/infrastructure/minimax/image/ImageClient';
+import { createInvalidJsonResponse, createMiniMaxRouteErrorResponse, createValidationErrorResponse } from '../../_shared/route-error';
 
 export const runtime = 'nodejs';
 
@@ -56,7 +52,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const useCase = new EnhanceImagePromptUseCase(new MiniMaxImageClient());
+    const useCase = new EnhanceImagePromptUseCase(new ImageClient());
     const result = await useCase.execute(parsed.data);
     return NextResponse.json(result);
   } catch (error) {

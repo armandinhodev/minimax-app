@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
-import type { LibraryGenerationDTO, LibrarySummaryDTO } from '@/application/dto/LibraryDTO';
+import type { LibraryGenerationDTO, LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authFetch } from '@/lib/auth-client';
 

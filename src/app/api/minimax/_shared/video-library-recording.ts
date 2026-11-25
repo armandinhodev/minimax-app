@@ -1,5 +1,5 @@
-import type { CreateLibraryAssetDTO, LibraryGenerationSource } from '@/application/dto/LibraryDTO';
-import type { VideoTaskDTO } from '@/application/dto/VideoDTO';
+import type { CreateLibraryAssetDTO, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
+import type { VideoTaskDTO } from '@/application/dto/minimax/video/VideoDTO';
 import { SQLiteGenerationRepository } from '@/infrastructure/sqlite/SQLiteGenerationRepository';
 
 function safeOutputUrl(value?: string): string | undefined {

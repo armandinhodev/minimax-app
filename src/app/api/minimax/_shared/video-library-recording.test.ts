@@ -1,6 +1,6 @@
 /** @vitest-environment node */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { recordVideoTaskBestEffort } from './video-library-recording';
 
 const mocks = vi.hoisted(() => ({ upsert: vi.fn() }));

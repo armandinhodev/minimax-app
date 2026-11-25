@@ -31,7 +31,7 @@ Every MiniMax failure event emitted via `captureServerError` / `recordUploadFail
 ## Event Emitters
 
 - `captureServerError(error, context)` — generic error sink for any route handler.
-- `recordUploadFailure(error, context)` — convenience wrapper that pins `eventType: 'upload_failure'` and the upload endpoint defaults. Used by `POST /api/minimax/files/upload`.
+- `recordUploadFailure(error, context)` — convenience wrapper that pins `eventType: 'upload_failure'` and the upload endpoint defaults. Used by `POST /api/minimax/files`.
 
 ## Starter Alert Thresholds
 
