@@ -45,6 +45,13 @@ const PRODUCT_CARDS = [
     metric: 'video' as const,
   },
   {
+    title: 'Transcription',
+    href: '/asr',
+    accent: 'orange' as const,
+    description: 'Turn audio into text, speaker segments or subtitles.',
+    metric: null,
+  },
+  {
     title: 'Library',
     href: '/library',
     accent: 'teal' as const,
@@ -58,6 +65,7 @@ const QUICK_ACTIONS = [
   { href: '/image', label: 'Create image' },
   { href: '/music', label: 'Compose music' },
   { href: '/video', label: 'Create video' },
+  { href: '/asr', label: 'Transcribe audio' },
   { href: '/library', label: 'Open Library' },
 ];
 

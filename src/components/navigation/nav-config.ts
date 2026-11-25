@@ -1,4 +1,4 @@
-export type ProductAccent = "speech" | "image" | "music" | "video" | "library";
+export type ProductAccent = "speech" | "asr" | "image" | "music" | "video" | "library";
 
 export type NavMatchMode = "exact" | "prefix";
 
@@ -45,6 +45,22 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
         items: [
           { href: "/voices/clone", label: "Clone Voice", description: "Create a voice from audio" },
           { href: "/voices/design", label: "Design Voice", description: "Build a synthetic voice" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "asr",
+    label: "Transcription",
+    shortLabel: "TR",
+    href: "/asr",
+    description: "Speech-to-Text studio",
+    matchPaths: ["/asr"],
+    groups: [
+      {
+        label: "Workflows",
+        items: [
+          { href: "/asr", label: "Transcribe Audio", description: "Turn audio into text and subtitles" },
         ],
       },
     ],

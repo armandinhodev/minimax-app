@@ -48,6 +48,8 @@ Reglas que sostienen la convención:
 | `POST /api/minimax/speech/voices` | `POST /v1/delete_voice` |
 | `POST /api/minimax/speech/voices/clone` | `POST /v1/voice_clone` |
 | `POST /api/minimax/speech/voices/design` | `POST /v1/voice_design` |
+| `POST /api/minimax/asr/transcriptions` | `POST /v1/speech_to_text` |
+| `POST /api/minimax/asr/transcriptions/stream` | `POST /v1/speech_to_text` con `stream: true` (SSE) |
 | `POST /api/minimax/image` | `POST /v1/images/generations` o `/v1/images/edits` |
 | `POST /api/minimax/image/context-ir` | `POST /v1/h3_image_context_ir` |
 | `POST /api/minimax/video/generation` | `POST /v2/video_generation` |
