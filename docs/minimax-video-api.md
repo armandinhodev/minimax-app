@@ -6,12 +6,17 @@ The Video Studio targets the MiniMax video V2 endpoints: `POST /v2/video_generat
 
 | User intent | App surface | Upstream endpoint |
 | --- | --- | --- |
-| Generate a video | `/video#video-generation`, `POST /api/minimax/video/generation` | `POST /v2/video_generation` |
-| Enrich a prompt | `/video#video-context-ir`, `POST /api/minimax/video/context-ir` | `POST /v2/h3_context_ir` |
-| Regenerate in 2K | `/video#video-regeneration`, `POST /api/minimax/video/regeneration` | `POST /v2/video_regeneration` |
+| Overview of the studio | `/video` | — |
+| Generate a video | `/video/generation`, `POST /api/minimax/video/generation` | `POST /v2/video_generation` |
+| Enrich a prompt | `/video/context-ir`, `POST /api/minimax/video/context-ir` | `POST /v2/h3_context_ir` |
+| Regenerate in 2K | `/video/regeneration`, `POST /api/minimax/video/regeneration` | `POST /v2/video_regeneration` |
+| Browse tasks | `/video/tasks`, `GET /api/minimax/video/tasks` | `GET /v2/query/video_generation` |
 | Follow a task | `GET /api/minimax/video/tasks/[taskId]` | `GET /v2/query/video_generation/{task_id}` |
-| Browse tasks | `GET /api/minimax/video/tasks` | `GET /v2/query/video_generation` |
 | Cancel or delete | `DELETE /api/minimax/video/tasks/[taskId]` | `DELETE /v2/video_generation/{task_id}` |
+
+Each mode lives on its own route, mirroring the MiniMax creation endpoints
+one to one, so every one of them is an independent page and an independent
+sidebar item.
 
 ## Supported models
 

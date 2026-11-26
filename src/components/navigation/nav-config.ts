@@ -127,7 +127,11 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
       {
         label: "Video workflows",
         items: [
-          { href: "/video", label: "Video Studio", description: "Generate, enhance and regenerate videos" },
+          { href: "/video", label: "Video Studio", description: "Overview of the video workflows" },
+          { href: "/video/generation", label: "Video Generation", description: "Create a video from text, images or references" },
+          { href: "/video/context-ir", label: "H3-Context-IR", description: "Enrich a prompt with multimodal context" },
+          { href: "/video/regeneration", label: "2K Regeneration", description: "Re-render a 768P result in 2K" },
+          { href: "/video/tasks", label: "Tasks", description: "Browse and cancel video tasks" },
         ],
       },
     ],
