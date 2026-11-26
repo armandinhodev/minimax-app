@@ -85,15 +85,14 @@ dominios. El mapa completo está en
 | Speech | `/v1/t2a_v2`, `/v1/t2a_async_v2`, `/v1/query/t2a_async_query_v2` | `/api/minimax/speech/t2a/**` |
 | Voice | `/v1/voice_clone`, `/v1/voice_design`, `/v1/get_voice`, `/v1/delete_voice` | `/api/minimax/speech/voices/**` |
 | ASR | `/v1/speech_to_text` | `/api/minimax/asr/transcriptions/**` |
+| Text | `/v1/text/chatcompletion_v2`, `/v1/chat/completions`, `/anthropic/v1/messages`, `/v1/responses`, `/v1/responses/input_tokens`, `/v1/models`, `/v1/models/{model}` | `/api/minimax/text/**` |
 | Files | `/v1/files/upload`, `/list`, `/retrieve`, `/retrieve_content`, `/delete` | `/api/minimax/files/**` |
 | Image | `/v1/images/generations`, `/v1/images/edits`, `/v1/h3_image_context_ir` | `/api/minimax/image/**` |
 | Video | `/v2/video_generation`, `/v2/h3_context_ir`, `/v2/video_regeneration`, `/v2/query/video_generation[/{id}]`, `DELETE /v2/video_generation/{id}` | `/api/minimax/video/**` |
 | Music | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` | `/api/minimax/music/**` |
 
-**Endpoints vigentes aún sin implementar** (pendientes de las unidades W3 en
-adelante): `POST /v1/text/chatcompletion_v2` (y las superficies OpenAI /
-Anthropic / Responses), `GET /v1/models` y `/v1/models/{model}`,
-`POST /v1/video_template_generation` y
+**Endpoints vigentes aún sin implementar** (pendientes de las unidades W4 y W5 en
+adelante): `POST /v1/video_template_generation` y
 `GET /v1/query/video_template_generation` (Video Agent), y el TTS por WebSocket
 (`wss://api.minimax.io/ws/v1/t2a_v2`).
 

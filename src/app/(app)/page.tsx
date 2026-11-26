@@ -52,6 +52,13 @@ const PRODUCT_CARDS = [
     metric: null,
   },
   {
+    title: 'Chat',
+    href: '/text',
+    accent: 'purple' as const,
+    description: 'Talk to MiniMax M3 models on any compatible surface.',
+    metric: null,
+  },
+  {
     title: 'Library',
     href: '/library',
     accent: 'teal' as const,
@@ -66,6 +73,7 @@ const QUICK_ACTIONS = [
   { href: '/music', label: 'Compose music' },
   { href: '/video', label: 'Create video' },
   { href: '/asr', label: 'Transcribe audio' },
+  { href: '/text', label: 'Chat with MiniMax' },
   { href: '/library', label: 'Open Library' },
 ];
 

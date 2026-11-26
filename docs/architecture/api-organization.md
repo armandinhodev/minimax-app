@@ -16,7 +16,7 @@ upstream) como antes de esta estandarización.
 | Video Agent | `video-agent` | `/v1/video_template_generation`, `/v1/query/video_template_generation` |
 | Music | `music` | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` |
 | Files | `files` | `/v1/files/upload`, `/list`, `/retrieve`, `/retrieve_content`, `/delete` |
-| Text / LLM | `text` | `/v1/text/chatcompletion_v2`, `/v1/messages`, `/v1/chat/completions`, `/v1/responses`, `/v1/models[/{id}]` |
+| Text / LLM | `text` | `/v1/text/chatcompletion_v2`, `/anthropic/v1/messages`, `/v1/chat/completions`, `/v1/responses`, `/v1/responses/input_tokens`, `/v1/models[/{id}]` |
 
 ## Convención de cuatro capas
 
@@ -66,6 +66,13 @@ Reglas que sostienen la convención:
 | `GET /api/minimax/files/[fileId]` | `GET /v1/files/retrieve` |
 | `GET /api/minimax/files/[fileId]/content` | `GET /v1/files/retrieve_content` |
 | `DELETE /api/minimax/files/[fileId]` | `POST /v1/files/delete` |
+| `POST /api/minimax/text/chat/completions` | `POST /v1/text/chatcompletion_v2` |
+| `POST /api/minimax/text/chat/completions/stream` | `POST /v1/text/chatcompletion_v2` con `stream: true` (SSE) |
+| `POST /api/minimax/text/messages` | `POST /anthropic/v1/messages` |
+| `POST /api/minimax/text/responses` | `POST /v1/responses` |
+| `POST /api/minimax/text/responses/input-tokens` | `POST /v1/responses/input_tokens` |
+| `GET /api/minimax/text/models` | `GET /v1/models` |
+| `GET /api/minimax/text/models/[model]` | `GET /v1/models/{model}` |
 
 `POST /api/minimax/image` mantiene una sola ruta: el upstream decide entre
 generación y edición según cuántas imágenes de referencia acompañan el request,

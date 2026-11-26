@@ -1,4 +1,4 @@
-export type ProductAccent = "speech" | "asr" | "image" | "music" | "video" | "library";
+export type ProductAccent = "speech" | "asr" | "text" | "image" | "music" | "video" | "library";
 
 export type NavMatchMode = "exact" | "prefix";
 
@@ -61,6 +61,22 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
         label: "Workflows",
         items: [
           { href: "/asr", label: "Transcribe Audio", description: "Turn audio into text and subtitles" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "text",
+    label: "Chat",
+    shortLabel: "CH",
+    href: "/text",
+    description: "MiniMax M3 chat studio",
+    matchPaths: ["/text"],
+    groups: [
+      {
+        label: "Workflows",
+        items: [
+          { href: "/text", label: "Chat Studio", description: "Talk to MiniMax M3 models" },
         ],
       },
     ],
