@@ -13,8 +13,7 @@ upstream) como antes de esta estandarización.
 | Speech-to-Text | `asr` | `/v1/speech_to_text` |
 | Image | `image` | `/v1/images/generations`, `/v1/images/edits`, `/v1/h3_image_context_ir` |
 | Video | `video` | `/v2/video_generation`, `/v2/h3_context_ir`, `/v2/video_regeneration`, `/v2/query/video_generation[/{id}]`, `DELETE /v2/video_generation/{id}` |
-| Video Agent | `video-agent` | `/v1/video_template_generation`, `/v1/query/video_template_generation` |
-| Music | `music` | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` |
+| Video Agent | `video-agent` | `/v1/video_template_generation`, `/v1/query/video_template_generation` || Music | `music` | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` |
 | Files | `files` | `/v1/files/upload`, `/list`, `/retrieve`, `/retrieve_content`, `/delete` |
 | Text / LLM | `text` | `/v1/text/chatcompletion_v2`, `/anthropic/v1/messages`, `/v1/chat/completions`, `/v1/responses`, `/v1/responses/input_tokens`, `/v1/models[/{id}]` |
 
@@ -73,6 +72,9 @@ Reglas que sostienen la convención:
 | `POST /api/minimax/text/responses/input-tokens` | `POST /v1/responses/input_tokens` |
 | `GET /api/minimax/text/models` | `GET /v1/models` |
 | `GET /api/minimax/text/models/[model]` | `GET /v1/models/{model}` |
+| `POST /api/minimax/video-agent/generations` | `POST /v1/video_template_generation` |
+| `GET /api/minimax/video-agent/generations/[taskId]` | `GET /v1/query/video_template_generation` |
+| `GET /api/minimax/video-agent/templates` | ninguno — el catálogo está en la FAQ de MiniMax |
 
 `POST /api/minimax/image` mantiene una sola ruta: el upstream decide entre
 generación y edición según cuántas imágenes de referencia acompañan el request,

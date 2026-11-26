@@ -1,4 +1,4 @@
-export type ProductAccent = "speech" | "asr" | "text" | "image" | "music" | "video" | "library";
+export type ProductAccent = "speech" | "asr" | "text" | "image" | "music" | "video" | "video-agent" | "library";
 
 export type NavMatchMode = "exact" | "prefix";
 
@@ -128,6 +128,22 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
         label: "Video workflows",
         items: [
           { href: "/video", label: "Video Studio", description: "Generate, enhance and regenerate videos" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "video-agent",
+    label: "Video Agent",
+    shortLabel: "VA",
+    href: "/video-agent",
+    description: "Template based video generation",
+    matchPaths: ["/video-agent"],
+    groups: [
+      {
+        label: "Workflows",
+        items: [
+          { href: "/video-agent", label: "Video Agent", description: "Render a video from a MiniMax template" },
         ],
       },
     ],

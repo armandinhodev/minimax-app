@@ -89,12 +89,12 @@ dominios. El mapa completo está en
 | Files | `/v1/files/upload`, `/list`, `/retrieve`, `/retrieve_content`, `/delete` | `/api/minimax/files/**` |
 | Image | `/v1/images/generations`, `/v1/images/edits`, `/v1/h3_image_context_ir` | `/api/minimax/image/**` |
 | Video | `/v2/video_generation`, `/v2/h3_context_ir`, `/v2/video_regeneration`, `/v2/query/video_generation[/{id}]`, `DELETE /v2/video_generation/{id}` | `/api/minimax/video/**` |
+| Video Agent | `/v1/video_template_generation`, `/v1/query/video_template_generation` | `/api/minimax/video-agent/**` |
 | Music | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` | `/api/minimax/music/**` |
 
-**Endpoints vigentes aún sin implementar** (pendientes de las unidades W4 y W5 en
-adelante): `POST /v1/video_template_generation` y
-`GET /v1/query/video_template_generation` (Video Agent), y el TTS por WebSocket
-(`wss://api.minimax.io/ws/v1/t2a_v2`).
+**Endpoints vigentes aún sin implementar**: el TTS por WebSocket
+(`wss://api.minimax.io/ws/v1/t2a_v2`) y su variante bidireccional. El resto de
+la API vigente de MiniMax está cubierta.
 
 ## Deliberate deviations
 
