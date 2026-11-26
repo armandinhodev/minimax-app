@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
@@ -110,26 +110,26 @@ export default function LyricsGenerationPage() {
       <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
         <Box maxW="52rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Lyrics Generation</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="purple.100" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500.
         </Box>
       </Box>
 
-      <Box border="1px solid" borderColor="orange.100" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="orange.800" fontSize="sm">
+      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
-        <Card accent="purple">
-          <CardHeader>
-            <CardTitle>Lyric Brief</CardTitle>
-            <CardDescription>Choose whether MiniMax should write from scratch or revise your existing lyrics.</CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Lyric Brief</SheetTitle>
+            <SheetDescription>Choose whether MiniMax should write from scratch or revise your existing lyrics.</SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="grid" gridTemplateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
               <Box display="grid" gap={2}>
                 <Label>Mode</Label>
@@ -174,13 +174,13 @@ export default function LyricsGenerationPage() {
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="orange.100" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="orange.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -188,29 +188,29 @@ export default function LyricsGenerationPage() {
             <Button onClick={handleGenerate} disabled={!canGenerate} colorPalette="purple">
               {isLoading ? 'Generating lyrics...' : 'Generate Lyrics'}
             </Button>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="28rem">
-          <CardHeader>
-            <CardTitle>Generated Lyrics</CardTitle>
-            <CardDescription>{result ? result.songTitle || 'Untitled song' : 'Lyrics, title, and style tags appear here after generation.'}</CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+        <Sheet minH="28rem">
+          <SheetHeader>
+            <SheetTitle>Generated Lyrics</SheetTitle>
+            <SheetDescription>{result ? result.songTitle || 'Untitled song' : 'Lyrics, title, and style tags appear here after generation.'}</SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {!result && !isLoading && (
-              <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 Write a focused brief, then generate lyrics ready for MiniMax Music Generation.
               </Box>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="purple.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 Writing lyrics with MiniMax Music. This is a billable POST, so the app will not retry automatically.
               </Box>
             )}
             {result && (
               <Box display="grid" gap={4}>
                 <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
-                  <Box color="gray.600" fontSize="sm">
+                  <Box color="content.readout" fontSize="sm">
                     {result.styleTags.length ? result.styleTags.join(' · ') : 'No style tags returned'}
                   </Box>
                   <Box display="flex" gap={2} flexWrap="wrap">
@@ -220,13 +220,13 @@ export default function LyricsGenerationPage() {
                     </Box>
                   </Box>
                 </Box>
-                <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="green.100" borderRadius="xl" bg="white" p="1rem" color="gray.800" overflowX="auto">
+                <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
                   {result.lyrics}
                 </Box>
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

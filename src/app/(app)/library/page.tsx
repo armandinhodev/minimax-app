@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
@@ -63,14 +63,6 @@ function downloadUrl(url: string): void {
   document.body.appendChild(link);
   link.click();
   link.remove();
-}
-
-function getItemAccent(kind: LibraryGenerationKind): 'green' | 'purple' | 'teal' | 'blue' {
-  if (kind === 'video') return 'purple';
-  if (kind === 'image') return 'blue';
-  if (kind === 'clone') return 'purple';
-  if (kind === 'design') return 'teal';
-  return 'green';
 }
 
 function getItemBadgeVariant(kind: LibraryGenerationKind): 'success' | 'purple' | 'info' {
@@ -174,54 +166,54 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
   const isExpiredCoverPreprocess = isCoverPreprocessGeneration(generation) && !coverGenerationHref;
 
   return (
-    <Card accent={getItemAccent(generation.kind)}>
-      <CardHeader>
+    <Sheet>
+      <SheetHeader>
         <Box display="flex" alignItems="flex-start" justifyContent="space-between">
           <Box>
-            <CardTitle style={{ fontSize: '0.875rem' }}>{isCoverPreprocessGeneration(generation) ? 'Cover preprocess' : getItemTypeLabel(generation.kind)}</CardTitle>
-            <CardDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+            <SheetTitle style={{ fontSize: '0.875rem' }}>{isCoverPreprocessGeneration(generation) ? 'Cover preprocess' : getItemTypeLabel(generation.kind)}</SheetTitle>
+            <SheetDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
               {formatDate(generation.createdAt)}
-            </CardDescription>
+            </SheetDescription>
           </Box>
           <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
             <Badge variant={getItemBadgeVariant(generation.kind)}>{generation.kind}</Badge>
             <Badge variant={storageStatus.variant}>{storageStatus.label}</Badge>
           </Box>
         </Box>
-      </CardHeader>
-      <CardContent display="grid" gap={2}>
+      </SheetHeader>
+      <SheetContent display="grid" gap={2}>
         {generation.prompt && (
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
             &ldquo;{truncateText(generation.prompt, 80)}&rdquo;
           </p>
         )}
         {sourceLabel && (
-          <p style={{ fontSize: '0.75rem', color: '#4b5563' }}>Source: {sourceLabel}</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.ink)' }}>Source: {sourceLabel}</p>
         )}
         {generation.model && (
           <p style={{ fontSize: '0.75rem' }}>
-            Model: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.model}</code>
+            Model: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.model}</code>
           </p>
         )}
         {getStringMetadata(generation.metadata, 'voiceId') && (
           <p style={{ fontSize: '0.75rem' }}>
-            Voice: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{getStringMetadata(generation.metadata, 'voiceId')}</code>
+            Voice: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{getStringMetadata(generation.metadata, 'voiceId')}</code>
           </p>
         )}
         {generation.providerFileId && (
           <p style={{ fontSize: '0.75rem' }}>
-            File: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.providerFileId}</code>
+            File: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.providerFileId}</code>
           </p>
         )}
         {generation.kind === 'image' && (
-          <Box display="flex" gap={2} flexWrap="wrap" color="gray.600" fontSize="0.75rem">
+          <Box display="flex" gap={2} flexWrap="wrap" color="content.readout" fontSize="0.75rem">
             {aspectRatio && <span>Ratio: {aspectRatio}</span>}
             {getNumberMetadata(generation.metadata, 'seed') !== undefined && <span>Seed: {getNumberMetadata(generation.metadata, 'seed')}</span>}
             {getBooleanMetadata(generation.metadata, 'promptOptimizer') !== undefined && <span>Optimizer: {getBooleanMetadata(generation.metadata, 'promptOptimizer') ? 'On' : 'Off'}</span>}
           </Box>
         )}
         {generation.kind === 'music' && (
-          <Box display="flex" gap={2} flexWrap="wrap" color="gray.600" fontSize="0.75rem">
+          <Box display="flex" gap={2} flexWrap="wrap" color="content.readout" fontSize="0.75rem">
             {audioAsset?.format && <span>Format: {audioAsset.format.toUpperCase()}</span>}
             {getNumberMetadata(generation.metadata, 'durationSeconds') !== undefined && <span>Duration: {Math.round(getNumberMetadata(generation.metadata, 'durationSeconds') ?? 0)}s</span>}
             {getNumberMetadata(generation.metadata, 'audioDurationSeconds') !== undefined && <span>Reference duration: {Math.round(getNumberMetadata(generation.metadata, 'audioDurationSeconds') ?? 0)}s</span>}
@@ -230,12 +222,12 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           </Box>
         )}
         {isExpiredCoverPreprocess && (
-          <p style={{ fontSize: '0.75rem', color: '#9a3412' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.run)' }}>
             This cover feature ID expired. Run Cover Preprocess again before using it for cover generation.
           </p>
         )}
         {isCoverPreprocessGeneration(generation) && !isExpiredCoverPreprocess && (
-          <p style={{ fontSize: '0.75rem', color: '#166534' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.ok)' }}>
             This intermediate Library record stores the cover feature ID metadata only. Reference audio bytes were not saved.
           </p>
         )}
@@ -245,7 +237,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
             {enhancedPrompt && <Box whiteSpace="pre-wrap" fontSize="sm">{enhancedPrompt}</Box>}
             {videoAsset?.storageRef && (
               <>
-                <video controls preload="metadata" src={videoAsset.storageRef} aria-label="Generated video" style={{ width: '100%', borderRadius: '0.5rem' }} />
+                <video controls preload="metadata" src={videoAsset.storageRef} aria-label="Generated video" style={{ width: '100%', borderRadius: 'var(--chakra-radii-md)' }} />
                 <Box fontSize="xs" color="fg.muted">This provider URL is temporary. Download the video before it expires; an exact expiration time is not provided.</Box>
                 <Button size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
               </>
@@ -260,7 +252,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
               const previewUrl = asset.storageType === 'provider_url' && asset.storageRef ? asset.storageRef : assetUrl;
 
               return (
-                <Box key={asset.id} border="1px solid" borderColor="blue.100" borderRadius="lg" overflow="hidden" bg="gray.50">
+                <Box key={asset.id} border="1px solid" borderColor="interaction.soft" borderRadius="lg" overflow="hidden" bg="surface.field">
                   <img
                     src={previewUrl}
                     alt={`Generated image ${index + 1}`}
@@ -282,12 +274,12 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           </Box>
         )}
         {generation.kind === 'image' && imageAssets.length === 0 && (
-          <p style={{ fontSize: '0.75rem', color: '#9a3412' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.run)' }}>
             No downloadable image asset is available for this backend Library record.
           </p>
         )}
         {(generation.kind === 'tts' || generation.kind === 'music') && !audioAsset && !isCoverPreprocessGeneration(generation) && (
-          <p style={{ fontSize: '0.75rem', color: '#9a3412' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.run)' }}>
             This backend Library record has metadata only and no downloadable audio asset.
           </p>
         )}
@@ -301,7 +293,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
             </Button>
           )}
           {coverGenerationHref && (
-            <a href={coverGenerationHref} style={{ border: '1px solid #16a34a', borderRadius: '0.375rem', color: '#166534', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
+            <a href={coverGenerationHref} style={{ border: '1px solid #16a34a', borderRadius: '0.375rem', color: 'var(--chakra-colors-state.ok)', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
               Use in Cover Generation
             </a>
           )}
@@ -314,8 +306,8 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
             Remove
           </Button>
         </Box>
-      </CardContent>
-    </Card>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -397,7 +389,7 @@ export default function LibraryPage() {
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Library</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Your backend Library records from SQLite metadata and server-side asset references.
           </Box>
         </Box>
@@ -415,7 +407,7 @@ export default function LibraryPage() {
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
-        <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
           {actionStatus}
         </Box>
       )}
@@ -445,22 +437,22 @@ export default function LibraryPage() {
           />
         ))}
         {generations.length === 0 && (
-          <Card accent="green" style={{ gridColumn: '1 / -1' }}>
-            <CardHeader>
-              <CardTitle>No backend Library records yet.</CardTitle>
-              <CardDescription>
+          <Sheet style={{ gridColumn: '1 / -1' }}>
+            <SheetHeader>
+              <SheetTitle>No backend Library records yet.</SheetTitle>
+              <SheetDescription>
                 Generate audio, music, images, or video to create SQLite Library records with backend asset references.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+              </SheetDescription>
+            </SheetHeader>
+          </Sheet>
         )}
         {generations.length > 0 && filteredGenerations.length === 0 && (
-          <Card accent="gray" style={{ gridColumn: '1 / -1' }}>
-            <CardHeader>
-              <CardTitle>No items match this filter</CardTitle>
-              <CardDescription>Switch filters or generate new audio, music, images, video, and voices to add more Library records.</CardDescription>
-            </CardHeader>
-          </Card>
+          <Sheet style={{ gridColumn: '1 / -1' }}>
+            <SheetHeader>
+              <SheetTitle>No items match this filter</SheetTitle>
+              <SheetDescription>Switch filters or generate new audio, music, images, video, and voices to add more Library records.</SheetDescription>
+            </SheetHeader>
+          </Sheet>
         )}
       </Box>
 

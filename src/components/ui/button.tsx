@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * Button.
+ *
+ * The primary action uses the app's single accent. Outlines are separated by
+ * a hairline, not by a shadow, and nothing lifts on hover: a control that
+ * moves is decoration, and the app has one accent to spend, not many.
+ */
+
 import { Button as ChakraButton, type ButtonProps as ChakraButtonProps } from "@chakra-ui/react";
 
 type AppButtonVariant = "solid" | "outline" | "ghost" | "link" | "default" | "destructive";
@@ -9,18 +17,31 @@ interface ButtonProps extends Omit<ChakraButtonProps, "variant"> {
 }
 
 function Button({ variant = "solid", colorPalette, _hover, type = "button", ...props }: ButtonProps) {
-  const effectiveVariant = variant === "default" || variant === "destructive" ? "solid" : variant === "link" ? "plain" : variant;
-  const effectiveColorPalette = colorPalette ?? (variant === "destructive" ? "red" : effectiveVariant === "solid" ? "green" : "gray");
+  const destructive = variant === "destructive" || colorPalette === "red";
+  const solid = variant === "solid" || variant === "default" || destructive;
+  const plain = variant === "link" || variant === "ghost";
+  const effectiveVariant = solid ? "solid" : plain ? "plain" : variant;
+
+  const tone = solid
+    ? destructive
+      ? { bg: "state.err", color: "content.inverse", _hover: { bg: "state.err" } }
+      : { bg: "interaction.accent", color: "content.inverse", _hover: { bg: "interaction.accent" } }
+    : {
+      bg: "transparent",
+      color: "content.ink",
+      borderColor: "surface.rule",
+      _hover: { bg: "surface.inset" },
+    };
 
   return (
     <ChakraButton
       type={type}
       variant={effectiveVariant}
-      colorPalette={effectiveColorPalette}
       borderRadius="md"
-      fontWeight="medium"
-      transition="background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease"
-      _hover={{ boxShadow: "sm", transform: "translateY(-1px)", ..._hover }}
+      fontSize="body"
+      fontWeight="500"
+      transition="background-color 140ms ease, border-color 140ms ease"
+      {...tone}
       {...props}
     />
   );

@@ -11,10 +11,12 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Field } from '@/components/ui/spec';
+import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
 
 import { CreateVideoRegenerationSchema } from '@/application/dto/minimax/video/VideoDTO';
@@ -97,18 +99,21 @@ export function VideoRegenerationSection() {
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.05fr) minmax(0, 0.95fr)' }} gap={6} alignItems="start">
-        <Card accent="teal">
-          <CardHeader>
-            <CardTitle>2K Regeneration</CardTitle>
-            <CardDescription>
-              Regenerate a MiniMax H3 768P result in 2K, either from a source task id or from the
-              768P source video itself.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="video-regeneration-mode">Source</Label>
+      <Box
+        display="grid"
+        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.15fr) minmax(0, 0.85fr)' }}
+        gap={6}
+        alignItems="start"
+      >
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Parameters</SheetTitle>
+            <SheetDescription>
+              Either a source task id or the 768P source video itself.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={0}>
+            <Field label="Source">
               <Select
                 id="video-regeneration-mode"
                 value={regenerationMode}
@@ -119,41 +124,48 @@ export function VideoRegenerationSection() {
                 disabled={isCreating}
                 onValueChange={(value) => setRegenerationMode(value as 'task' | 'video')}
               />
-            </Box>
+            </Field>
 
             {regenerationMode === 'task' ? (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-regeneration-source-task-id">Source task id</Label>
-                <Input
-                  id="video-regeneration-source-task-id"
-                  value={sourceTaskId}
-                  disabled={isCreating}
-                  placeholder="424010985738629"
-                  onChange={(event) => setSourceTaskId(event.currentTarget.value)}
-                />
-                <Box color="gray.600" fontSize="xs">
-                  The source task must have succeeded and stay queryable for 7 days.
-                </Box>
-              </Box>
-            ) : (
-              <Box display="grid" gap={3}>
-                <Box display="grid" gap={2}>
-                  <Label htmlFor="video-regeneration-base-video">768P base video URL</Label>
+              <Field label="Source task id">
+                <Box display="grid" gap={1}>
                   <Input
-                    id="video-regeneration-base-video"
-                    value={baseVideo}
+                    id="video-regeneration-source-task-id"
+                    value={sourceTaskId}
                     disabled={isCreating}
-                    placeholder="https://cdn.example.com/h3-t2va-768p.mp4"
-                    onChange={(event) => setBaseVideo(event.currentTarget.value)}
+                    placeholder="424010985738629"
+                    onChange={(event) => setSourceTaskId(event.currentTarget.value)}
                   />
-                  <Box color="gray.600" fontSize="xs">
-                    The base video must be a MiniMax H3 768P output with an audio track, 24 fps and
-                    dimensions divisible by 32.
+                  <Box color="content.subtle" fontSize="label" lineHeight="label">
+                    The source task must have succeeded and stay queryable for 7 days.
                   </Box>
                 </Box>
+              </Field>
+            ) : (
+              <>
+                <Field label="768P base video URL">
+                  <Box display="grid" gap={1}>
+                    <Input
+                      id="video-regeneration-base-video"
+                      value={baseVideo}
+                      disabled={isCreating}
+                      placeholder="https://cdn.example.com/h3-t2va-768p.mp4"
+                      onChange={(event) => setBaseVideo(event.currentTarget.value)}
+                    />
+                    <Box color="content.subtle" fontSize="label" lineHeight="label">
+                      The base video must be a MiniMax H3 768P output with an audio track, 24 fps and
+                      dimensions divisible by 32.
+                    </Box>
+                  </Box>
+                </Field>
 
-                <Box display="grid" gap={2}>
-                  <Label htmlFor="video-regeneration-prompt">Prompt used for the source video</Label>
+                <Box display="grid" gap={2} py={3} borderBottom="1px solid" borderColor="surface.rule">
+                  <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
+                    <Label htmlFor="video-regeneration-prompt">Prompt used for the source video</Label>
+                    <Box as="span" color="content.subtle" fontSize="label" lineHeight="label">
+                      {regenerationPrompt.length}/{REGENERATION_PROMPT_MAX_LENGTH}
+                    </Box>
+                  </Box>
                   <Textarea
                     id="video-regeneration-prompt"
                     value={regenerationPrompt}
@@ -165,44 +177,57 @@ export function VideoRegenerationSection() {
                   />
                 </Box>
 
-                <VideoMediaFields
-                  idPrefix="video-regeneration"
-                  values={regenerationMedia}
-                  disabled={isCreating}
-                  onChange={(key, value) => setRegenerationMedia((current) => ({ ...current, [key]: value }))}
-                />
-              </Box>
+                <Box display="grid" gap={2} pt={3}>
+                  <Label>Media references</Label>
+                  <VideoMediaFields
+                    idPrefix="video-regeneration"
+                    values={regenerationMedia}
+                    disabled={isCreating}
+                    onChange={(key, value) => setRegenerationMedia((current) => ({ ...current, [key]: value }))}
+                  />
+                </Box>
+              </>
             )}
 
-            <Button onClick={handleRegeneration} disabled={isCreating} colorPalette="teal">
-              {isCreating ? 'Creating task...' : 'Regenerate in 2K'}
-            </Button>
-          </CardContent>
-        </Card>
+            <Box pt={4}>
+              <Button onClick={handleRegeneration} disabled={isCreating}>
+                {isCreating ? 'Creating task' : 'Regenerate in 2K'}
+              </Button>
+            </Box>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="16rem">
-          <CardHeader>
-            <CardTitle>Latest Task</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Latest task</SheetTitle>
+            <SheetDescription>
               The status is polled while the task runs. Only one task is tracked at a time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={3}>
-            {polling.error && <Box color="gray.700" fontSize="sm">{polling.error}</Box>}
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={3}>
+            {polling.task && (
+              <StatusLamp state={polling.task.status} detail={polling.task.id} />
+            )}
+
+            {polling.error && (
+              <Box color="state.err" fontSize="body" lineHeight="body">{polling.error}</Box>
+            )}
+
             {!polling.task && !polling.isPolling && !polling.error && (
               <Box
                 border="1px dashed"
-                borderColor="gray.200"
-                borderRadius="xl"
+                borderColor="surface.rule"
+                borderRadius="lg"
                 p="1.5rem"
                 textAlign="center"
-                color="gray.600"
+                color="content.subtle"
+                fontSize="body"
               >
                 Create a task to see its status here.
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

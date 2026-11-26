@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -196,24 +196,24 @@ export default function ImagePage() {
       <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
         <Box maxW="48rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Image Generation</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Create polished visual assets with MiniMax-H3-Image. The app uses URL output for fast preview, download, and Library access.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="blue.100" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="21rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="21rem">
           Provider URLs are not guaranteed to stay available. Download final images when you like a result.
         </Box>
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.25fr)' }} gap={6} alignItems="start">
-        <Card accent="blue">
-          <CardHeader>
-            <CardTitle>Creative Brief</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Creative Brief</SheetTitle>
+            <SheetDescription>
               Be specific about subject, environment, lighting, composition, and style. Better inputs produce more controllable outputs.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="grid" gap={2}>
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="image-prompt">Prompt</Label>
@@ -230,7 +230,7 @@ export default function ImagePage() {
                 minH="10rem"
                 placeholder="Example: A premium studio product photo of emerald headphones on warm marble, softbox lighting, shallow depth of field, refined luxury editorial style."
               />
-              <Box color="gray.600" fontSize="sm">
+              <Box color="content.readout" fontSize="sm">
                 Include what should be visible and the mood you want. Avoid vague prompts like "make it beautiful".
               </Box>
             </Box>
@@ -286,7 +286,7 @@ export default function ImagePage() {
                 })}
               </Box>
               {usesCustomSize && (
-                <Box color="gray.600" fontSize="xs">
+                <Box color="content.readout" fontSize="xs">
                   A custom size replaces the aspect ratio and the area level.
                 </Box>
               )}
@@ -328,7 +328,7 @@ export default function ImagePage() {
                   placeholder="2720x1536"
                   onChange={(event) => setCustomSize(event.currentTarget.value)}
                 />
-                <Box color="gray.600" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
+                <Box color="content.readout" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
               </Box>
               <Box display="grid" gap={2}>
                 <Label htmlFor="image-count">Images</Label>
@@ -341,7 +341,7 @@ export default function ImagePage() {
                   disabled={isLoading}
                   onChange={(event) => setImageCount(Number(event.currentTarget.value))}
                 />
-                <Box color="gray.600" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
+                <Box color="content.readout" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
               </Box>
             </Box>
 
@@ -383,14 +383,14 @@ export default function ImagePage() {
                   disabled={isLoading || outputFormat === 'png'}
                   onChange={(event) => setOutputCompression(Number(event.currentTarget.value))}
                 />
-                <Box color="gray.600" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
+                <Box color="content.readout" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
               </Box>
             </Box>
 
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="blue.100" borderRadius="lg" p="0.75rem" bg="white">
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="white">
               <Box>
                 <Label htmlFor="image-prompt-enhancement">Disable Prompt Enhancement</Label>
-                <Box color="gray.600" fontSize="sm">
+                <Box color="content.readout" fontSize="sm">
                   MiniMax rewrites your prompt by default. Turn this off to send the prompt unchanged; a fixed ratio or size is then required.
                 </Box>
               </Box>
@@ -404,7 +404,7 @@ export default function ImagePage() {
 
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -412,27 +412,27 @@ export default function ImagePage() {
             <Button onClick={handleGenerate} disabled={isLoading || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH} colorPalette="blue">
               {isLoading ? 'Generating images...' : 'Generate Images'}
             </Button>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="28rem">
-          <CardHeader>
-            <CardTitle>Results</CardTitle>
-            <CardDescription>
+        <Sheet minH="28rem">
+          <SheetHeader>
+            <SheetTitle>Results</SheetTitle>
+            <SheetDescription>
               {result
                 ? `${result.metadata.successCount} generated · ${result.metadata.failedCount} failed · ${resultRatio.label} ${resultRatio.value}`
                 : 'Generated images appear here as soon as MiniMax returns URL results.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {isLoading && (
-              <Box border="1px dashed" borderColor="blue.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} with MiniMax-H3-Image...
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 Start with a clear prompt, choose the frame, then generate. Your results will be saved to backend Library automatically.
               </Box>
             )}
@@ -440,16 +440,16 @@ export default function ImagePage() {
             {result && successfulItems.length > 0 && (
               <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
                 {successfulItems.map((item) => (
-                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="green.100" borderRadius="xl" overflow="hidden" bg="white" boxShadow="sm">
+                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="white" boxShadow="sm">
                     <img
                       src={item.url ?? ''}
                       alt={`Generated image ${item.index + 1}`}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: '#f9fafb' }}
+                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: 'var(--chakra-colors-surface.field)' }}
                     />
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
-                      <Box color="gray.600" fontSize="sm">Image {item.index + 1}{item.size ? ` · ${item.size}` : ''}</Box>
+                      <Box color="content.readout" fontSize="sm">Image {item.index + 1}{item.size ? ` · ${item.size}` : ''}</Box>
                       <Box display="flex" gap={2}>
                         <Button variant="outline" colorPalette="blue" size="sm" onClick={() => window.open(item.url ?? '', '_blank')}>
                           Open
@@ -465,7 +465,7 @@ export default function ImagePage() {
             )}
 
             {result && failedItems.length > 0 && (
-              <Box border="1px solid" borderColor="red.100" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="white" p="0.75rem" color="red.800" fontSize="sm" display="grid" gap="0.25rem">
+              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="white" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
                 {failedItems.map((item) => (
                   <span key={`failure-${item.index}`}>
                     Image {item.index + 1} failed{item.error?.code ? ` (${item.error.code})` : ''}: {item.error?.message}
@@ -473,8 +473,8 @@ export default function ImagePage() {
                 ))}
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

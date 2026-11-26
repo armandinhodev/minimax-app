@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 
@@ -87,14 +87,14 @@ export function VideoTasksSection() {
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
 
-      <Card accent="gray">
-        <CardHeader>
-          <CardTitle>Tasks</CardTitle>
-          <CardDescription>
+      <Sheet>
+        <SheetHeader>
+          <SheetTitle>Tasks</SheetTitle>
+          <SheetDescription>
             MiniMax keeps task records for 7 days. Cancel a queued task or delete a finished one.
-          </CardDescription>
-        </CardHeader>
-        <CardContent display="grid" gap={3}>
+          </SheetDescription>
+        </SheetHeader>
+        <SheetContent display="grid" gap={3}>
           <Box display="grid" gap={3} gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }}>
             <Box display="grid" gap={2}>
               <Label htmlFor="video-task-filter-status">Status</Label>
@@ -129,16 +129,16 @@ export function VideoTasksSection() {
           </Button>
 
           {!hasLoaded ? (
-            <Box color="gray.600" fontSize="sm">No task loaded yet.</Box>
+            <Box color="content.readout" fontSize="sm">No task loaded yet.</Box>
           ) : tasks.length === 0 ? (
-            <Box color="gray.600" fontSize="sm">No task matches the current filters.</Box>
+            <Box color="content.readout" fontSize="sm">No task matches the current filters.</Box>
           ) : (
             <Box display="grid" gap={2}>
               {tasks.map((task) => (
                 <Box
                   key={task.id}
                   border="1px solid"
-                  borderColor="gray.200"
+                  borderColor="surface.rule"
                   borderRadius="md"
                   p="0.75rem"
                   display="flex"
@@ -147,9 +147,9 @@ export function VideoTasksSection() {
                   gap={2}
                   flexWrap="wrap"
                 >
-                  <Box fontSize="sm" color="gray.700">
+                  <Box fontSize="sm" color="content.ink">
                     <strong>{task.id}</strong>
-                    <Box color="gray.600" fontSize="xs">
+                    <Box color="content.readout" fontSize="xs">
                       {task.taskType} · {task.status}
                       {task.model ? ` · ${task.model}` : ''}
                     </Box>
@@ -168,8 +168,8 @@ export function VideoTasksSection() {
               ))}
             </Box>
           )}
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
     </Box>
   );
 }

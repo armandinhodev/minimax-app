@@ -11,10 +11,12 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Field } from '@/components/ui/spec';
+import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
 
 import {
@@ -119,21 +121,19 @@ export function VideoGenerationSection() {
 
       <Box
         display="grid"
-        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.05fr) minmax(0, 0.95fr)' }}
+        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.15fr) minmax(0, 0.85fr)' }}
         gap={6}
         alignItems="start"
       >
-        <Card accent="blue">
-          <CardHeader>
-            <CardTitle>Video Generation</CardTitle>
-            <CardDescription>
-              Text-to-video, image-to-video or reference-to-video. The model, resolution and duration
-              follow the official MiniMax limits.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="video-generation-model">Model</Label>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Parameters</SheetTitle>
+            <SheetDescription>
+              Text-to-video, image-to-video or reference-to-video.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={0}>
+            <Field label="Model">
               <Select
                 id="video-generation-model"
                 value={model}
@@ -152,12 +152,58 @@ export function VideoGenerationSection() {
                   }
                 }}
               />
-            </Box>
+            </Field>
 
-            <Box display="grid" gap={2}>
+            <Field label="Resolution">
+              <Select
+                id="video-generation-resolution"
+                value={resolution}
+                options={resolutionOptions}
+                disabled={isCreating}
+                onValueChange={(value) => setResolution(value as VideoResolution)}
+              />
+            </Field>
+
+            <Field label="Duration (seconds)">
+              <Input
+                id="video-generation-duration"
+                type="number"
+                min={durationRange.min}
+                max={durationRange.max}
+                value={duration}
+                disabled={isCreating}
+                onChange={(event) => setDuration(Number(event.currentTarget.value))}
+              />
+            </Field>
+
+            <Field label="Aspect ratio">
+              <Select
+                id="video-generation-ratio"
+                value={composition.ratio}
+                options={composition.ratioOptions}
+                disabled={isCreating}
+                onValueChange={(value) => composition.setRatio(value as typeof composition.ratio)}
+              />
+            </Field>
+
+            {supportsPromptExpansionMode(model) && (
+              <Field label="Prompt expansion">
+                <Select
+                  id="video-generation-prompt-expansion"
+                  value={promptExpansionMode}
+                  options={VIDEO_PROMPT_EXPANSION_OPTIONS}
+                  disabled={isCreating}
+                  onValueChange={(value) => setPromptExpansionMode(value as VideoPromptExpansionMode)}
+                />
+              </Field>
+            )}
+
+            <Box display="grid" gap={2} py={3} borderBottom="1px solid" borderColor="surface.rule">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="video-generation-prompt">Prompt</Label>
-                <Box as="span" color="gray.500" fontSize="sm">{prompt.length}/{PROMPT_MAX_LENGTH}</Box>
+                <Box as="span" color="content.subtle" fontSize="label" lineHeight="label">
+                  {prompt.length}/{PROMPT_MAX_LENGTH}
+                </Box>
               </Box>
               <Textarea
                 id="video-generation-prompt"
@@ -170,95 +216,64 @@ export function VideoGenerationSection() {
               />
             </Box>
 
-            <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr 1fr' }}>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-generation-resolution">Resolution</Label>
-                <Select
-                  id="video-generation-resolution"
-                  value={resolution}
-                  options={resolutionOptions}
-                  disabled={isCreating}
-                  onValueChange={(value) => setResolution(value as VideoResolution)}
-                />
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-generation-duration">Duration (seconds)</Label>
-                <Input
-                  id="video-generation-duration"
-                  type="number"
-                  min={durationRange.min}
-                  max={durationRange.max}
-                  value={duration}
-                  disabled={isCreating}
-                  onChange={(event) => setDuration(Number(event.currentTarget.value))}
-                />
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-generation-ratio">Aspect ratio</Label>
-                <Select
-                  id="video-generation-ratio"
-                  value={composition.ratio}
-                  options={composition.ratioOptions}
-                  disabled={isCreating}
-                  onValueChange={(value) => composition.setRatio(value as typeof composition.ratio)}
-                />
-              </Box>
+            <Box display="grid" gap={2} pt={3}>
+              <Label>Media references</Label>
+              <VideoMediaFields
+                idPrefix="video-generation"
+                values={composition.media}
+                disabled={isCreating}
+                onChange={composition.updateMedia}
+              />
             </Box>
 
-            <VideoMediaFields
-              idPrefix="video-generation"
-              values={composition.media}
-              disabled={isCreating}
-              onChange={composition.updateMedia}
-            />
+            <Box pt={4}>
+              <Button onClick={handleGenerate} disabled={isCreating} colorPalette="teal">
+                {isCreating ? 'Creating task' : 'Generate video'}
+              </Button>
+            </Box>
+          </SheetContent>
+        </Sheet>
 
-            {supportsPromptExpansionMode(model) && (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-generation-prompt-expansion">Prompt expansion</Label>
-                <Select
-                  id="video-generation-prompt-expansion"
-                  value={promptExpansionMode}
-                  options={VIDEO_PROMPT_EXPANSION_OPTIONS}
-                  disabled={isCreating}
-                  onValueChange={(value) => setPromptExpansionMode(value as VideoPromptExpansionMode)}
-                />
-              </Box>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Latest task</SheetTitle>
+            <SheetDescription>
+              The status is polled while the task runs. Only one task is tracked at a time.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={3}>
+            {polling.task && (
+              <StatusLamp
+                state={polling.task.status}
+                detail={polling.task.id}
+              />
             )}
 
-            <Button onClick={handleGenerate} disabled={isCreating} colorPalette="blue">
-              {isCreating ? 'Creating task...' : 'Generate Video'}
-            </Button>
-          </CardContent>
-        </Card>
+            {polling.error && (
+              <Box color="state.err" fontSize="body" lineHeight="body">{polling.error}</Box>
+            )}
 
-        <Card accent="green">
-          <CardHeader>
-            <CardTitle>Latest Task</CardTitle>
-            <CardDescription>
-              The status is polled while the task runs. Only one task is tracked at a time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={3}>
-            {polling.error && <Box color="gray.700" fontSize="sm">{polling.error}</Box>}
             <VideoTaskResult
               task={polling.task}
               isPolling={polling.isPolling}
               onCancel={(task) => { void handleCancel(task.id, task.taskType); }}
             />
+
             {!polling.task && !polling.isPolling && !polling.error && (
               <Box
                 border="1px dashed"
-                borderColor="gray.200"
-                borderRadius="xl"
+                borderColor="surface.rule"
+                borderRadius="lg"
                 p="1.5rem"
                 textAlign="center"
-                color="gray.600"
+                color="content.subtle"
+                fontSize="body"
               >
                 Create a task to see its status, output and playback here.
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

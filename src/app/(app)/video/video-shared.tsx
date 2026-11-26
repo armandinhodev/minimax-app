@@ -63,33 +63,35 @@ export function buildComposition(prompt: string, media: VideoMediaValues): Video
 interface VideoStudioHeaderProps {
   title: string;
   description: string;
-  note: string;
+  note?: string;
 }
 
-/** The header every Video Studio route shares. */
+/**
+ * The masthead every Video Studio route shares.
+ *
+ * A title, one line of description, and at most one note. No eyebrow, no
+ * card: the hierarchy comes from the type scale.
+ */
 export function VideoStudioHeader({ title, description, note }: VideoStudioHeaderProps) {
   return (
-    <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
-      <Box maxW="52rem">
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>{title}</h1>
-        <Box color="gray.600" mt={1}>
-          {description}
+    <Box display="grid" gap={2}>
+      <h1>{title}</h1>
+      <Box color="content.readout" fontSize="body" lineHeight="body" maxW="54rem">
+        {description}
+      </Box>
+      {note && (
+        <Box
+          borderLeft="2px solid"
+          borderColor="surface.rule"
+          pl={3}
+          color="content.subtle"
+          fontSize="label"
+          lineHeight="label"
+          maxW="54rem"
+        >
+          {note}
         </Box>
-      </Box>
-      <Box
-        border="1px solid"
-        borderColor="blue.100"
-        borderLeft="3px solid"
-        borderLeftColor="blue.400"
-        borderRadius="md"
-        bg="white"
-        p="0.75rem"
-        color="gray.700"
-        fontSize="sm"
-        maxW="21rem"
-      >
-        {note}
-      </Box>
+      )}
     </Box>
   );
 }
@@ -126,13 +128,13 @@ export function VideoMessageBanner({ error, notice, nonce, children }: VideoMess
       {notice && !error && (
         <Box
           border="1px solid"
-          borderColor="green.100"
+          borderColor="state.okSoft"
           borderLeft="3px solid"
           borderLeftColor="green.400"
           borderRadius="md"
           bg="white"
           p="0.75rem"
-          color="green.800"
+          color="state.ok"
           fontSize="sm"
         >
           {notice}

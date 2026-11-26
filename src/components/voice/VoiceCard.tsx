@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
@@ -36,12 +36,6 @@ function VoiceTypeBadge({ type }: { type: VoiceDTO['type'] }) {
   return <Badge variant={variants[type]}>{labels[type]}</Badge>;
 }
 
-function getVoiceAccent(type: VoiceDTO['type']): 'blue' | 'purple' | 'teal' {
-  if (type === 'clone') return 'purple';
-  if (type === 'design') return 'teal';
-  return 'blue';
-}
-
 export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceCardProps) {
   const createdDate = new Date(voice.createdAt).toLocaleDateString();
   const info = voice.language ? getLanguageInfo(voice.language) : null;
@@ -49,8 +43,8 @@ export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceC
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
-    <Card accent={getVoiceAccent(voice.type)}>
-      <CardHeader>
+    <Sheet>
+      <SheetHeader>
         <Box display="flex" alignItems="flex-start" justifyContent="space-between">
           <Box minW={0} flex={1}>
             <Box display="flex" alignItems="center" gap={1} minW={0}>
@@ -72,21 +66,21 @@ export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceC
                   </span>
                 )
               )}
-              <CardTitle style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{voice.name}</CardTitle>
+              <SheetTitle style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{voice.name}</SheetTitle>
             </Box>
-            <CardDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={voice.voiceId}>
+            <SheetDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={voice.voiceId}>
               {voice.voiceId}
-            </CardDescription>
+            </SheetDescription>
           </Box>
           <VoiceTypeBadge type={voice.type} />
         </Box>
-      </CardHeader>
-      <CardContent display="flex" flexDirection="column" gap={2}>
+      </SheetHeader>
+      <SheetContent display="flex" flexDirection="column" gap={2}>
         <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
           <Badge variant={voice.type === 'system' ? 'secondary' : 'success'}>
             {voice.type === 'system' ? 'System voice' : 'My voice'}
           </Badge>
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Created {createdDate}</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>Created {createdDate}</span>
           {voice.ttlExpiry && <TTLCounter expiresAt={voice.ttlExpiry} label="TTL" />}
         </Box>
         <Box display="flex" gap={1} style={{ marginTop: '0.25rem' }}>
@@ -112,7 +106,7 @@ export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceC
             </Button>
           )}
         </Box>
-      </CardContent>
-    </Card>
+      </SheetContent>
+    </Sheet>
   );
 }

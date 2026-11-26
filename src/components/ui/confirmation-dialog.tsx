@@ -33,7 +33,7 @@ export function ConfirmationDialog({
             <Dialog.Header>
               <Dialog.Title>{title}</Dialog.Title>
             </Dialog.Header>
-            <Dialog.Body color="gray.700">{description}</Dialog.Body>
+            <Dialog.Body color="content.ink">{description}</Dialog.Body>
             <Dialog.Footer gap={2}>
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                 {cancelLabel}

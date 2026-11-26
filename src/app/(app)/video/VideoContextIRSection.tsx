@@ -11,10 +11,12 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Field } from '@/components/ui/spec';
+import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
 
 import { CreateVideoContextIRSchema } from '@/application/dto/minimax/video/VideoDTO';
@@ -75,6 +77,10 @@ export function VideoContextIRSection() {
     }
   };
 
+  const enhancedPrompt = polling.task?.taskType === 'h3_context_ir'
+    ? polling.task.content?.prompt
+    : undefined;
+
   return (
     <Box display="grid" gap={6} width="100%">
       <VideoStudioHeader
@@ -85,18 +91,27 @@ export function VideoContextIRSection() {
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.05fr) minmax(0, 0.95fr)' }} gap={6} alignItems="start">
-        <Card accent="purple">
-          <CardHeader>
-            <CardTitle>H3-Context-IR</CardTitle>
-            <CardDescription>
-              MiniMax interprets the multimodal context and returns a structured, enriched prompt.
-              It never creates a video.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="video-context-ir-prompt">Prompt</Label>
+      <Box
+        display="grid"
+        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.15fr) minmax(0, 0.85fr)' }}
+        gap={6}
+        alignItems="start"
+      >
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Parameters</SheetTitle>
+            <SheetDescription>
+              The context MiniMax reads to enrich the prompt.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={0}>
+            <Box display="grid" gap={2} py={3} borderBottom="1px solid" borderColor="surface.rule">
+              <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
+                <Label htmlFor="video-context-ir-prompt">Prompt</Label>
+                <Box as="span" color="content.subtle" fontSize="label" lineHeight="label">
+                  {contextPrompt.length}/{PROMPT_MAX_LENGTH}
+                </Box>
+              </Box>
               <Textarea
                 id="video-context-ir-prompt"
                 value={contextPrompt}
@@ -108,78 +123,86 @@ export function VideoContextIRSection() {
               />
             </Box>
 
-            <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }}>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-context-ir-duration">Target duration (seconds)</Label>
-                <Input
-                  id="video-context-ir-duration"
-                  type="number"
-                  min={4}
-                  max={15}
-                  value={contextDuration}
-                  disabled={isCreating}
-                  onChange={(event) => setContextDuration(Number(event.currentTarget.value))}
-                />
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-context-ir-ratio">Aspect ratio</Label>
-                <Select
-                  id="video-context-ir-ratio"
-                  value={composition.ratio}
-                  options={composition.ratioOptions}
-                  disabled={isCreating}
-                  onValueChange={(value) => composition.setRatio(value as typeof composition.ratio)}
-                />
-              </Box>
+            <Field label="Target duration (seconds)">
+              <Input
+                id="video-context-ir-duration"
+                type="number"
+                min={4}
+                max={15}
+                value={contextDuration}
+                disabled={isCreating}
+                onChange={(event) => setContextDuration(Number(event.currentTarget.value))}
+              />
+            </Field>
+
+            <Field label="Aspect ratio">
+              <Select
+                id="video-context-ir-ratio"
+                value={composition.ratio}
+                options={composition.ratioOptions}
+                disabled={isCreating}
+                onValueChange={(value) => composition.setRatio(value as typeof composition.ratio)}
+              />
+            </Field>
+
+            <Box display="grid" gap={2} pt={3}>
+              <Label>Media references</Label>
+              <VideoMediaFields
+                idPrefix="video-context-ir"
+                values={composition.media}
+                disabled={isCreating}
+                onChange={composition.updateMedia}
+              />
             </Box>
 
-            <VideoMediaFields
-              idPrefix="video-context-ir"
-              values={composition.media}
-              disabled={isCreating}
-              onChange={composition.updateMedia}
-            />
+            <Box pt={4}>
+              <Button onClick={handleContextIR} disabled={isCreating}>
+                {isCreating ? 'Creating task' : 'Enhance prompt'}
+              </Button>
+            </Box>
+          </SheetContent>
+        </Sheet>
 
-            <Button onClick={handleContextIR} disabled={isCreating} colorPalette="purple">
-              {isCreating ? 'Creating task...' : 'Enhance Prompt'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card accent="teal" minH="16rem">
-          <CardHeader>
-            <CardTitle>Enhanced prompt</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Enhanced prompt</SheetTitle>
+            <SheetDescription>
               The enriched prompt appears here once MiniMax finishes the task.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
-            {polling.task?.taskType === 'h3_context_ir' && polling.task.content?.prompt && (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-context-ir-result">Enhanced prompt</Label>
-                <Textarea
-                  id="video-context-ir-result"
-                  readOnly
-                  value={polling.task.content.prompt}
-                  minH="10rem"
-                />
-              </Box>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={3}>
+            {polling.task && (
+              <StatusLamp state={polling.task.status} detail={polling.task.id} />
             )}
 
-            {!polling.task && !polling.isPolling && (
-              <Box
-                border="1px dashed"
-                borderColor="gray.200"
-                borderRadius="xl"
-                p="1.5rem"
-                textAlign="center"
-                color="gray.600"
-              >
-                Enhance a prompt to see the result here.
-              </Box>
+            {polling.error && (
+              <Box color="state.err" fontSize="body" lineHeight="body">{polling.error}</Box>
             )}
-          </CardContent>
-        </Card>
+
+            {enhancedPrompt ? (
+              <Textarea
+                id="video-context-ir-result"
+                readOnly
+                value={enhancedPrompt}
+                minH="12rem"
+              />
+            ) : (
+              !polling.task && !polling.isPolling && (
+                <Box
+                  border="1px dashed"
+                  borderColor="surface.rule"
+                  borderRadius="lg"
+                  p="1.5rem"
+                  textAlign="center"
+                  color="content.subtle"
+                  fontSize="body"
+                >
+                  Enhance a prompt to see the result here.
+                </Box>
+              )
+            )}
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

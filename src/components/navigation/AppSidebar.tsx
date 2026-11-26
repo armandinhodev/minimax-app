@@ -29,7 +29,7 @@ export function AppSidebar({ markCurrent = true, onNavigate, variant = "desktop"
           <span className={styles.brandMark} aria-hidden="true">M</span>
           <span>
             <span className={styles.brandTitle}>MiniMax Studio</span>
-            <span className={styles.brandSubtitle}>Speech, image, and music generation</span>
+            <span className={styles.brandSubtitle}>Speech, image, video, music and more</span>
           </span>
         </Link>
       </div>

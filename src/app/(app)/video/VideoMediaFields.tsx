@@ -3,7 +3,7 @@
 import { Box } from '@chakra-ui/react';
 
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/spec';
 
 import type { VideoMediaValues } from './video-options';
 
@@ -66,19 +66,22 @@ const FIELDS: Array<{
  */
 export function VideoMediaFields({ idPrefix, values, disabled, onChange }: VideoMediaFieldsProps) {
   return (
-    <Box display="grid" gap={3}>
+    <Box display="grid" gap={0}>
       {FIELDS.map((field) => (
-        <Box display="grid" gap={1} key={field.key}>
-          <Label htmlFor={`${idPrefix}-${field.id}`}>{field.label}</Label>
-          <Input
-            id={`${idPrefix}-${field.id}`}
-            value={values[field.key]}
-            disabled={disabled}
-            placeholder={field.placeholder}
-            onChange={(event) => onChange(field.key, event.currentTarget.value)}
-          />
-          <Box color="gray.600" fontSize="xs">{field.hint}</Box>
-        </Box>
+        <Field key={field.key} label={field.label}>
+          <Box display="grid" gap={1}>
+            <Input
+              id={`${idPrefix}-${field.id}`}
+              value={values[field.key]}
+              disabled={disabled}
+              placeholder={field.placeholder}
+              onChange={(event) => onChange(field.key, event.currentTarget.value)}
+            />
+            <Box color="content.subtle" fontSize="label" lineHeight="label">
+              {field.hint}
+            </Box>
+          </Box>
+        </Field>
       ))}
     </Box>
   );

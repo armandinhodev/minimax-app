@@ -19,14 +19,14 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
       p={8}
       textAlign="center"
     >
-      <Text fontSize="xl" fontWeight="bold" color="red.500">
+      <Text fontSize="xl" fontWeight="bold" color="state.err">
         Something went wrong
       </Text>
-      <Text color="gray.600" fontSize="sm" maxW="md">
+      <Text color="content.readout" fontSize="sm" maxW="md">
         An unexpected error occurred.
       </Text>
       {error.digest && (
-        <Text color="gray.400" fontSize="xs">
+        <Text color="content.subtle" fontSize="xs">
           Error ID: {error.digest}
         </Text>
       )}

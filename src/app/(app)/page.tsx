@@ -1,92 +1,46 @@
 'use client';
 
-import Link from 'next/link';
+/**
+ * The console front panel.
+ *
+ * A rack of instruments, not a grid of cards: each product area is a row
+ * with its monogram, what it does and how much has been generated with it.
+ */
+
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
+
 import type { LibraryGenerationDTO, LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PRODUCT_NAV_SECTIONS } from '@/components/navigation/nav-config';
 import { authFetch } from '@/lib/auth-client';
 
 const EMPTY_SUMMARY: LibrarySummaryDTO = {
   totalGenerations: 0,
   totalAssets: 0,
   completedGenerations: 0,
-  byKind: { tts: 0, music: 0, image: 0, video: 0, clone: 0, design: 0 },
+  byKind: { tts: 0, image: 0, music: 0, video: 0, clone: 0, design: 0 },
   recentGenerations: [],
 };
 
-const PRODUCT_CARDS = [
-  {
-    title: 'Speech',
-    href: '/tts',
-    accent: 'green' as const,
-    description: 'Generate natural voice clips and stream fast previews.',
-    metric: 'tts' as const,
-  },
-  {
-    title: 'Image',
-    href: '/image',
-    accent: 'blue' as const,
-    description: 'Create visual assets from prompts or image references.',
-    metric: 'image' as const,
-  },
-  {
-    title: 'Music',
-    href: '/music',
-    accent: 'purple' as const,
-    description: 'Compose vocal or instrumental tracks with MiniMax Music.',
-    metric: 'music' as const,
-  },
-  {
-    title: 'Video',
-    href: '/video/generation',
-    accent: 'blue' as const,
-    description: 'Generate H3 video, enhance prompts and regenerate in 2K.',
-    metric: 'video' as const,
-  },
-  {
-    title: 'Transcription',
-    href: '/asr',
-    accent: 'orange' as const,
-    description: 'Turn audio into text, speaker segments or subtitles.',
-    metric: null,
-    metricLabel: 'Transcripts are not stored in the Library yet.',
-  },
-  {
-    title: 'Chat',
-    href: '/text',
-    accent: 'purple' as const,
-    description: 'Talk to MiniMax M3 models on any compatible surface.',
-    metric: null,
-    metricLabel: 'Chats are not stored in the Library yet.',
-  },
-  {
-    title: 'Library',
-    href: '/library',
-    accent: 'teal' as const,
-    description: 'Review SQLite metadata and backend asset references.',
-    metric: null,
-  },
-];
+/** Library kinds each product area owns. */
+const KINDS_BY_AREA: Record<string, Array<keyof LibrarySummaryDTO['byKind']>> = {
+  speech: ['tts', 'clone', 'design'],
+  image: ['image'],
+  music: ['music'],
+  video: ['video'],
+};
 
-const QUICK_ACTIONS = [
-  { href: '/tts', label: 'Generate speech' },
-  { href: '/image', label: 'Create image' },
-  { href: '/music', label: 'Compose music' },
-  { href: '/video/generation', label: 'Create video' },
-  { href: '/asr', label: 'Transcribe audio' },
-  { href: '/text', label: 'Chat with MiniMax' },
-  { href: '/library', label: 'Open Library' },
-];
-
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+const AREA_DESCRIPTION: Record<string, string> = {
+  speech: 'Generate speech from text',
+  asr: 'Turn audio into text and subtitles',
+  text: 'Talk to MiniMax M3 models',
+  image: 'Create images from prompts',
+  music: 'Compose songs and instrumentals',
+  video: 'Generate H3 video and regenerate in 2K',
+  'video-agent': 'Render a video from a template',
+  library: 'Review metadata and asset references',
+};
 
 function getGenerationLabel(generation: LibraryGenerationDTO): string {
   if (generation.kind === 'tts') return 'Speech';
@@ -105,21 +59,12 @@ function getGenerationHref(generation: LibraryGenerationDTO): string {
   return '/tts';
 }
 
-function getGenerationTitle(generation: LibraryGenerationDTO): string {
-  return generation.title ?? generation.prompt ?? getGenerationLabel(generation);
-}
-
-function buildSummary(generations: LibraryGenerationDTO[]): LibrarySummaryDTO {
-  return generations.reduce<LibrarySummaryDTO>((summary, generation) => {
-    summary.totalGenerations += 1;
-    summary.totalAssets += generation.assets.length;
-    summary.byKind[generation.kind] += 1;
-    if (generation.status === 'completed') summary.completedGenerations += 1;
-    return summary;
-  }, {
-    ...EMPTY_SUMMARY,
-    byKind: { ...EMPTY_SUMMARY.byKind },
-    recentGenerations: generations.slice(0, 5),
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -135,7 +80,8 @@ export default function DashboardPage() {
         const response = await authFetch('/api/library/generations?limit=5');
         if (!response.ok) return;
         const data = await response.json() as { generations?: LibraryGenerationDTO[] };
-        if (isMounted) setSummary(buildSummary(data.generations ?? []));
+        if (!isMounted) return;
+        setSummary(buildSummary(data.generations ?? []));
       } catch (error) {
         console.error('Failed to load dashboard summary.', error);
       } finally {
@@ -144,153 +90,166 @@ export default function DashboardPage() {
     }
 
     void loadDashboard();
-
     return () => {
       isMounted = false;
     };
   }, []);
 
   return (
-    <Box display="grid" gap={6}>
-      <Box
-        border="1px solid"
-        borderColor="gray.200"
-        borderRadius="2xl"
-        bg="linear-gradient(135deg, #0f172a 0%, #1e293b 52%, #312e81 100%)"
-        color="white"
-        p={{ base: '1.25rem', md: '2rem' }}
-        overflow="hidden"
-      >
-        <Box maxW="56rem">
-          <Box as="p" color="cyan.100" fontSize="sm" fontWeight={700} letterSpacing="0.08em" textTransform="uppercase">
-            Operational dashboard
-          </Box>
-          <h1 style={{ fontSize: 'clamp(2rem, 5vw, 4.25rem)', lineHeight: 0.95, fontWeight: 900, letterSpacing: '-0.06em', marginTop: '0.75rem' }}>
-            Create, track, and recover MiniMax outputs from one place.
-          </h1>
-          <Box color="slate.200" fontSize={{ base: 'md', md: 'lg' }} mt={4} maxW="42rem">
-            Metadata is stored in local SQLite. Generated audio can be stored on the server; image and video outputs may use temporary provider URLs.
-          </Box>
+    <Box display="grid" gap={8} width="100%">
+      <Box display="grid" gap={2}>
+        <h1>MiniMax Studio</h1>
+        <Box color="content.readout" fontSize="body" lineHeight="body" maxW="54rem">
+          Dispatch a job to MiniMax, follow its state and retrieve the asset. Every area speaks to
+          its own upstream endpoint.
         </Box>
       </Box>
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
-        <Card accent="gray">
-          <CardHeader>
-            <CardTitle>Total generations</CardTitle>
-            <CardDescription>SQLite metadata records</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Box fontSize="2rem" fontWeight={900}>{summary.totalGenerations}</Box>
-          </CardContent>
-        </Card>
-        <Card accent="green">
-          <CardHeader>
-            <CardTitle>Completed</CardTitle>
-            <CardDescription>Successful generation records</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Box fontSize="2rem" fontWeight={900}>{summary.completedGenerations}</Box>
-          </CardContent>
-        </Card>
-        <Card accent="blue">
-          <CardHeader>
-            <CardTitle>Assets tracked</CardTitle>
-            <CardDescription>Metadata references, not binary blobs</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Box fontSize="2rem" fontWeight={900}>{summary.totalAssets}</Box>
-          </CardContent>
-        </Card>
+      <Box display="grid" gap={3}>
+        <Box display="flex" alignItems="baseline" justifyContent="space-between" gap={4} flexWrap="wrap">
+          <h2>Instruments</h2>
+          <Box color="content.subtle" fontSize="label" lineHeight="label" fontFamily="mono">
+            {summary.totalGenerations} generations · {summary.completedGenerations} completed ·{' '}
+            {summary.totalAssets} assets
+          </Box>
+        </Box>
+
+        <Box borderTop="1px solid" borderColor="surface.rule">
+          {PRODUCT_NAV_SECTIONS.map((area) => {
+            const kinds = KINDS_BY_AREA[area.id] ?? [];
+            const count = kinds.reduce((total, kind) => total + summary.byKind[kind], 0);
+
+            return (
+              <Link
+                key={area.id}
+                href={area.href}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <Box
+                  display="grid"
+                  gridTemplateColumns={{ base: '2rem 1fr', md: '2rem minmax(0, 1fr) 4rem' }}
+                  gap={{ base: 2, md: 4 }}
+                  alignItems="center"
+                  py="0.75rem"
+                  borderBottom="1px solid"
+                  borderColor="surface.rule"
+                >
+                  <Box
+                    aria-hidden="true"
+                    display="inline-flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    h="1.75rem"
+                    w="1.75rem"
+                    border="1px solid"
+                    borderColor="surface.rule"
+                    borderRadius="md"
+                    fontFamily="mono"
+                    fontSize="0.6875rem"
+                    color="content.readout"
+                  >
+                    {area.shortLabel}
+                  </Box>
+
+                  <Box minW={0}>
+                    <Box fontWeight="600" fontSize="body" lineHeight="body">
+                      {area.label}
+                    </Box>
+                    <Box color="content.subtle" fontSize="label" lineHeight="label">
+                      {AREA_DESCRIPTION[area.id] ?? area.description}
+                    </Box>
+                  </Box>
+
+                  <Box
+                    display={{ base: 'none', md: 'block' }}
+                    textAlign="right"
+                    fontFamily="mono"
+                    fontSize="mono"
+                    color="content.readout"
+                    fontVariantNumeric="tabular-nums"
+                  >
+                    {kinds.length > 0 ? count : '—'}
+                  </Box>
+                </Box>
+              </Link>
+            );
+          })}
+        </Box>
       </Box>
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: '1fr 0.8fr' }} gap={6} alignItems="start">
-        <Box display="grid" gap={4}>
-          <Box>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Product areas</h2>
-            <Box color="gray.600" mt={1}>Jump directly into the generation workflow you need.</Box>
+      <Box display="grid" gap={3}>
+        <h2>Recent creations</h2>
+
+        {!isLoading && summary.recentGenerations.length === 0 && (
+          <Box
+            border="1px dashed"
+            borderColor="surface.rule"
+            borderRadius="lg"
+            p="1.5rem"
+            color="content.subtle"
+            fontSize="body"
+          >
+            Nothing here yet. Generate a speech, an image or a video to fill the library.
           </Box>
-          <Box display="grid" gridTemplateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-            {PRODUCT_CARDS.map((product) => (
-              <Card key={product.href} accent={product.accent} minH="12rem">
-                <CardHeader>
-                  <CardTitle>{product.title}</CardTitle>
-                  <CardDescription>{product.description}</CardDescription>
-                </CardHeader>
-                <CardContent display="grid" gap={4}>
-                  <Box color="gray.700" fontSize="sm">
-                    {product.metric
-                      ? `${summary.byKind[product.metric]} records tracked`
-                      : product.metricLabel ?? `${summary.totalAssets} assets tracked`}
+        )}
+
+        {summary.recentGenerations.length > 0 && (
+          <Box borderTop="1px solid" borderColor="surface.rule">
+            {summary.recentGenerations.map((generation) => (
+              <Link
+                key={generation.id}
+                href={getGenerationHref(generation)}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <Box
+                  display="grid"
+                  gridTemplateColumns={{ base: '1fr', md: 'minmax(0, 1fr) 9rem 10rem' }}
+                  gap={{ base: 1, md: 4 }}
+                  alignItems="baseline"
+                  py="0.625rem"
+                  borderBottom="1px solid"
+                  borderColor="surface.rule"
+                >
+                  <Box fontWeight="600" fontSize="body" lineHeight="body" minW={0}>
+                    {generation.title ?? generation.prompt ?? getGenerationLabel(generation)}
                   </Box>
-                  <Link href={product.href} style={{ color: '#0f766e', fontWeight: 800, textDecoration: 'none' }}>
-                    Open {product.title}
-                  </Link>
-                </CardContent>
-              </Card>
+                  <Box
+                    display={{ base: 'none', md: 'block' }}
+                    fontFamily="mono"
+                    fontSize="mono"
+                    color="content.readout"
+                  >
+                    {getGenerationLabel(generation)}
+                  </Box>
+                  <Box
+                    textAlign={{ base: 'left', md: 'right' }}
+                    fontFamily="mono"
+                    fontSize="mono"
+                    color="content.subtle"
+                    fontVariantNumeric="tabular-nums"
+                  >
+                    {formatDate(generation.createdAt)}
+                  </Box>
+                </Box>
+              </Link>
             ))}
           </Box>
-        </Box>
-
-        <Box display="grid" gap={4}>
-          <Card accent="purple">
-            <CardHeader>
-              <CardTitle>Quick actions</CardTitle>
-              <CardDescription>Start the common flows without hunting through navigation.</CardDescription>
-            </CardHeader>
-            <CardContent display="grid" gap={2}>
-              {QUICK_ACTIONS.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  style={{ border: '1px solid #e5e7eb', borderRadius: '0.75rem', color: '#111827', fontWeight: 750, padding: '0.75rem', textDecoration: 'none' }}
-                >
-                  {action.label}
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card accent="teal">
-            <CardHeader>
-              <CardTitle>Recent creations</CardTitle>
-              <CardDescription>Latest records from SQLite.</CardDescription>
-            </CardHeader>
-            <CardContent display="grid" gap={3}>
-              {isLoading ? (
-                <Box border="1px dashed" borderColor="gray.300" borderRadius="xl" p="1rem" color="gray.600" bg="gray.50">
-                  Loading recent creations...
-                </Box>
-              ) : summary.recentGenerations.length > 0 ? (
-                summary.recentGenerations.map((generation) => (
-                  <Link
-                    key={generation.id}
-                    href={getGenerationHref(generation)}
-                    style={{ border: '1px solid #e5e7eb', borderRadius: '0.85rem', color: '#111827', display: 'grid', gap: '0.25rem', padding: '0.75rem', textDecoration: 'none' }}
-                  >
-                    <span style={{ color: '#0f766e', fontSize: '0.75rem', fontWeight: 850, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                      {getGenerationLabel(generation)} · {formatDate(generation.createdAt)}
-                    </span>
-                    <span style={{ fontWeight: 800 }}>{getGenerationTitle(generation)}</span>
-                    <span style={{ color: '#64748b', fontSize: '0.82rem' }}>
-                      {generation.assets.length} asset reference{generation.assets.length === 1 ? '' : 's'} tracked
-                    </span>
-                  </Link>
-                ))
-              ) : (
-                <Box border="1px dashed" borderColor="gray.300" borderRadius="xl" p="1rem" color="gray.600" bg="gray.50">
-                  No SQLite records yet. Generate speech, images, or music to populate this dashboard.
-                  <Box mt={3}>
-                    <Link href="/tts" style={{ color: '#0f766e', fontWeight: 800, textDecoration: 'none' }}>
-                      Generate speech
-                    </Link>
-                  </Box>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
+        )}
       </Box>
     </Box>
   );
+}
+
+function buildSummary(generations: LibraryGenerationDTO[]): LibrarySummaryDTO {
+  return generations.reduce<LibrarySummaryDTO>((summary, generation) => {
+    summary.totalGenerations += 1;
+    summary.totalAssets += generation.assets.length;
+    summary.byKind[generation.kind] += 1;
+    if (generation.status === 'completed') summary.completedGenerations += 1;
+    return summary;
+  }, {
+    ...EMPTY_SUMMARY,
+    byKind: { ...EMPTY_SUMMARY.byKind },
+    recentGenerations: generations.slice(0, 5),
+  });
 }

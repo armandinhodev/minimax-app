@@ -161,15 +161,15 @@ export const VoiceSelector = memo(function VoiceSelector({
         groupOrder={getVoiceGroupOrder}
         searchable
       />
-      {error && <p style={{ fontSize: '0.75rem', color: '#dc2626' }}>{error}</p>}
+      {error && <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.err)' }}>{error}</p>}
       {selectedVoice && (
-        <Box display="grid" gap={1} fontSize="0.75rem" color="gray.600">
+        <Box display="grid" gap={1} fontSize="0.75rem" color="content.readout">
           <p>
             Type: {getVoiceTypeLabel(selectedVoice.type)}
             {selectedVoice.ttlExpiry ? `, ${formatExpiry(selectedVoice.ttlExpiry)}` : ''}
           </p>
           <p>
-            Voice ID: <code style={{ backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{selectedVoice.voiceId}</code>
+            Voice ID: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{selectedVoice.voiceId}</code>
           </p>
         </Box>
       )}

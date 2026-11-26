@@ -5,7 +5,7 @@ import { Box } from '@chakra-ui/react';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
@@ -259,40 +259,40 @@ export default function MusicPage() {
       <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
         <Box maxW="52rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Music Generation</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="purple.100" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is stored by the backend when bytes are available.
         </Box>
       </Box>
 
-      <Box border="1px solid" borderColor="orange.100" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="orange.800" fontSize="sm">
+      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
-        <Card accent="purple">
-          <CardHeader>
-            <CardTitle>{isCoverMode ? 'Cover Generation Brief' : 'Composition Brief'}</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>{isCoverMode ? 'Cover Generation Brief' : 'Composition Brief'}</SheetTitle>
+            <SheetDescription>
               {isCoverMode
                 ? 'Step 2 after Cover Preprocess: choose the target cover style and optionally edit the detected lyrics.'
                 : 'Guide the arrangement with genre, mood, tempo, instrumentation, structure, and production references.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {isCoverMode && (
-              <Box border="1px solid" borderColor="purple.100" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm">
+              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
                 Cover generation requires a cover feature ID from Cover Preprocess. The ID expires 24 hours after preprocessing.
               </Box>
             )}
 
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="purple.100" borderRadius="lg" p="0.75rem" bg="white">
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="white">
               <Box>
                 <Label htmlFor="instrumental-mode">Instrumental mode</Label>
-                <Box color="gray.600" fontSize="sm">{isCoverMode ? 'Disabled for MiniMax cover models.' : 'Use prompt-only generation when you do not need vocals.'}</Box>
+                <Box color="content.readout" fontSize="sm">{isCoverMode ? 'Disabled for MiniMax cover models.' : 'Use prompt-only generation when you do not need vocals.'}</Box>
               </Box>
               <Switch id="instrumental-mode" checked={isCoverMode ? false : instrumental} onChange={setInstrumental} disabled={isLoading || isCoverMode} />
             </Box>
@@ -307,7 +307,7 @@ export default function MusicPage() {
                   disabled={isLoading}
                   placeholder="cover_feature_id from Cover Preprocess"
                 />
-                <Box color="gray.600" fontSize="sm">Use the ID within 24 hours of preprocessing the reference audio.</Box>
+                <Box color="content.readout" fontSize="sm">Use the ID within 24 hours of preprocessing the reference audio.</Box>
               </Box>
             )}
 
@@ -327,7 +327,7 @@ export default function MusicPage() {
                 minH="8rem"
                 placeholder={isCoverMode ? 'Example: Dreamy acoustic bossa nova with soft nylon guitar, warm percussion, and intimate vocals.' : 'Example: Cinematic synth-pop at 118 BPM, bright analog bass, crisp drums, uplifting chorus, glossy modern mix.'}
               />
-              <Box color="gray.600" fontSize="sm">
+              <Box color="content.readout" fontSize="sm">
                 {isCoverMode ? 'Required for cover generation. Use 10 to 300 characters to describe the target cover style.' : instrumental ? 'Required for instrumental music.' : 'Optional for vocal music, but strongly recommended for better direction.'}
               </Box>
             </Box>
@@ -348,7 +348,7 @@ export default function MusicPage() {
                 minH="14rem"
                 placeholder={'[Verse]\nLate city lights and a silver sky\n[Chorus]\nWe keep moving where the echoes fly'}
               />
-              <Box color="gray.600" fontSize="sm">
+              <Box color="content.readout" fontSize="sm">
                 {isCoverMode ? 'Optional for cover generation. If provided, use 10 to 1,000 characters.' : 'Use structure tags like [Intro], [Verse], [Chorus], and [Bridge]. Lyrics are required when instrumental mode is off.'}
               </Box>
             </Box>
@@ -360,20 +360,20 @@ export default function MusicPage() {
               </Box>
               <Box display="grid" gap={2}>
                 <Label>Audio settings</Label>
-                <Box border="1px solid" borderColor="gray.200" borderRadius="lg" bg="white" px="0.75rem" py="0.5rem" color="gray.700" fontSize="sm">
+                <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" px="0.75rem" py="0.5rem" color="content.ink" fontSize="sm">
                   MP3 · 44.1 kHz · 256 kbps
                 </Box>
               </Box>
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="orange.100" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="orange.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -381,38 +381,38 @@ export default function MusicPage() {
             <Button onClick={handleGenerate} disabled={!canGenerate} colorPalette="purple">
               {isLoading ? 'Generating music...' : isCoverMode ? 'Generate Cover' : 'Generate Music'}
             </Button>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="28rem">
-          <CardHeader>
-            <CardTitle>Track Preview</CardTitle>
-            <CardDescription>
+        <Sheet minH="28rem">
+          <SheetHeader>
+            <SheetTitle>Track Preview</SheetTitle>
+            <SheetDescription>
               {result
                 ? `${result.metadata.durationSeconds ? `${Math.round(result.metadata.durationSeconds)}s · ` : ''}${result.format.toUpperCase()} · ${result.metadata.sampleRate ?? DEFAULT_SAMPLE_RATE} Hz`
                 : isCoverMode ? 'Generated covers appear here with playback, download, and Library persistence.' : 'Generated tracks appear here with playback, download, and Library persistence.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {isLoading && (
-              <Box border="1px dashed" borderColor="purple.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 Composing your track with MiniMax Music. Keep this tab open until generation completes.
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 {isCoverMode ? 'Start from a valid cover feature ID and target cover style. Your generated cover will be saved to backend Library automatically when bytes are available.' : 'Start with a focused brief and complete lyrics. Your generated track will be saved to backend Library automatically when bytes are available.'}
               </Box>
             )}
 
             {result && (
               <Box display="grid" gap={4}>
-                <Box border="1px solid" borderColor="green.100" borderRadius="xl" bg="white" p="1rem" display="grid" gap={3}>
+                <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" display="grid" gap={3}>
                   <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                     <Box>
                       <Box fontWeight={700}>Generated track</Box>
-                      <Box color="gray.600" fontSize="sm">Trace: {result.metadata.traceId ?? result.id}</Box>
+                      <Box color="content.readout" fontSize="sm">Trace: {result.metadata.traceId ?? result.id}</Box>
                     </Box>
                     <Button variant="outline" colorPalette="blue" size="sm" onClick={() => downloadMusicHex(result.audio, result.format, result.id)}>
                       Download MP3
@@ -422,23 +422,23 @@ export default function MusicPage() {
                 </Box>
 
                 <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}>
-                  <Box border="1px solid" borderColor="gray.200" borderRadius="lg" bg="white" p="0.75rem">
-                    <Box color="gray.500" fontSize="xs">Mode</Box>
+                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" p="0.75rem">
+                    <Box color="content.subtle" fontSize="xs">Mode</Box>
                     <Box fontWeight={700}>{isCoverMode ? 'Cover' : instrumental ? 'Instrumental' : 'Vocal'}</Box>
                   </Box>
-                  <Box border="1px solid" borderColor="gray.200" borderRadius="lg" bg="white" p="0.75rem">
-                    <Box color="gray.500" fontSize="xs">Model</Box>
+                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" p="0.75rem">
+                    <Box color="content.subtle" fontSize="xs">Model</Box>
                     <Box fontWeight={700}>{model}</Box>
                   </Box>
-                  <Box border="1px solid" borderColor="gray.200" borderRadius="lg" bg="white" p="0.75rem">
-                    <Box color="gray.500" fontSize="xs">Bitrate</Box>
+                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" p="0.75rem">
+                    <Box color="content.subtle" fontSize="xs">Bitrate</Box>
                     <Box fontWeight={700}>{Math.round((result.metadata.bitrate ?? DEFAULT_BITRATE) / 1000)} kbps</Box>
                   </Box>
                 </Box>
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

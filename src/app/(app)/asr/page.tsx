@@ -12,7 +12,7 @@ import { useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
@@ -245,23 +245,23 @@ export default function AsrPage() {
       <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
         <Box maxW="52rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Transcription</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Turn audio into text with MiniMax ASR. Get a plain transcript, speaker segments, or
             ready-to-use subtitles.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="orange.100" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Audio is billed by its duration. Clips up to 500 seconds and 50MB are accepted.
         </Box>
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: '1fr 1fr' }} gap={6} alignItems="start">
-        <Card accent="orange">
-          <CardHeader>
-            <CardTitle>Audio</CardTitle>
-            <CardDescription>Pick a recording to transcribe. It is sent to MiniMax ASR through this app.</CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Audio</SheetTitle>
+            <SheetDescription>Pick a recording to transcribe. It is sent to MiniMax ASR through this app.</SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="grid" gap={2}>
               <Label htmlFor="asr-file">Audio file</Label>
               <Input
@@ -321,7 +321,7 @@ export default function AsrPage() {
             {fileError && !error && <ErrorDisplay message={fileError} />}
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
                 {notice}
               </Box>
             )}
@@ -339,27 +339,27 @@ export default function AsrPage() {
                 Stream transcript
               </Button>
             </Box>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="24rem">
-          <CardHeader>
-            <CardTitle>Transcript</CardTitle>
-            <CardDescription>
+        <Sheet minH="24rem">
+          <SheetHeader>
+            <SheetTitle>Transcript</SheetTitle>
+            <SheetDescription>
               {transcript
                 ? `${transcript.duration.toFixed(2)}s of audio`
                 : 'The transcription appears here once MiniMax finishes.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {streamedText.length > 0 && (
-              <Box border="1px solid" borderColor="blue.100" borderRadius="xl" bg="white" p="1rem" color="gray.800" whiteSpace="pre-wrap">
+              <Box border="1px solid" borderColor="interaction.soft" borderRadius="xl" bg="white" p="1rem" color="content.ink" whiteSpace="pre-wrap">
                 {streamedText}
               </Box>
             )}
 
             {!transcript && !subtitles && streamedText.length === 0 && !isTranscribing && (
-              <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 {file
                   ? fileError
                     ? `The selected file cannot be transcribed: ${fileError}`
@@ -369,20 +369,20 @@ export default function AsrPage() {
             )}
 
             {isTranscribing && !transcript && !subtitles && streamedText.length === 0 && (
-              <Box border="1px dashed" borderColor="orange.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="state.runSoft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 MiniMax is transcribing. This request is billed by audio duration.
               </Box>
             )}
 
             {subtitles !== null && (
-              <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="green.100" borderRadius="xl" bg="white" p="1rem" color="gray.800" overflowX="auto">
+              <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
                 {subtitles}
               </Box>
             )}
 
             {transcript && (
               <Box display="grid" gap={4}>
-                <Box display="flex" gap={4} flexWrap="wrap" color="gray.600" fontSize="sm">
+                <Box display="flex" gap={4} flexWrap="wrap" color="content.readout" fontSize="sm">
                   <span>Duration: {transcript.duration.toFixed(2)}s</span>
                   {transcript.nSpeakers !== undefined && <span>Speakers: {transcript.nSpeakers}</span>}
                 </Box>
@@ -396,14 +396,14 @@ export default function AsrPage() {
                         gridTemplateColumns={{ base: '5.5rem', md: '8rem' }}
                         gap={2}
                         fontSize="sm"
-                        color="gray.700"
+                        color="content.ink"
                       >
-                        <Box color="gray.500" fontFamily="monospace" fontSize="0.78rem">
+                        <Box color="content.subtle" fontFamily="monospace" fontSize="0.78rem">
                           {formatTimestamp(segment.start)}
                         </Box>
                         <Box>
                           {segment.speaker && (
-                            <Box as="span" color="teal.700" fontWeight={700} fontSize="0.78rem" mr={2}>
+                            <Box as="span" color="interaction.accent" fontWeight={700} fontSize="0.78rem" mr={2}>
                               {segment.speaker}
                             </Box>
                           )}
@@ -413,14 +413,14 @@ export default function AsrPage() {
                     ))}
                   </Box>
                 ) : (
-                  <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="green.100" borderRadius="xl" bg="white" p="1rem" color="gray.800" overflowX="auto">
+                  <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
                     {transcript.text}
                   </Box>
                 )}
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

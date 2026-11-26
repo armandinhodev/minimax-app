@@ -200,7 +200,7 @@ export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProp
   if (!webAudioSupported) {
     return (
       <Box display="grid" gap={2}>
-        <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+        <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
           Web Audio API is not supported in this browser. Audio playback is unavailable.
         </p>
         <Button variant="outline" onClick={handleDownload} disabled={!hex}>
@@ -213,7 +213,7 @@ export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProp
   return (
     <Box display="grid" gap={3}>
       {playbackState === 'error' && (
-        <p style={{ fontSize: '0.875rem', color: '#dc2626' }}>{errorMessage}</p>
+        <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-state.err)' }}>{errorMessage}</p>
       )}
 
       <Box display="flex" alignItems="center" gap={2}>

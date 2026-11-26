@@ -9,7 +9,7 @@ import { useCallback, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
@@ -109,20 +109,20 @@ export default function TTSPage() {
     <Box display="grid" gap={6} maxW="42rem">
       <Box>
         <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Text to Speech</h1>
-        <Box color="gray.600" mt={1}>
+        <Box color="content.readout" mt={1}>
           Convert text to natural-sounding audio using MiniMax TTS. Generate Audio creates a reusable Library item; Streaming TTS is immediate playback only.
         </Box>
       </Box>
 
-      <Card accent="green">
-        <CardHeader>
-          <CardTitle>Generate Audio</CardTitle>
-          <CardDescription>
+      <Sheet>
+        <SheetHeader>
+          <SheetTitle>Generate Audio</SheetTitle>
+          <SheetDescription>
             Creates audio you can download now and find later in Library when the backend stores an asset reference.
-          </CardDescription>
-        </CardHeader>
-        <CardContent display="grid" gap={4}>
-          <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm">
+          </SheetDescription>
+        </SheetHeader>
+        <SheetContent display="grid" gap={4}>
+          <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
             Best for finished clips, exports, and anything you want to keep in backend Library.
           </Box>
           {/* Text Input — Phase 6 component */}
@@ -164,7 +164,7 @@ export default function TTSPage() {
 
           {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}
@@ -191,19 +191,19 @@ export default function TTSPage() {
               <AudioPlayer hex={audioHex} format={format} />
             </Box>
           )}
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
 
       {/* Streaming TTS — Phase 6 StreamingPlayer component */}
-      <Card accent="teal">
-        <CardHeader>
-          <CardTitle>Streaming TTS</CardTitle>
-          <CardDescription>
+      <Sheet>
+        <SheetHeader>
+          <SheetTitle>Streaming TTS</SheetTitle>
+          <SheetDescription>
             Plays audio immediately while it is generated. Streaming playback is not saved to Library.
-          </CardDescription>
-        </CardHeader>
-        <CardContent display="grid" gap={4}>
-          <Box border="1px solid" borderColor="teal.100" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm">
+          </SheetDescription>
+        </SheetHeader>
+        <SheetContent display="grid" gap={4}>
+          <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
             Best for fast previews and live playback. Use Generate Audio when you need a downloadable Library item.
           </Box>
           <Box display="flex" alignItems="center" gap={2}>
@@ -236,7 +236,7 @@ export default function TTSPage() {
                   {useWebSocketTransport ? 'WebSocket' : 'HTTP SSE'}
                 </Button>
               </Box>
-              <Box border="1px solid" borderColor="teal.100" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm">
+              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
                 {useWebSocketTransport
                   ? 'The server holds a WebSocket to MiniMax and relays the audio as it arrives. The API key never reaches the browser.'
                   : 'The server relays the MiniMax HTTP stream as Server-Sent Events.'}
@@ -263,8 +263,8 @@ export default function TTSPage() {
               />
             </>
           )}
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
     </Box>
   );
 }

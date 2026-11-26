@@ -26,11 +26,11 @@ vi.mock('@/components/ui/button', () => ({
 }));
 
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: { children: ReactNode }) => <section>{children}</section>,
-  CardHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CardTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
-  CardDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
-  CardContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Sheet: ({ children }: { children: ReactNode }) => <section>{children}</section>,
+  SheetHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SheetTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
+  SheetDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
+  SheetContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/ui/badge', () => ({

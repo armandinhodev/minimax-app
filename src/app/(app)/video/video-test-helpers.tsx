@@ -20,15 +20,15 @@ export function createChakraMock() {
 
 export function createCardMock() {
   return {
-    Card: ({ children, accent, size, ...props }: { children?: ReactNode; accent?: string; size?: string } & Record<string, unknown>) => {
+    Sheet: ({ children, accent, size, ...props }: { children?: ReactNode; accent?: string; size?: string } & Record<string, unknown>) => {
       void accent;
       void size;
       return <section {...props}>{children}</section>;
     },
-    CardHeader: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-    CardTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
-    CardDescription: ({ children }: { children?: ReactNode }) => <p>{children}</p>,
-    CardContent: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+    SheetHeader: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+    SheetTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
+    SheetDescription: ({ children }: { children?: ReactNode }) => <p>{children}</p>,
+    SheetContent: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   };
 }
 

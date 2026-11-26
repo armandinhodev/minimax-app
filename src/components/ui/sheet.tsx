@@ -1,109 +1,76 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+/**
+ * Sheet — a panel of the work surface.
+ *
+ * It replaces the old card kit: no drop shadow, no accent border, radius
+ * at most 4px. A panel is separated from its neighbours by a hairline seam,
+ * the way machined panels are.
+ *
+ * See docs/design.md.
+ */
 
-function Sheet({ open, onOpenChange, children }: {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  children?: React.ReactNode;
-}) {
-  if (!open) return null;
+import { Box, type BoxProps } from "@chakra-ui/react";
+
+interface SheetProps extends BoxProps {
+  size?: "default" | "sm";
+}
+
+const sheetPadding = "1.25rem";
+
+function Sheet({ size = "default", bg, borderColor, ...props }: SheetProps) {
+  const padding = size === "sm" ? "0.875rem" : sheetPadding;
 
   return (
-    <div style={{ position: "relative" }}>
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.4)",
-          zIndex: 40,
-        }}
-        onClick={() => onOpenChange?.(false)}
-      />
-      {children}
-    </div>
+    <Box
+      bg={bg ?? "surface.sheet"}
+      borderRadius="lg"
+      p={padding}
+      border="1px solid"
+      borderColor={borderColor ?? "surface.rule"}
+      {...props}
+    />
   );
 }
 
-function SheetContent({ side = "right", onClose, children, className }: {
-  side?: "top" | "right" | "bottom" | "left";
-  onClose?: () => void;
-  children?: React.ReactNode;
-  className?: string;
-}) {
-  const getPosition = () => {
-    switch (side) {
-      case "top": return { top: 0, left: 0, right: 0 };
-      case "bottom": return { bottom: 0, left: 0, right: 0 };
-      case "left": return { top: 0, bottom: 0, left: 0 };
-      case "right": return { top: 0, bottom: 0, right: 0 };
-    }
-  };
+function SheetHeader({ ...props }: BoxProps) {
+  return <Box px={sheetPadding} pt={sheetPadding} pb="0" {...props} />;
+}
 
-  const width = (side === "left" || side === "right") ? "24rem" : "100%";
-  const height = (side === "top" || side === "bottom") ? "auto" : "100%";
+function SheetTitle({ ...props }: BoxProps) {
+  return <Box fontSize="title" lineHeight="title" fontWeight="600" {...props} />;
+}
 
+function SheetDescription({ ...props }: BoxProps) {
+  return <Box fontSize="body" lineHeight="body" color="content.readout" mt="0.35rem" {...props} />;
+}
+
+function SheetContent({ ...props }: BoxProps) {
+  return <Box px={sheetPadding} py="0.75rem" {...props} />;
+}
+
+function SheetFooter({ ...props }: BoxProps) {
   return (
-    <div
-      style={{
-        position: "fixed",
-        zIndex: 50,
-        background: "white",
-        display: "flex",
-        flexDirection: "column",
-        gap: "1rem",
-        padding: "1rem",
-        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-        width,
-        height,
-        ...getPosition(),
-      }}
-      className={className}
-    >
-      {children}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onClose}
-        style={{ position: "absolute", top: "0.75rem", right: "0.75rem" }}
-      >
-        X
-      </Button>
-    </div>
+    <Box
+      display="flex"
+      alignItems="center"
+      gap={2}
+      borderTop="1px solid"
+      borderColor="surface.rule"
+      bg="surface.field"
+      px={sheetPadding}
+      py="0.625rem"
+      borderBottomRadius="lg"
+      {...props}
+    />
   );
-}
-
-function SheetHeader({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ display: "flex", flexDirection: "column", gap: "0.125rem" }} className={className}>{children}</div>;
-}
-
-function SheetFooter({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "0.5rem" }} className={className}>{children}</div>;
-}
-
-function SheetTitle({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ fontSize: "1rem", fontWeight: 500 }} className={className}>{children}</div>;
-}
-
-function SheetDescription({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ fontSize: "0.875rem", color: "#6b7280" }} className={className}>{children}</div>;
-}
-
-function SheetTrigger({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) {
-  return <button type="button" onClick={onClick}>{children}</button>;
-}
-
-function SheetClose(props: React.HTMLAttributes<HTMLButtonElement>) {
-  return <button type="button" {...props} />;
 }
 
 export {
   Sheet,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
   SheetHeader,
   SheetFooter,
   SheetTitle,
   SheetDescription,
+  SheetContent,
 };

@@ -19,14 +19,6 @@ vi.mock('@chakra-ui/react', () => ({
   },
 }));
 
-vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: { children: ReactNode }) => <section>{children}</section>,
-  CardHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CardTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
-  CardDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
-  CardContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
-
 vi.mock('@/lib/auth-client', () => ({
   authFetch: vi.fn(async () => ({
     ok: true,
@@ -63,12 +55,30 @@ describe('DashboardPage', () => {
     });
   }
 
-  it('renders the empty operational dashboard state', async () => {
+  it('renders the instrument rack with every product area', async () => {
     await renderDashboard();
 
-    expect(container!.textContent).toContain('Operational dashboard');
-    expect(container!.textContent).toContain('No SQLite records yet');
-    expect(Array.from(container!.querySelectorAll('a[href="/tts"]')).some((link) => link.textContent?.includes('Generate speech'))).toBe(true);
+    expect(container!.textContent).toContain('MiniMax Studio');
+    expect(container!.textContent).toContain('Instruments');
+
+    const hrefs = Array.from(container!.querySelectorAll('a')).map((link) => link.getAttribute('href'));
+    expect(hrefs).toEqual(expect.arrayContaining([
+      '/tts',
+      '/asr',
+      '/text',
+      '/image',
+      '/music',
+      '/video',
+      '/video-agent',
+      '/library',
+    ]));
+  });
+
+  it('renders the empty state as an invitation', async () => {
+    await renderDashboard();
+
+    expect(container!.textContent).toContain('Nothing here yet');
+    expect(container!.textContent).toContain('Recent creations');
   });
 
   it('renders recent SQLite generations', async () => {
@@ -114,7 +124,6 @@ describe('DashboardPage', () => {
 
     await renderDashboard();
 
-    expect(container!.textContent).toContain('2');
     expect(container!.textContent).toContain('Glossy synth-pop chorus');
     expect(container!.querySelector('a[href="/music"]')?.textContent).toContain('Music');
   });

@@ -26,21 +26,48 @@ describe('application color system', () => {
     }
   });
 
-  it('preserves the existing palette and Chakra defaults', () => {
-    expect(system.token('colors.app.slate.900')).toBe('#0f172a');
-    expect(system.token('colors.app.speech')).toBe('#38bdf8');
-    expect(system.token('colors.app.image')).toBe('#a78bfa');
-    expect(system.token('colors.app.music')).toBe('#f472b6');
-    expect(system.token('colors.app.library')).toBe('#34d399');
-    expect(system.token('colors.app.scrollbar')).toBe('#d1d5db');
+  it('keeps the bench palette described in docs/design.md', () => {
+    expect(system.token('colors.bench.console')).toBe('#14181D');
+    expect(system.token('colors.bench.seam')).toBe('#2B323B');
+    expect(system.token('colors.bench.sheet')).toBe('#FFFFFF');
+    expect(system.token('colors.bench.field')).toBe('#EEF0F2');
+    expect(system.token('colors.bench.rule')).toBe('#D7DCE1');
+    expect(system.token('colors.bench.ink')).toBe('#0F1216');
+    expect(system.token('colors.bench.readout')).toBe('#5C6673');
+    expect(system.token('colors.bench.accent')).toBe('#1F5E6B');
+  });
+
+  it('has a single interactive accent', () => {
+    const accents = system.token('colors.bench.accent');
+    expect(accents).toBe('#1F5E6B');
+
+    // No per-product accent palette survives the redesign.
+    expect(system.token('colors.bench.speech')).toBeUndefined();
+    expect(system.token('colors.bench.image')).toBeUndefined();
+    expect(system.token('colors.bench.music')).toBeUndefined();
+    expect(system.token('colors.bench.video')).toBeUndefined();
+  });
+
+  it('wires the two typefaces and keeps the radius machined', () => {
+    expect(system.token('fonts.body')).toContain('--font-archivo');
+    expect(system.token('fonts.mono')).toContain('--font-plex-mono');
+
+    // Equipment is machined, not pillowy: nothing rounds past 4px.
+    for (const radius of ['sm', 'md', 'lg', 'xl', '2xl']) {
+      const value = String(system.token(`radii.${radius}`));
+      expect(parseFloat(value), radius).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it('keeps the Chakra default palette available', () => {
     expect(system.token('colors.blue.500')).toBe(defaultSystem.token('colors.blue.500'));
   });
 
   it('provides the application tokens globally without changing its children', () => {
     const html = renderToStaticMarkup(<Provider><span>Application content</span></Provider>);
     expect(html).toContain('<span>Application content</span>');
-    expect(html).toContain('--chakra-colors-navigation-text');
-    expect(html).toContain('--chakra-colors-scrollbar-thumb');
-    expect(html).toContain('--chakra-colors-app-music:#f472b6');
+    expect(html).toContain('--chakra-colors-console-text');
+    expect(html).toContain('--chakra-colors-surface-sheet');
+    expect(html).toContain('--chakra-colors-interaction-accent');
   });
 });

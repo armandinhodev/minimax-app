@@ -180,7 +180,13 @@ function BaseSelect({
     >
       <ChakraSelect.HiddenSelect />
       <ChakraSelect.Control>
-        <ChakraSelect.Trigger bg="white">
+        <ChakraSelect.Trigger
+          bg="surface.sheet"
+          borderColor="surface.rule"
+          borderRadius="md"
+          height="2.25rem"
+          fontSize="body"
+        >
           <ChakraSelect.ValueText placeholder={placeholder}>
             {selectedOption ? (
               <Box display="inline-flex" alignItems="center" gap={2}>
@@ -196,7 +202,7 @@ function BaseSelect({
       </ChakraSelect.Control>
       <Portal>
         <ChakraSelect.Positioner>
-          <ChakraSelect.Content maxH="20rem" bg="white">
+          <ChakraSelect.Content maxH="20rem" bg="surface.sheet" borderColor="surface.rule" borderRadius="md">
             {groupedOptions.map(({ key, options: groupItems }) =>
               key === undefined ? (
                 groupItems.map((option) => <BaseItem key={option.value} option={option} />)
@@ -307,14 +313,21 @@ function SearchableSelect({
       id={id}
     >
       <Combobox.Control>
-        <Combobox.Input placeholder={placeholder} bg="white" />
+        <Combobox.Input
+          placeholder={placeholder}
+          bg="surface.sheet"
+          borderColor="surface.rule"
+          borderRadius="md"
+          height="2.25rem"
+          fontSize="body"
+        />
         <Combobox.IndicatorGroup>
           <Combobox.Trigger />
         </Combobox.IndicatorGroup>
       </Combobox.Control>
       <Portal>
         <Combobox.Positioner>
-          <Combobox.Content maxH="20rem" bg="white">
+          <Combobox.Content maxH="20rem" bg="surface.sheet" borderColor="surface.rule" borderRadius="md">
             {groupedOptions.map(({ key, options: groupItems }) =>
               key === undefined ? (
                 groupItems.map((option) => <SearchableItem key={option.value} option={option} />)

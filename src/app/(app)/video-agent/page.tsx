@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
@@ -165,27 +165,27 @@ export default function VideoAgentPage() {
       <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
         <Box maxW="52rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Video Agent</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Generate a video from an official MiniMax template. Pick a template, fill what it asks
             for, and follow the task until the clip is ready.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="purple.100" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Template tasks are billable and run asynchronously. The download link is valid for 9 hours.
         </Box>
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.9fr) minmax(0, 1.1fr)' }} gap={6} alignItems="start">
-        <Card accent="purple">
-          <CardHeader>
-            <CardTitle>Template</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Template</SheetTitle>
+            <SheetDescription>
               {selected
                 ? selected.description
                 : 'Choose one of the official MiniMax Video Agent templates.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="grid" gap={2}>
               <Label htmlFor="video-agent-template">Template</Label>
               <Select
@@ -209,7 +209,7 @@ export default function VideoAgentPage() {
                   placeholder="https://example.com/photo.jpg"
                   onChange={(event) => setMediaUrl(event.currentTarget.value)}
                 />
-                <Box color="gray.500" fontSize="0.78rem">
+                <Box color="content.subtle" fontSize="0.78rem">
                   JPEG, PNG or WebP. Under 20MB, shorter side over 300px, ratio between 2:5 and 5:2.
                 </Box>
               </Box>
@@ -233,7 +233,7 @@ export default function VideoAgentPage() {
 
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
                 {notice}
               </Box>
             )}
@@ -241,19 +241,19 @@ export default function VideoAgentPage() {
             <Button onClick={handleCreate} disabled={!canCreate} colorPalette="purple">
               {isCreating ? 'Creating task...' : 'Create video'}
             </Button>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="24rem">
-          <CardHeader>
-            <CardTitle>Result</CardTitle>
-            <CardDescription>
+        <Sheet minH="24rem">
+          <SheetHeader>
+            <SheetTitle>Result</SheetTitle>
+            <SheetDescription>
               {task ? `Task ${task.taskId} · ${task.status}` : 'The generated clip appears here.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {!task && (
-              <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 {selected
                   ? `Ready to render "${selected.name}".`
                   : 'Pick a template to start.'}
@@ -261,7 +261,7 @@ export default function VideoAgentPage() {
             )}
 
             {task && task.status !== 'succeeded' && (
-              <Box border="1px dashed" borderColor="purple.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 {task.status === 'failed' ? 'The task failed.' : 'MiniMax is rendering the video.'}
               </Box>
             )}
@@ -269,13 +269,13 @@ export default function VideoAgentPage() {
             {task?.videoUrl && (
               <Box display="grid" gap="0.5rem">
                 <video src={task.videoUrl} controls style={{ width: '100%', borderRadius: '0.75rem' }} />
-                <Box color="gray.500" fontSize="0.78rem">
+                <Box color="content.subtle" fontSize="0.78rem">
                   The link expires 9 hours after the task completed.
                 </Box>
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

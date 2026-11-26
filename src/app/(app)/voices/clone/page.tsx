@@ -12,7 +12,7 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
@@ -97,19 +97,19 @@ export default function CloneVoicePage() {
     <Box display="grid" gap={6} maxW="36rem">
       <Box>
         <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Clone a Voice</h1>
-        <Box color="gray.600" mt={1}>
+        <Box color="content.readout" mt={1}>
           Upload an audio sample ({VOICE_UPLOAD_DURATION_LIMITS.minSeconds}s–{VOICE_UPLOAD_DURATION_LIMITS.maxSeconds / 60}min, MP3/M4A/WAV, ≤{MAX_UPLOAD_FILE_SIZE_MB} MB) to create a voice clone.
         </Box>
       </Box>
 
-      <Card accent="purple">
-        <CardHeader>
-          <CardTitle>Voice Clone</CardTitle>
-          <CardDescription>
+      <Sheet>
+        <SheetHeader>
+          <SheetTitle>Voice Clone</SheetTitle>
+          <SheetDescription>
             Upload a clean audio sample with clear speech. The clone will be ready shortly after generation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent display="grid" gap={4}>
+          </SheetDescription>
+        </SheetHeader>
+        <SheetContent display="grid" gap={4}>
           <VoiceUpload onFileSelected={handleFileSelected} onUploadComplete={handleUploadComplete} />
 
           {/* Voice ID */}
@@ -122,14 +122,14 @@ export default function CloneVoicePage() {
               onChange={(e) => setVoiceId(e.target.value)}
               maxLength={256}
             />
-            <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
               A unique identifier for your voice (8–256 chars, starts with a letter).
             </p>
           </Box>
 
           {error && <ErrorDisplay code={error.code} message={error.message} details={error.details} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}
@@ -139,41 +139,41 @@ export default function CloneVoicePage() {
               {isLoading ? 'Cloning...' : 'Clone Voice'}
             </Button>
           </Box>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
 
       {/* Success State */}
       {clonedVoice && (
-        <Card accent="green">
-          <CardHeader>
-            <CardTitle>Voice Cloned Successfully</CardTitle>
-            <CardDescription>
-              Your voice clone is ready. Use the voice ID <code style={{ fontSize: '0.75rem', backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{clonedVoice.voiceId}</code> in Text to Speech. Fresh clones may appear there before the MiniMax voice list refreshes.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Voice Cloned Successfully</SheetTitle>
+            <SheetDescription>
+              Your voice clone is ready. Use the voice ID <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{clonedVoice.voiceId}</code> in Text to Speech. Fresh clones may appear there before the MiniMax voice list refreshes.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="flex" alignItems="center" gap={2}>
               <TTLCounter expiresAt={ttlExpiry} label="Voice TTL" />
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
                 Your cloned voice will expire after 7 days of inactivity.
               </span>
             </Box>
             <Box display="flex" gap={2}>
               <Link
                 href="/tts"
-                style={{ display: 'inline-flex', height: '2rem', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', borderRadius: '0.5rem', border: '1px solid transparent', backgroundColor: '#111827', padding: '0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: 'white' }}
+                style={{ display: 'inline-flex', height: '2rem', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', borderRadius: 'var(--chakra-radii-md)', border: '1px solid transparent', backgroundColor: 'var(--chakra-colors-interaction-accent)', padding: '0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--chakra-colors-content-inverse)' }}
               >
                 Go to Text to Speech
               </Link>
               <Link
                 href="/voices"
-                style={{ display: 'inline-flex', height: '2rem', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', borderRadius: '0.5rem', border: '1px solid #d1d5db', backgroundColor: 'white', padding: '0 0.75rem', fontSize: '0.875rem' }}
+                style={{ display: 'inline-flex', height: '2rem', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', borderRadius: 'var(--chakra-radii-md)', border: '1px solid var(--chakra-colors-surface-rule)', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem' }}
               >
                 View All Voices
               </Link>
             </Box>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       )}
     </Box>
   );

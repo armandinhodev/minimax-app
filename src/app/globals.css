@@ -1,4 +1,11 @@
-/* Reset and base styles */
+/*
+ * Base styles.
+ *
+ * The type scale and the colors live in the Chakra theme (docs/design.md);
+ * this file only sets the document defaults. No raw colors here: the theme
+ * test enforces that every color comes from a token.
+ */
+
 *,
 *::before,
 *::after {
@@ -10,14 +17,17 @@
 }
 
 html {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--chakra-fonts-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
+  background: var(--chakra-colors-surface-field);
+  color: var(--chakra-colors-content-ink);
+  font-size: var(--chakra-font-sizes-body);
+  line-height: var(--chakra-line-heights-body);
   min-height: 100vh;
-  line-height: 1.5;
 }
 
 img,
@@ -46,6 +56,52 @@ h6 {
   overflow-wrap: break-word;
 }
 
+h1 {
+  font-size: var(--chakra-font-sizes-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: var(--chakra-line-heights-display);
+}
+
+h2 {
+  font-size: var(--chakra-font-sizes-title);
+  font-weight: 600;
+  line-height: var(--chakra-line-heights-title);
+}
+
+h3 {
+  font-size: var(--chakra-font-sizes-body);
+  font-weight: 600;
+  line-height: var(--chakra-line-heights-body);
+}
+
+/* Values, ids and durations read as instrument readouts. */
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--chakra-fonts-mono);
+  font-size: var(--chakra-font-sizes-mono);
+}
+
+/* Keyboard focus is always visible. */
+:focus-visible {
+  outline: 2px solid var(--chakra-colors-interaction-accent);
+  outline-offset: 2px;
+}
+
+/* Motion only ever answers a user action. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -58,7 +114,7 @@ h6 {
 
 ::-webkit-scrollbar-thumb {
   background: var(--chakra-colors-scrollbar-thumb);
-  border-radius: 4px;
+  border-radius: var(--chakra-radii-md);
 }
 
 ::-webkit-scrollbar-thumb:hover {

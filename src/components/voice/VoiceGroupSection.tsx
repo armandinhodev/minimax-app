@@ -44,7 +44,7 @@ export function VoiceGroupSection({ language, voices, onDelete, deletingId }: Vo
           <VoiceCard key={voice.voiceId} voice={voice} onDelete={onDelete} isDeleting={deletingId === voice.voiceId} />
         ))}
         {voices.length === 0 && (
-          <p style={{ color: '#6b7280', gridColumn: '1 / -1', fontSize: '0.875rem' }}>No voices in this group match the current filter.</p>
+          <p style={{ color: 'var(--chakra-colors-content.readout)', gridColumn: '1 / -1', fontSize: '0.875rem' }}>No voices in this group match the current filter.</p>
         )}
       </Box>
     </Box>

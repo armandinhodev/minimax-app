@@ -10,7 +10,7 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
@@ -120,18 +120,18 @@ export function VoiceDesigner({
   return (
     <Box display="grid" gap={6}>
       {/* Prompt */}
-      <Card accent="teal">
-        <CardHeader>
-          <CardTitle>Voice Prompt</CardTitle>
-          <CardDescription>
+      <Sheet>
+        <SheetHeader>
+          <SheetTitle>Voice Prompt</SheetTitle>
+          <SheetDescription>
             Describe the voice you want in natural language.
-          </CardDescription>
-        </CardHeader>
-        <CardContent display="grid" gap={3}>
+          </SheetDescription>
+        </SheetHeader>
+        <SheetContent display="grid" gap={3}>
           <Box display="grid" gap={2}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Label htmlFor="designer-prompt">Prompt</Label>
-              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
                 {prompt.length}/{MAX_PROMPT_CHARS}
               </span>
             </Box>
@@ -147,7 +147,7 @@ export function VoiceDesigner({
 
           {/* Example suggestions */}
           <Box display="flex" flexWrap="wrap" gap={1}>
-            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Examples:</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>Examples:</span>
             {EXAMPLE_PROMPTS.map((example) => (
               <Badge
                 key={example}
@@ -164,7 +164,7 @@ export function VoiceDesigner({
           <Box display="grid" gap={2}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Label htmlFor="designer-preview-text">Preview Text</Label>
-              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
                 {previewText.length}/{MAX_PREVIEW_CHARS}
               </span>
             </Box>
@@ -180,7 +180,7 @@ export function VoiceDesigner({
 
           {error && <ErrorDisplay code={error.code} message={error.message} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}
@@ -192,22 +192,22 @@ export function VoiceDesigner({
           >
             {isLoading ? 'Designing...' : 'Design Voice'}
           </Button>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
 
       {/* Preview Player */}
       {previewResult && (
-        <Card accent="blue">
-          <CardHeader>
-            <CardTitle>Voice Preview</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Voice Preview</SheetTitle>
+            <SheetDescription>
               Listen to the trial audio. Accept to save or regenerate for a new version.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="grid" gap={2}>
               <Label>Voice ID</Label>
-              <code style={{ fontSize: '0.875rem', backgroundColor: '#f3f4f6', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
+              <code style={{ fontSize: '0.875rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
                 {previewResult.voice.voiceId}
               </code>
             </Box>
@@ -234,29 +234,29 @@ export function VoiceDesigner({
                 Regenerate
               </Button>
             </Box>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       )}
 
       {/* Saved Voice */}
       {savedVoice && (
-        <Card accent="green">
-          <CardHeader>
-            <CardTitle>Voice Saved</CardTitle>
-            <CardDescription>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Voice Saved</SheetTitle>
+            <SheetDescription>
               Your designed voice is ready. Use voice ID{' '}
-              <code style={{ fontSize: '0.75rem', backgroundColor: '#f3f4f6', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{savedVoice.voiceId}</code> in Text to Speech. Fresh designed voices may appear there before the MiniMax voice list refreshes.
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+              <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{savedVoice.voiceId}</code> in Text to Speech. Fresh designed voices may appear there before the MiniMax voice list refreshes.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="flex" alignItems="center" gap={2}>
               <TTLCounter expiresAt={ttlExpiry} label="Voice TTL" />
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
                 Expires after 7 days of inactivity.
               </span>
             </Box>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       )}
     </Box>
   );

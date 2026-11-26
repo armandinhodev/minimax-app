@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -200,23 +200,23 @@ export default function TextPage() {
       <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
         <Box maxW="52rem">
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Chat Studio</h1>
-          <Box color="gray.600" mt={1}>
+          <Box color="content.readout" mt={1}>
             Talk to MiniMax M3 models. The same conversation can run against the native endpoint
             or any of the OpenAI, Anthropic and Responses compatible surfaces.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="blue.100" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           MiniMax-M3.1-Flash and MiniMax-M3 are reasoning models: streaming is recommended.
         </Box>
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.9fr) minmax(0, 1.1fr)' }} gap={6} alignItems="start">
-        <Card accent="blue">
-          <CardHeader>
-            <CardTitle>Prompt</CardTitle>
-            <CardDescription>Pick the model and the upstream surface, then send a message.</CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+        <Sheet>
+          <SheetHeader>
+            <SheetTitle>Prompt</SheetTitle>
+            <SheetDescription>Pick the model and the upstream surface, then send a message.</SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             <Box display="grid" gap={2}>
               <Label htmlFor="text-model">Model</Label>
               <Select
@@ -270,21 +270,21 @@ export default function TextPage() {
             <Button onClick={handleSend} disabled={!canSend} colorPalette="blue">
               {isSending ? 'Thinking...' : 'Send'}
             </Button>
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
 
-        <Card accent="green" minH="28rem">
-          <CardHeader>
-            <CardTitle>Conversation</CardTitle>
-            <CardDescription>
+        <Sheet minH="28rem">
+          <SheetHeader>
+            <SheetTitle>Conversation</SheetTitle>
+            <SheetDescription>
               {messages.length === 0 && !reply
                 ? 'Your conversation appears here.'
                 : `${messages.length} message${messages.length === 1 ? '' : 's'} sent`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent display="grid" gap={4}>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap={4}>
             {messages.length === 0 && !reply && !isSending && (
-              <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
                 Send a message to start.
               </Box>
             )}
@@ -298,18 +298,18 @@ export default function TextPage() {
                 bg="white"
                 p="0.75rem"
               >
-                <Box color="gray.500" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
+                <Box color="content.subtle" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
                   {message.role}
                 </Box>
-                <Box color="gray.800" whiteSpace="pre-wrap" mt={1}>
+                <Box color="content.ink" whiteSpace="pre-wrap" mt={1}>
                   {message.text}
                 </Box>
               </Box>
             ))}
 
             {reply && (
-              <Box border="1px solid" borderColor="green.100" borderRadius="xl" bg="white" p="0.75rem">
-                <Box color="gray.500" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
+              <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="0.75rem">
+                <Box color="content.subtle" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
                   assistant
                 </Box>
 
@@ -317,32 +317,32 @@ export default function TextPage() {
                   <Box
                     mt={2}
                     border="1px dashed"
-                    borderColor="purple.200"
+                    borderColor="interaction.soft"
                     borderRadius="lg"
                     p="0.6rem"
-                    color="gray.600"
+                    color="content.readout"
                     fontSize="0.85rem"
                     whiteSpace="pre-wrap"
                   >
-                    <Box fontWeight={700} color="purple.700" fontSize="0.75rem" mb={1}>
+                    <Box fontWeight={700} color="interaction.accent" fontSize="0.75rem" mb={1}>
                       Thinking
                     </Box>
                     {reply.reasoningContent}
                   </Box>
                 )}
 
-                <Box color="gray.800" whiteSpace="pre-wrap" mt={2}>
+                <Box color="content.ink" whiteSpace="pre-wrap" mt={2}>
                   {reply.content}
                 </Box>
 
                 {reply.toolCalls && reply.toolCalls.length > 0 && (
                   <Box display="grid" gap="0.5rem" mt={2}>
                     {reply.toolCalls.map((call) => (
-                      <Box key={call.id} border="1px solid" borderColor="teal.200" borderRadius="lg" p="0.5rem">
-                        <Box fontSize="0.8rem" fontWeight={700} color="teal.700">
+                      <Box key={call.id} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.5rem">
+                        <Box fontSize="0.8rem" fontWeight={700} color="interaction.accent">
                           {call.name}
                         </Box>
-                        <Box as="pre" fontSize="0.75rem" whiteSpace="pre-wrap" color="gray.600" m={0}>
+                        <Box as="pre" fontSize="0.75rem" whiteSpace="pre-wrap" color="content.readout" m={0}>
                           {call.arguments}
                         </Box>
                       </Box>
@@ -351,7 +351,7 @@ export default function TextPage() {
                 )}
 
                 {reply.usage && (
-                  <Box color="gray.500" fontSize="0.78rem" mt={2}>
+                  <Box color="content.subtle" fontSize="0.78rem" mt={2}>
                     {reply.usage.inputTokens !== undefined && <>Input {reply.usage.inputTokens} tokens · </>}
                     {reply.usage.outputTokens !== undefined && <>Output {reply.usage.outputTokens} tokens</>}
                     {reply.finishReason && <> · {reply.finishReason}</>}
@@ -361,12 +361,12 @@ export default function TextPage() {
             )}
 
             {isSending && !reply && (
-              <Box border="1px dashed" borderColor="blue.200" borderRadius="xl" p="1.5rem" textAlign="center" color="gray.600" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="1.5rem" textAlign="center" color="content.readout" bg="white">
                 MiniMax is thinking.
               </Box>
             )}
-          </CardContent>
-        </Card>
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

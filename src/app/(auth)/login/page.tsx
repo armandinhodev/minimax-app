@@ -12,7 +12,7 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { setAppAccessKey } from '@/components/shared/AppKeyGate';
 import { validateAppAccessKey } from '@/lib/auth-client';
@@ -52,14 +52,14 @@ export default function LoginPage() {
 
   return (
     <main style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
-      <Card w="full" maxW="sm">
-        <CardHeader textAlign="center">
-          <CardTitle>MiniMax Speech</CardTitle>
-          <CardDescription>
+      <Sheet w="full" maxW="sm">
+        <SheetHeader textAlign="center">
+          <SheetTitle>MiniMax Studio</SheetTitle>
+          <SheetDescription>
             Enter your app access key to continue.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </SheetDescription>
+        </SheetHeader>
+        <SheetContent>
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
             <Box display="grid" gap={2}>
               <Label htmlFor="access-key">Access Key</Label>
@@ -85,8 +85,8 @@ export default function LoginPage() {
               {isLoading ? 'Validating...' : 'Sign In'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }
