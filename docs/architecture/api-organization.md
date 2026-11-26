@@ -40,6 +40,7 @@ Reglas que sostienen la convención:
 | --- | --- |
 | `POST /api/minimax/speech/t2a` | `POST /v1/t2a_v2` |
 | `GET /api/minimax/speech/t2a/stream` | `POST /v1/t2a_v2` con `stream: true` (SSE) |
+| `POST /api/minimax/speech/t2a/websocket` | `wss://api.minimax.io/ws/v1/t2a_v2` (relay server-side → SSE) |
 | `POST /api/minimax/speech/t2a/async` | `POST /v1/t2a_async_v2` |
 | `GET /api/minimax/speech/t2a/async/[taskId]` | `GET /v1/query/t2a_async_query_v2` |
 | `GET /api/minimax/speech/t2a/async/file/[fileId]` | `GET /v1/files/retrieve` |

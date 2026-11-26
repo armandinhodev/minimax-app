@@ -45,6 +45,7 @@ export default function TTSPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioHex, setAudioHex] = useState<string | null>(null);
   const [streamingEnabled, setStreamingEnabled] = useState(false);
+  const [useWebSocketTransport, setUseWebSocketTransport] = useState(false);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
 
   const handleModelChange = useCallback((value: string) => {
@@ -219,6 +220,25 @@ export default function TTSPage() {
           </Box>
           {streamingEnabled && (
             <>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Label htmlFor="streaming-transport" style={{ fontSize: '0.875rem' }}>
+                  Transport
+                </Label>
+                <Button
+                  id="streaming-transport"
+                  variant={useWebSocketTransport ? 'default' : 'outline'}
+                  colorPalette={useWebSocketTransport ? 'green' : 'gray'}
+                  size="sm"
+                  onClick={() => setUseWebSocketTransport((prev) => !prev)}
+                >
+                  {useWebSocketTransport ? 'WebSocket' : 'HTTP SSE'}
+                </Button>
+              </Box>
+              <Box border="1px solid" borderColor="teal.100" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="gray.700" fontSize="sm">
+                {useWebSocketTransport
+                  ? 'The server holds a WebSocket to MiniMax and relays the audio as it arrives. The API key never reaches the browser.'
+                  : 'The server relays the MiniMax HTTP stream as Server-Sent Events.'}
+              </Box>
               <TextInput
                 value={streamingText}
                 onChange={setStreamingText}
@@ -237,6 +257,7 @@ export default function TTSPage() {
                 voiceId={streamingVoiceId}
                 model={model}
                 enabled={streamingEnabled}
+                endpoint={useWebSocketTransport ? '/api/minimax/speech/t2a/websocket' : undefined}
               />
             </>
           )}

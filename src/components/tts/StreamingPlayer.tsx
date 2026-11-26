@@ -10,12 +10,15 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
+import { hexToUint8Array } from './AudioPlayer';
 
 interface StreamingPlayerProps {
   text: string;
   voiceId: string;
   model?: string;
   enabled: boolean;
+  /** Transport endpoint. Defaults to the HTTP SSE transport. */
+  endpoint?: string;
 }
 
 type StreamState = 'idle' | 'connecting' | 'streaming' | 'paused' | 'done' | 'error';
@@ -34,15 +37,49 @@ export function base64ToUint8Array(value: string): Uint8Array {
   return bytes;
 }
 
+/**
+ * MiniMax streams the audio as hex inside `data.audio`. Hex is also a
+ * subset of the base64 alphabet, so the two cannot be told apart by the
+ * alphabet alone: lowercase-only and even-length means hex.
+ */
+export function isHexPayload(value: string): boolean {
+  return value.length > 0 && value.length % 2 === 0 && /^[0-9a-f]+$/.test(value);
+}
+
+/**
+ * Decodes a streaming audio payload, accepting both the hex encoding
+ * MiniMax uses and base64 for compatibility with other producers.
+ */
+export function decodeAudioPayload(value: string): Uint8Array {
+  const compact = value.replace(/\s/g, '');
+  return isHexPayload(compact) ? hexToUint8Array(compact) : base64ToUint8Array(compact);
+}
+
+/**
+ * Parses one SSE `data:` line.
+ *
+ * The upstream shape nests the audio under `data.audio`; the flat `audio` and
+ * `base64` keys are still accepted for other producers.
+ */
 export function parseStreamingAudioPayload(data: string): StreamChunkParseResult {
   const trimmed = data.trim();
   if (!trimmed || trimmed === '[DONE]') return { kind: 'ignore' };
 
   try {
     const parsed = JSON.parse(trimmed) as Record<string, unknown>;
-    const audio = parsed.audio ?? parsed.base64 ?? parsed.data;
+
+    const error = parsed.error as Record<string, unknown> | undefined;
+    if (typeof error?.message === 'string' && error.message.trim().length > 0) {
+      return { kind: 'error', reason: error.message };
+    }
+
+    const nested = parsed.data as Record<string, unknown> | undefined;
+    const audio = typeof nested?.audio === 'string'
+      ? nested.audio
+      : (parsed.audio ?? parsed.base64);
+
     if (typeof audio !== 'string' || audio.trim() === '') return { kind: 'ignore' };
-    return { kind: 'audio', bytes: base64ToUint8Array(audio) };
+    return { kind: 'audio', bytes: decodeAudioPayload(audio) };
   } catch {
     return { kind: 'error', reason: 'Invalid streaming audio payload.' };
   }
@@ -63,7 +100,7 @@ export function shouldRetryStreamFailure(error: unknown): boolean {
   return !(error instanceof NonRetryableStreamError);
 }
 
-export const StreamingPlayer = memo(function StreamingPlayer({ text, voiceId, model = DEFAULT_T2A_MODEL, enabled }: StreamingPlayerProps) {
+export const StreamingPlayer = memo(function StreamingPlayer({ text, voiceId, model = DEFAULT_T2A_MODEL, enabled, endpoint = '/api/minimax/speech/t2a/stream' }: StreamingPlayerProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const chunksRef = useRef<Uint8Array[]>([]);
@@ -141,7 +178,7 @@ export const StreamingPlayer = memo(function StreamingPlayer({ text, voiceId, mo
     setTotalBytes(0);
 
     try {
-      const response = await fetch('/api/minimax/speech/t2a/stream', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,7 +230,7 @@ export const StreamingPlayer = memo(function StreamingPlayer({ text, voiceId, mo
         setErrorMessage('Stream failed after multiple attempts.');
       }
     }
-  }, [text, voiceId, model, enabled, initAudioContext, playAccumulated]);
+  }, [text, voiceId, model, enabled, endpoint, initAudioContext, playAccumulated]);
 
   const handleStart = () => { void streamChunks(); };
   const handleStop = () => {

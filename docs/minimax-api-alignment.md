@@ -82,7 +82,7 @@ dominios. El mapa completo está en
 
 | Dominio | Endpoints upstream cubiertos | Ruta de la app |
 | --- | --- | --- |
-| Speech | `/v1/t2a_v2`, `/v1/t2a_async_v2`, `/v1/query/t2a_async_query_v2` | `/api/minimax/speech/t2a/**` |
+| Speech | `/v1/t2a_v2`, `/v1/t2a_async_v2`, `/v1/query/t2a_async_query_v2`, `wss://api.minimax.io/ws/v1/t2a_v2` | `/api/minimax/speech/t2a/**` |
 | Voice | `/v1/voice_clone`, `/v1/voice_design`, `/v1/get_voice`, `/v1/delete_voice` | `/api/minimax/speech/voices/**` |
 | ASR | `/v1/speech_to_text` | `/api/minimax/asr/transcriptions/**` |
 | Text | `/v1/text/chatcompletion_v2`, `/v1/chat/completions`, `/anthropic/v1/messages`, `/v1/responses`, `/v1/responses/input_tokens`, `/v1/models`, `/v1/models/{model}` | `/api/minimax/text/**` |
@@ -92,9 +92,10 @@ dominios. El mapa completo está en
 | Video Agent | `/v1/video_template_generation`, `/v1/query/video_template_generation` | `/api/minimax/video-agent/**` |
 | Music | `/v1/music_generation`, `/v1/lyrics_generation`, `/v1/music_cover_preprocess` | `/api/minimax/music/**` |
 
-**Endpoints vigentes aún sin implementar**: el TTS por WebSocket
-(`wss://api.minimax.io/ws/v1/t2a_v2`) y su variante bidireccional. El resto de
-la API vigente de MiniMax está cubierta.
+**Endpoints vigentes aún sin implementar**: ninguno de la API HTTP de MiniMax.
+Queda fuera la variante **bidireccional** del TTS por WebSocket
+(`wss://api.minimax.io/ws/v1/t2a_v2` en modo bidi), que necesita un canal
+dúplex que el transporte HTTP de la app no puede ofrecer.
 
 ## Deliberate deviations
 

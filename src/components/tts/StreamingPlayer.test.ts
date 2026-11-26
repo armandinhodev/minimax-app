@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NonRetryableStreamError, base64ToUint8Array, parseStreamingAudioPayload, shouldFailCompletedStream, shouldRetryStreamFailure } from './StreamingPlayer';
+import { NonRetryableStreamError, base64ToUint8Array, decodeAudioPayload, isHexPayload, parseStreamingAudioPayload, shouldFailCompletedStream, shouldRetryStreamFailure } from './StreamingPlayer';
 
 describe('base64ToUint8Array', () => {
   it('decodes a complete base64 chunk', () => {
@@ -7,7 +7,46 @@ describe('base64ToUint8Array', () => {
   });
 });
 
+describe('isHexPayload', () => {
+  it('detects the lowercase even-length hex MiniMax streams', () => {
+    expect(isHexPayload('deadbeef')).toBe(true);
+    expect(isHexPayload('00ff')).toBe(true);
+  });
+
+  it('rejects base64 payloads and odd-length strings', () => {
+    expect(isHexPayload('SGVsbG8=')).toBe(false);
+    expect(isHexPayload('abc')).toBe(false);
+    expect(isHexPayload('')).toBe(false);
+  });
+});
+
+describe('decodeAudioPayload', () => {
+  it('decodes hex payloads', () => {
+    expect(Array.from(decodeAudioPayload('deadbeef'))).toEqual([0xde, 0xad, 0xbe, 0xef]);
+  });
+
+  it('falls back to base64 for payloads that are not hex', () => {
+    expect(Array.from(decodeAudioPayload('AAEC/w=='))).toEqual([0, 1, 2, 255]);
+  });
+});
+
 describe('parseStreamingAudioPayload', () => {
+  it('parses the upstream shape with the audio nested under data', () => {
+    const result = parseStreamingAudioPayload('{"data":{"audio":"deadbeef","status":2},"extra_info":{"usage_characters":12}}');
+
+    expect(result.kind).toBe('audio');
+    if (result.kind === 'audio') {
+      expect(Array.from(result.bytes)).toEqual([0xde, 0xad, 0xbe, 0xef]);
+    }
+  });
+
+  it('reports the error shape of the relay', () => {
+    expect(parseStreamingAudioPayload('{"error":{"message":"boom"}}')).toEqual({
+      kind: 'error',
+      reason: 'boom',
+    });
+  });
+
   it('parses valid base64 audio payloads into bytes', () => {
     const result = parseStreamingAudioPayload('{"audio":"SGVsbG8="}');
 
