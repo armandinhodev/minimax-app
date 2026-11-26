@@ -257,6 +257,8 @@ export default function TextPage() {
                 id="text-input"
                 value={input}
                 disabled={isSending}
+                required
+                aria-required="true"
                 minH="8rem"
                 placeholder="Ask something, or describe an image to reason about."
                 onChange={(event) => setInput(event.currentTarget.value)}

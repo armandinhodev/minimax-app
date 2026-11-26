@@ -20,6 +20,14 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
 
+import {
+  ASR_AUDIO_EXTENSIONS,
+  validateAudioFile,
+} from '@/application/dto/minimax/asr/AsrDTO';
+
+/** Extensiones admitidas por el servidor, en el mismo orden. */
+const ACCEPTED_EXTENSIONS = ASR_AUDIO_EXTENSIONS.map((extension) => `.${extension}`).join(',');
+
 const FORMAT_OPTIONS: SelectOption[] = [
   { value: 'json', label: 'JSON — plain transcript' },
   { value: 'verbose_json', label: 'Verbose JSON — segments and speakers' },
@@ -28,13 +36,13 @@ const FORMAT_OPTIONS: SelectOption[] = [
 ];
 
 const TIMESTAMP_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Default (segment level)' },
+  { value: 'default', label: 'Default (segment level)' },
   { value: 'sentence', label: 'Sentence' },
   { value: 'word', label: 'Word' },
 ];
 
 const LANGUAGE_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Auto — mixed language' },
+  { value: 'auto', label: 'Auto — mixed language' },
   { value: 'zh', label: 'Chinese' },
   { value: 'yue', label: 'Cantonese' },
   { value: 'en', label: 'English' },
@@ -85,8 +93,8 @@ function formatTimestamp(seconds: number): string {
 export default function AsrPage() {
   const [file, setFile] = useState<File | null>(null);
   const [responseFormat, setResponseFormat] = useState('json');
-  const [timestampLevel, setTimestampLevel] = useState('');
-  const [language, setLanguage] = useState('');
+  const [timestampLevel, setTimestampLevel] = useState('default');
+  const [language, setLanguage] = useState('auto');
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -96,21 +104,30 @@ export default function AsrPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isDiarizationFormat = DIARIZATION_FORMATS.includes(responseFormat);
-  const canTranscribe = !isTranscribing && file !== null;
+  /**
+   * The file is validated before it is uploaded: an unsupported container
+   * must not travel to the backend.
+   */
+  const fileError = file ? validateAudioFile(file.name, file.size) : null;
+  const canTranscribe = !isTranscribing && file !== null && fileError === null;
 
   const buildFormData = (): FormData => {
     const formData = new FormData();
     if (file) formData.append('file', file);
     formData.append('model', 'asr-1.0');
     formData.append('response_format', responseFormat);
-    formData.append('timestamp_level', timestampLevel);
-    formData.append('language', language);
+    formData.append('timestamp_level', timestampLevel === 'default' ? '' : timestampLevel);
+    formData.append('language', language === 'auto' ? '' : language);
     return formData;
   };
 
   const handleTranscribe = async () => {
     if (!file) {
       setError('Choose an audio file first.');
+      return;
+    }
+    if (fileError) {
+      setError(fileError);
       return;
     }
 
@@ -151,6 +168,10 @@ export default function AsrPage() {
   const handleStream = async () => {
     if (!file) {
       setError('Choose an audio file first.');
+      return;
+    }
+    if (fileError) {
+      setError(fileError);
       return;
     }
 
@@ -246,7 +267,7 @@ export default function AsrPage() {
               <Input
                 id="asr-file"
                 type="file"
-                accept="audio/*,.wav,.aiff,.flac,.m4a,.mp3,.aac,.opus,.ogg"
+                accept={ACCEPTED_EXTENSIONS}
                 ref={fileInputRef}
                 onChange={(event) => {
                   setFile(event.currentTarget.files?.[0] ?? null);
@@ -297,6 +318,7 @@ export default function AsrPage() {
               />
             </Box>
 
+            {fileError && !error && <ErrorDisplay message={fileError} />}
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
               <Box border="1px solid" borderColor="green.100" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="green.800" fontSize="sm">
@@ -338,7 +360,11 @@ export default function AsrPage() {
 
             {!transcript && !subtitles && streamedText.length === 0 && !isTranscribing && (
               <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
-                Choose an audio file to start.
+                {file
+                  ? fileError
+                    ? `The selected file cannot be transcribed: ${fileError}`
+                    : `Ready to transcribe ${file.name}.`
+                  : 'Choose an audio file to start.'}
               </Box>
             )}
 

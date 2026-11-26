@@ -213,6 +213,7 @@ export default function TTSPage() {
               variant={streamingEnabled ? 'default' : 'outline'}
               colorPalette={streamingEnabled ? 'green' : 'gray'}
               size="sm"
+              aria-pressed={streamingEnabled}
               onClick={() => setStreamingEnabled((prev) => !prev)}
             >
               {streamingEnabled ? 'On' : 'Off'}
@@ -229,6 +230,7 @@ export default function TTSPage() {
                   variant={useWebSocketTransport ? 'default' : 'outline'}
                   colorPalette={useWebSocketTransport ? 'green' : 'gray'}
                   size="sm"
+                  aria-pressed={useWebSocketTransport}
                   onClick={() => setUseWebSocketTransport((prev) => !prev)}
                 >
                   {useWebSocketTransport ? 'WebSocket' : 'HTTP SSE'}

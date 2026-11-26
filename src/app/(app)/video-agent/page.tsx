@@ -71,6 +71,14 @@ export default function VideoAgentPage() {
   }, []);
 
   const selected = templates.find((template) => template.id === templateId);
+  const mediaValue = mediaUrl.trim();
+  const textValue = textInput.trim();
+  /** The primary action stays disabled until the template gets what it asks for. */
+  const missingInput = selected
+    ? (selected.requiresMedia && mediaValue.length === 0)
+      || (selected.requiresText && textValue.length === 0)
+    : true;
+  const canCreate = !isCreating && !missingInput;
 
   const refreshTask = useCallback(async (id: string) => {
     const response = await authFetch(`/api/minimax/video-agent/generations/${encodeURIComponent(id)}`);
@@ -111,6 +119,10 @@ export default function VideoAgentPage() {
   const handleCreate = async () => {
     if (!templateId) {
       setError('Choose a template first.');
+      return;
+    }
+    if (missingInput) {
+      setError('Fill in what the template asks for.');
       return;
     }
 
@@ -192,6 +204,8 @@ export default function VideoAgentPage() {
                   id="video-agent-media"
                   value={mediaUrl}
                   disabled={isCreating}
+                  required
+                  aria-required="true"
                   placeholder="https://example.com/photo.jpg"
                   onChange={(event) => setMediaUrl(event.currentTarget.value)}
                 />
@@ -208,6 +222,8 @@ export default function VideoAgentPage() {
                   id="video-agent-text"
                   value={textInput}
                   disabled={isCreating}
+                  required
+                  aria-required="true"
                   minH="6rem"
                   placeholder="Describe the scene you want to play."
                   onChange={(event) => setTextInput(event.currentTarget.value)}
@@ -222,7 +238,7 @@ export default function VideoAgentPage() {
               </Box>
             )}
 
-            <Button onClick={handleCreate} disabled={isCreating || !templateId} colorPalette="purple">
+            <Button onClick={handleCreate} disabled={!canCreate} colorPalette="purple">
               {isCreating ? 'Creating task...' : 'Create video'}
             </Button>
           </CardContent>
@@ -238,7 +254,9 @@ export default function VideoAgentPage() {
           <CardContent display="grid" gap={4}>
             {!task && (
               <Box border="1px dashed" borderColor="gray.200" borderRadius="xl" p="2rem" textAlign="center" color="gray.600" bg="white">
-                Pick a template to start.
+                {selected
+                  ? `Ready to render "${selected.name}".`
+                  : 'Pick a template to start.'}
               </Box>
             )}
 

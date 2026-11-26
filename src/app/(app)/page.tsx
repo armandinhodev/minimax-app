@@ -50,6 +50,7 @@ const PRODUCT_CARDS = [
     accent: 'orange' as const,
     description: 'Turn audio into text, speaker segments or subtitles.',
     metric: null,
+    metricLabel: 'Transcripts are not stored in the Library yet.',
   },
   {
     title: 'Chat',
@@ -57,6 +58,7 @@ const PRODUCT_CARDS = [
     accent: 'purple' as const,
     description: 'Talk to MiniMax M3 models on any compatible surface.',
     metric: null,
+    metricLabel: 'Chats are not stored in the Library yet.',
   },
   {
     title: 'Library',
@@ -217,7 +219,9 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent display="grid" gap={4}>
                   <Box color="gray.700" fontSize="sm">
-                    {product.metric ? `${summary.byKind[product.metric]} records tracked` : `${summary.totalAssets} assets tracked`}
+                    {product.metric
+                      ? `${summary.byKind[product.metric]} records tracked`
+                      : product.metricLabel ?? `${summary.totalAssets} assets tracked`}
                   </Box>
                   <Link href={product.href} style={{ color: '#0f766e', fontWeight: 800, textDecoration: 'none' }}>
                     Open {product.title}
