@@ -1,31 +1,15 @@
-import React, { act, type ReactNode } from 'react';
+import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import VideoPage from './page';
 
-vi.mock('@chakra-ui/react', () => ({
-  Box: ({ children, as: Component = 'div', ...props }: { children?: ReactNode; as?: keyof JSX.IntrinsicElements } & Record<string, unknown>) => {
-    void props;
-    return <Component>{children}</Component>;
-  },
+const redirectMock = vi.hoisted(() => vi.fn((_url: string) => {
+  // The real redirect interrupts the render by throwing.
+  throw new Error('NEXT_REDIRECT');
 }));
 
-vi.mock('@/components/ui/card', () => ({
-  Card: ({ children, accent, size, ...props }: { children?: ReactNode; accent?: string; size?: string } & Record<string, unknown>) => {
-    void accent;
-    void size;
-    return <section {...props}>{children}</section>;
-  },
-  CardHeader: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  CardTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
-  CardDescription: ({ children }: { children?: ReactNode }) => <p>{children}</p>,
-  CardContent: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock('next/link', () => ({
-  default: ({ children, href, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children: ReactNode; href: string }) => <a href={href} onClick={onClick} {...props}>{children}</a>,
-}));
+vi.mock('next/navigation', () => ({ redirect: redirectMock }));
 
 describe('VideoPage', () => {
   let container: HTMLDivElement | null = null;
@@ -33,6 +17,7 @@ describe('VideoPage', () => {
 
   beforeEach(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    vi.clearAllMocks();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -47,31 +32,15 @@ describe('VideoPage', () => {
     container = null;
   });
 
-  it('links each workflow to its own route', async () => {
-    await act(async () => {
-      root!.render(<VideoPage />);
-    });
+  it('sends the studio entry point to the primary mode', async () => {
+    try {
+      await act(async () => {
+        root!.render(<VideoPage />);
+      });
+    } catch {
+      // The redirect mock throws to interrupt the render, like the real one.
+    }
 
-    const hrefs = Array.from(container!.querySelectorAll('a')).map((link) => link.getAttribute('href'));
-
-    expect(hrefs).toEqual([
-      '/video/generation',
-      '/video/context-ir',
-      '/video/regeneration',
-      '/video/tasks',
-    ]);
-  });
-
-  it('names every workflow', async () => {
-    await act(async () => {
-      root!.render(<VideoPage />);
-    });
-
-    const text = container!.textContent ?? '';
-
-    expect(text).toContain('Video Generation');
-    expect(text).toContain('H3-Context-IR');
-    expect(text).toContain('2K Regeneration');
-    expect(text).toContain('Tasks');
+    expect(redirectMock).toHaveBeenCalledWith('/video/generation');
   });
 });

@@ -39,7 +39,7 @@ const PRODUCT_CARDS = [
   },
   {
     title: 'Video',
-    href: '/video',
+    href: '/video/generation',
     accent: 'blue' as const,
     description: 'Generate H3 video, enhance prompts and regenerate in 2K.',
     metric: 'video' as const,
@@ -73,7 +73,7 @@ const QUICK_ACTIONS = [
   { href: '/tts', label: 'Generate speech' },
   { href: '/image', label: 'Create image' },
   { href: '/music', label: 'Compose music' },
-  { href: '/video', label: 'Create video' },
+  { href: '/video/generation', label: 'Create video' },
   { href: '/asr', label: 'Transcribe audio' },
   { href: '/text', label: 'Chat with MiniMax' },
   { href: '/library', label: 'Open Library' },
@@ -100,7 +100,7 @@ function getGenerationLabel(generation: LibraryGenerationDTO): string {
 function getGenerationHref(generation: LibraryGenerationDTO): string {
   if (generation.kind === 'music') return '/music';
   if (generation.kind === 'image') return '/image';
-  if (generation.kind === 'video') return '/video';
+  if (generation.kind === 'video') return '/video/generation';
   if (generation.kind === 'clone' || generation.kind === 'design') return '/voices';
   return '/tts';
 }

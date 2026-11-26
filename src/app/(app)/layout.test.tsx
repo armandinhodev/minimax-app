@@ -113,11 +113,14 @@ describe('AppLayout navigation', () => {
   });
 
   it('exposes the video studio without changing the existing active navigation', () => {
-    navigationMocks.pathname = '/video';
+    navigationMocks.pathname = '/video/generation';
     renderLayout();
     expect(getSectionToggle('video')?.getAttribute('aria-expanded')).toBe('true');
     expect(getLinks()).toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/video', text: expect.stringContaining('Video Studio') }),
+      expect.objectContaining({ href: '/video/generation', text: expect.stringContaining('Video Generation') }),
+      expect.objectContaining({ href: '/video/context-ir', text: expect.stringContaining('H3-Context-IR') }),
+      expect.objectContaining({ href: '/video/regeneration', text: expect.stringContaining('2K Regeneration') }),
+      expect.objectContaining({ href: '/video/tasks', text: expect.stringContaining('Tasks') }),
     ]));
     expect(getLinks().filter((link) => link.current === 'page')).toHaveLength(1);
   });

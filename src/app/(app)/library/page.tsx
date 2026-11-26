@@ -250,7 +250,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
                 <Button size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
               </>
             )}
-            <a href="/video">Open Video Studio</a>
+            <a href="/video/generation">Open Video Studio</a>
           </Box>
         )}
         {imageAssets.length > 0 && (
