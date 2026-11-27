@@ -15,7 +15,7 @@ function Dialog({ open, onOpenChange, children }: {
         style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(0,0,0,0.4)",
+          background: "var(--chakra-colors-surface-veil)",
           zIndex: 40,
         }}
         onClick={() => onOpenChange?.(false)}
@@ -28,6 +28,7 @@ function Dialog({ open, onOpenChange, children }: {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          padding: "1rem",
         }}
       >
         {children}
@@ -44,10 +45,10 @@ function DialogContent({ onClose, children, className }: {
   return (
     <div
       style={{
-        background: "var(--chakra-colors-surface-sheet)",
-        borderRadius: "0.75rem",
-        padding: "1rem",
-        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+        background: "var(--chakra-colors-surface-plate)",
+        borderRadius: "var(--chakra-radii-xl)",
+        padding: "1.25rem",
+        boxShadow: "var(--chakra-shadows-overlay)",
         maxWidth: "100%",
         width: "100%",
         maxHeight: "85vh",
@@ -61,9 +62,10 @@ function DialogContent({ onClose, children, className }: {
         variant="ghost"
         size="sm"
         onClick={onClose}
+        aria-label="Close dialog"
         style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
       >
-        X
+        Close
       </Button>
     </div>
   );
@@ -80,15 +82,7 @@ function DialogHeader({ children, className }: { children?: React.ReactNode; cla
 function DialogFooter({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        gap: "0.5rem",
-        marginTop: "1rem",
-        paddingTop: "1rem",
-        borderTop: "1px solid var(--chakra-colors-surface-rule)",
-      }}
+      style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "1rem" }}
       className={className}
     >
       {children}
@@ -97,28 +91,19 @@ function DialogFooter({ children, className }: { children?: React.ReactNode; cla
 }
 
 function DialogTitle({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ fontSize: "1rem", fontWeight: 500 }} className={className}>{children}</div>;
+  return (
+    <h2 style={{ fontSize: "1.25rem", fontWeight: 600, lineHeight: 1.3 }} className={className}>
+      {children}
+    </h2>
+  );
 }
 
 function DialogDescription({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ fontSize: "0.875rem", color: "var(--chakra-colors-content-readout)" }} className={className}>{children}</div>;
+  return (
+    <p style={{ fontSize: "0.875rem", lineHeight: 1.5, color: "var(--chakra-colors-content-readout)" }} className={className}>
+      {children}
+    </p>
+  );
 }
 
-function DialogClose(props: React.HTMLAttributes<HTMLButtonElement>) {
-  return <button type="button" {...props} />;
-}
-
-function DialogTrigger({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) {
-  return <button type="button" onClick={onClick}>{children}</button>;
-}
-
-export {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-};
+export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription };

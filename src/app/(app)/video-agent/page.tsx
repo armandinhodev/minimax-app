@@ -19,7 +19,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 interface Template {
   id: string;
@@ -163,9 +163,9 @@ export default function VideoAgentPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="VA" title="Video Agent" description="Generate a video from an official MiniMax template. Pick a template, fill what it asks for, and follow the task until the clip is ready." note="Template tasks are billable and run asynchronously. The download link is valid for 9 hours." />
+      <AreaHeader title="Video Agent" description="Generate a video from an official MiniMax template. Pick a template, fill what it asks for, and follow the task until the clip is ready." note="Template tasks are billable and run asynchronously. The download link is valid for 9 hours." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.9fr) minmax(0, 1.1fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>Template</SheetTitle>

@@ -3,8 +3,8 @@
 /**
  * Alert — a message panel.
  *
- * A message is a readout, not a card: it is separated by a colored rule and
- * a tinted ground, never by a rounded box with a shadow.
+ * A message is a readout: a colored rule and a tinted ground, never a rounded
+ * box with a shadow.
  */
 
 import { Box } from "@chakra-ui/react";
@@ -25,9 +25,9 @@ function Alert({ variant = "default", ...props }: AlertProps) {
       pl={3}
       pr={3}
       py="0.625rem"
-      borderLeft="2px solid"
+      borderLeft="3px solid"
       borderLeftColor={destructive ? "state.err" : "interaction.accent"}
-      bg={destructive ? "state.errSoft" : "interaction.soft"}
+      bg={destructive ? "state.errSoft" : "interaction.faint"}
       fontSize="body"
       lineHeight="body"
       textAlign="left"

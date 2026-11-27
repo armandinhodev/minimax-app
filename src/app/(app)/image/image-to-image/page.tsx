@@ -3,6 +3,7 @@
 import { type ChangeEvent, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
+import { Plate } from '@/components/ui/plate';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 const PROMPT_MAX_LENGTH = 32_000;
 const MAX_IMAGE_COUNT = 10;
@@ -276,9 +277,9 @@ export default function ImageToImagePage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="IM" title="Image to Image" description="Transform 1 to 16 reference images with MiniMax-H3-Image while keeping uploads and API keys server-safe." note="Image edits always apply prompt enhancement. Reference images are forwarded to MiniMax, never fetched by this server." />
+      <AreaHeader title="Image to Image" description="Transform 1 to 16 reference images with MiniMax-H3-Image while keeping uploads and API keys server-safe." note="Image edits always apply prompt enhancement. Reference images are forwarded to MiniMax, never fetched by this server." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.25fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>References and direction</SheetTitle>
@@ -341,11 +342,11 @@ export default function ImageToImagePage() {
                     <Button
                       key={option.value}
                       id={option.id}
-                      variant={isSelected ? 'solid' : 'outline'}
+                      variant={'outline'}
                       aria-pressed={isSelected}
                       onClick={() => setModel(option.value)}
                       disabled={isLoading}
-                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
                       <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
@@ -366,11 +367,11 @@ export default function ImageToImagePage() {
                     <Button
                       key={option.value}
                       id={`image-edit-ratio-${option.value.replace(':', '-')}`}
-                      variant={isSelected ? 'solid' : 'outline'}
+                      variant={'outline'}
                       aria-pressed={isSelected}
                       onClick={() => setAspectRatio(option.value)}
                       disabled={isLoading || usesCustomSize}
-                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
                       <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label} ({option.value})</strong>
@@ -391,11 +392,11 @@ export default function ImageToImagePage() {
                     <Button
                       key={option.value}
                       id={`image-edit-area-${option.value.toLowerCase()}`}
-                      variant={isSelected ? 'solid' : 'outline'}
+                      variant={'outline'}
                       aria-pressed={isSelected}
                       onClick={() => setArea(option.value)}
                       disabled={isLoading || usesCustomSize}
-                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
                       <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
@@ -441,11 +442,11 @@ export default function ImageToImagePage() {
                     <Button
                       key={option.value}
                       id={`image-edit-format-${option.value}`}
-                      variant={isSelected ? 'solid' : 'outline'}
+                      variant={'outline'}
                       aria-pressed={isSelected}
                       onClick={() => setOutputFormat(option.value)}
                       disabled={isLoading}
-                      style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
+                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
                       <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
@@ -483,16 +484,9 @@ export default function ImageToImagePage() {
           </SheetContent>
         </Sheet>
 
-        <Sheet minH="28rem">
-          <SheetHeader>
-            <SheetTitle>Results</SheetTitle>
-            <SheetDescription>
-              {result
-                ? 'The images MiniMax returned, with the frame you asked for.'
-                : 'Generated images appear here as soon as MiniMax returns URL results.'}
-            </SheetDescription>
-          </SheetHeader>
-          <SheetContent display="grid" gap={4}>
+        <Plate minH="28rem" position="sticky" top="4.5rem" title="Results" description={result
+          ? 'The images MiniMax returned, with the frame you asked for.'
+          : 'Generated images appear here as soon as MiniMax returns URL results.'}>
             {result && (
               <SpecList>
                 <Spec label="Generated" value={String(result.metadata.successCount)} />
@@ -507,15 +501,18 @@ export default function ImageToImagePage() {
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
-                Attach your reference images, describe the desired direction, then generate. Results are saved to Library automatically.
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="sm" p="2rem" minH="22rem" flex="1" display="grid" alignItems="center" justifyItems="center" textAlign="center" color="content.readout" bg="surface.field">
+                <Box maxW="22rem">
+                  <Box fontFamily="mono" fontSize="label" color="content.subtle" mb={2}>No result yet</Box>
+                  Attach your reference images, describe the desired direction, then generate. Results are saved to Library automatically.
+                </Box>
               </Box>
             )}
 
             {result && successfulItems.length > 0 && (
               <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
                 {successfulItems.map((item) => (
-                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="surface.sheet" boxShadow="sm">
+                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="surface.rule" borderRadius="lg" overflow="hidden" bg="surface.plate">
                     <img
                       src={item.url ?? ''}
                       alt={`Generated image ${item.index + 1}`}
@@ -553,8 +550,7 @@ export default function ImageToImagePage() {
                 ))}
               </Box>
             )}
-          </SheetContent>
-        </Sheet>
+        </Plate>
       </Box>
     </Box>
   );

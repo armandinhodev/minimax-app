@@ -3,9 +3,8 @@
 /**
  * StatusLamp — the state readout.
  *
- * This is where the app spends its boldness: the state of a job is the one
- * thing an operator scans for. A lit bar plus a mono label reads like an
- * indicator on a panel, not like a badge.
+ * State is the loudest thing on the page: a lit dot and a mono label, on the
+ * soft ground of the state it names. It is the only circle in the system.
  *
  * See docs/design.md.
  */
@@ -42,30 +41,22 @@ export function StatusLamp({ state, detail, ...props }: StatusLampProps) {
 
   return (
     <Box
-      display="flex"
+      display="inline-flex"
       alignItems="center"
-      gap={3}
-      minH="2rem"
-      px={3}
-      py="0.375rem"
+      gap={2}
+      minH="1.875rem"
+      px="0.6rem"
+      py="0.25rem"
       bg={tone.soft}
-      border="1px solid"
-      borderColor={tone.token}
-      borderRadius="lg"
+      borderRadius="sm"
       {...props}
     >
-      <Box
-        aria-hidden="true"
-        w="3px"
-        alignSelf="stretch"
-        bg={tone.token}
-        borderRadius="sm"
-      />
+      <Box aria-hidden="true" w="0.5rem" h="0.5rem" flex="0 0 auto" bg={tone.token} borderRadius="full" />
       <Box fontFamily="mono" fontSize="mono" lineHeight="mono" fontWeight="500" color="content.ink">
         {tone.label}
       </Box>
       {detail && (
-        <Box fontFamily="mono" fontSize="mono" lineHeight="mono" color="content.readout" ml="auto">
+        <Box fontFamily="mono" fontSize="label" lineHeight="label" color="content.readout" ml={1}>
           {detail}
         </Box>
       )}

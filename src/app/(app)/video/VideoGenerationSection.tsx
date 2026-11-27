@@ -15,9 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Monitor } from '@/components/ui/monitor';
+import { Plate } from '@/components/ui/plate';
 import { Field } from '@/components/ui/spec';
-import { StatusLamp } from '@/components/ui/status-lamp';
+import { JobStrip } from '@/components/ui/job-strip';
 import { Textarea } from '@/components/ui/textarea';
 
 import {
@@ -129,8 +129,8 @@ export function VideoGenerationSection() {
 
       <Box
         display="grid"
-        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.15fr) minmax(0, 0.85fr)' }}
-        gap={6}
+        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }}
+        gap={0}
         alignItems="start"
       >
         <Sheet>
@@ -242,12 +242,12 @@ export function VideoGenerationSection() {
           </SheetContent>
         </Sheet>
 
-        <Monitor
+        <Plate
           title="Latest task"
           description="The status is polled while the task runs. Only one task is tracked at a time."
         >
           {polling.task && (
-            <StatusLamp
+            <JobStrip
               state={polling.task.status}
               detail={polling.task.id}
             />
@@ -268,17 +268,17 @@ export function VideoGenerationSection() {
           {!polling.task && !polling.isPolling && !polling.error && (
             <Box
               border="1px dashed"
-              borderColor="console.seam"
+              borderColor="surface.rule"
               borderRadius="lg"
               p="1.5rem"
               textAlign="center"
-              color="console.muted"
+              color="content.subtle"
               fontSize="body"
             >
               Create a task to see its status, output and playback here.
             </Box>
           )}
-        </Monitor>
+        </Plate>
       </Box>
     </Box>
   );

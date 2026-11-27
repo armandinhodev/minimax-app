@@ -23,9 +23,9 @@ interface VoiceCardProps {
 }
 
 function VoiceTypeBadge({ type }: { type: VoiceDTO['type'] }) {
-  const variants: Record<VoiceDTO['type'], 'info' | 'purple' | 'success'> = {
+  const variants: Record<VoiceDTO['type'], 'info' | 'secondary' | 'success'> = {
     system: 'info',
-    clone: 'purple',
+    clone: 'secondary',
     design: 'success',
   };
   const labels: Record<VoiceDTO['type'], string> = {

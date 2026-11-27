@@ -23,7 +23,10 @@ html {
 }
 
 body {
-  background: var(--chakra-colors-surface-field);
+  background-color: var(--chakra-colors-surface-field);
+  /* La retícula del tablero: apenas visible, pero da escala al espacio. */
+  background-image: radial-gradient(var(--chakra-colors-surface-grid) 1px, transparent 1px);
+  background-size: 22px 22px;
   color: var(--chakra-colors-content-ink);
   font-size: var(--chakra-font-sizes-body);
   line-height: var(--chakra-line-heights-body);

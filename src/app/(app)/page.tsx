@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 
 import type { LibraryGenerationDTO, LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
-import { ConsoleBand, ReadoutStrip } from '@/components/ui/console-band';
+import { AreaHeader, ReadoutStrip } from '@/components/ui/area-header';
 import { PRODUCT_NAV_SECTIONS } from '@/components/navigation/nav-config';
 import { authFetch } from '@/lib/auth-client';
 
@@ -98,8 +98,7 @@ export default function DashboardPage() {
 
   return (
     <Box display="grid" gap={8} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand
-        monogram="MS"
+      <AreaHeader
         title="MiniMax Studio"
         description="Dispatch a job to MiniMax, follow its state and retrieve the asset. Every area speaks to its own upstream endpoint."
         actions={
@@ -115,7 +114,7 @@ export default function DashboardPage() {
       />
 
       <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
-        <h2>Instruments</h2>
+        <h2>Areas</h2>
 
         <Box borderTop="1px solid" borderColor="surface.rule">
           {PRODUCT_NAV_SECTIONS.map((area) => {
@@ -130,30 +129,13 @@ export default function DashboardPage() {
               >
                 <Box
                   display="grid"
-                  gridTemplateColumns={{ base: '2rem 1fr', md: '2rem minmax(0, 1fr) 4rem' }}
+                  gridTemplateColumns={{ base: 'minmax(0, 1fr) 3rem', md: 'minmax(0, 1fr) 4rem' }}
                   gap={{ base: 2, md: 4 }}
                   alignItems="center"
                   py="0.75rem"
                   borderBottom="1px solid"
                   borderColor="surface.rule"
                 >
-                  <Box
-                    aria-hidden="true"
-                    display="inline-flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    h="1.75rem"
-                    w="1.75rem"
-                    border="1px solid"
-                    borderColor="surface.rule"
-                    borderRadius="md"
-                    fontFamily="mono"
-                    fontSize="0.6875rem"
-                    color="content.readout"
-                  >
-                    {area.shortLabel}
-                  </Box>
-
                   <Box minW={0}>
                     <Box fontWeight="600" fontSize="body" lineHeight="body">
                       {area.label}

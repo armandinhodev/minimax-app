@@ -20,8 +20,8 @@ import Link from 'next/link';
 import { VoiceCard } from '@/components/voice/VoiceCard';
 import { VoiceGroupSection } from '@/components/voice/VoiceGroupSection';
 import { getLanguageInfo } from '@/lib/language-flags';
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { AreaHeader } from '@/components/ui/area-header';
 
 export default function VoicesPage() {
   const [systemVoices, setSystemVoices] = useState<VoiceDTO[]>([]);
@@ -135,12 +135,11 @@ export default function VoicesPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
-      <ConsoleBand
-        monogram="SP"
+      <AreaHeader
         title="Voices"
         description="Browse system voices or manage your cloned and designed voices."
         actions={
-          <Button variant="console" onClick={loadVoices} disabled={isLoading}>
+          <Button variant="outline" onClick={loadVoices} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Refresh'}
           </Button>
         }
@@ -214,7 +213,7 @@ export default function VoicesPage() {
             {userVoices.length > 0 && (
               <Box display="flex" gap={2} flexWrap="wrap" mb={4}>
                 <Badge variant="success">My voices</Badge>
-                <Badge variant="purple">Cloned</Badge>
+                <Badge variant="secondary">Cloned</Badge>
                 <Badge variant="info">Designed</Badge>
               </Box>
             )}

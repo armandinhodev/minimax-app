@@ -11,9 +11,9 @@ function Progress({ value, ...props }: ProgressProps) {
   return (
     <Box
       position="relative"
-      height="0.25rem"
-      borderRadius="full"
-      bg="surface.field"
+      height="0.1875rem"
+      borderRadius="sm"
+      bg="surface.rule"
       overflow="hidden"
       {...props}
     >
@@ -24,7 +24,6 @@ function Progress({ value, ...props }: ProgressProps) {
         height="100%"
         width={value ? `${value}%` : "0%"}
         bg="interaction.accent"
-        borderRadius="full"
         transition="width 0.3s ease"
       />
     </Box>

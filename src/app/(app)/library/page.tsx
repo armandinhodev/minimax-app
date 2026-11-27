@@ -10,8 +10,8 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
-import { ConsoleBand } from '@/components/ui/console-band';
+import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
+import { AreaHeader } from '@/components/ui/area-header';
 
 type LibraryFilter = 'all' | LibraryGenerationKind;
 
@@ -67,11 +67,11 @@ function downloadUrl(url: string): void {
   link.remove();
 }
 
-function getItemBadgeVariant(kind: LibraryGenerationKind): 'success' | 'purple' | 'info' {
+function getItemBadgeVariant(kind: LibraryGenerationKind): 'success' | 'secondary' | 'info' {
   if (kind === 'video') return 'info';
   if (kind === 'image') return 'info';
-  if (kind === 'music') return 'purple';
-  if (kind === 'clone') return 'purple';
+  if (kind === 'music') return 'secondary';
+  if (kind === 'clone') return 'secondary';
   if (kind === 'design') return 'info';
   return 'success';
 }
@@ -409,8 +409,7 @@ export default function LibraryPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
-      <ConsoleBand
-        monogram="LB"
+      <AreaHeader
         title="Library"
         description="Everything you have generated, with the asset references kept for it."
         readoutsLabel="Stored"
@@ -422,11 +421,11 @@ export default function LibraryPage() {
         ]}
         actions={
           <Box display="flex" gap={2}>
-            <Button variant="console" onClick={() => void loadGenerations()}>
+            <Button variant="outline" onClick={() => void loadGenerations()}>
               Refresh
             </Button>
             {generations.length > 0 && (
-              <Button variant="console" colorPalette="red" onClick={() => setIsClearDialogOpen(true)}>
+              <Button variant="destructive" onClick={() => setIsClearDialogOpen(true)}>
                 Clear all
               </Button>
             )}

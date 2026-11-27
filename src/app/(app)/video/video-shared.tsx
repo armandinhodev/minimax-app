@@ -10,7 +10,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Box } from '@chakra-ui/react';
 
-import { ConsoleBand, type ConsoleReadout } from '@/components/ui/console-band';
+import { AreaHeader, type Readout } from '@/components/ui/area-header';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import type { VideoMediaValues } from './video-options';
@@ -66,7 +66,7 @@ interface VideoStudioHeaderProps {
   description: string;
   note?: string;
   /** Key facts of the current job, shown as live readouts. */
-  readouts?: ConsoleReadout[];
+  readouts?: Readout[];
   /** What the readouts describe. */
   readoutsLabel?: string;
 }
@@ -85,8 +85,7 @@ export function VideoStudioHeader({
   readoutsLabel,
 }: VideoStudioHeaderProps) {
   return (
-    <ConsoleBand
-      monogram="VI"
+    <AreaHeader
       title={title}
       description={description}
       note={note}

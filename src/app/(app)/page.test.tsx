@@ -55,11 +55,11 @@ describe('DashboardPage', () => {
     });
   }
 
-  it('renders the instrument rack with every product area', async () => {
+  it('renders every product area in the dashboard rundown', async () => {
     await renderDashboard();
 
     expect(container!.textContent).toContain('MiniMax Studio');
-    expect(container!.textContent).toContain('Instruments');
+    expect(container!.textContent).toContain('Areas');
 
     const hrefs = Array.from(container!.querySelectorAll('a')).map((link) => link.getAttribute('href'));
     expect(hrefs).toEqual(expect.arrayContaining([

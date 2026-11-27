@@ -22,7 +22,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 const MODEL_OPTIONS: SelectOption[] = [
   { value: 'MiniMax-M3.1-Flash', label: 'MiniMax-M3.1-Flash' },
@@ -198,9 +198,9 @@ export default function TextPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="CH" title="Chat Studio" description="Talk to MiniMax M3 models. The same conversation can run against the native endpoint or any of the OpenAI, Anthropic and Responses compatible surfaces." note="MiniMax-M3.1-Flash and MiniMax-M3 are reasoning models: streaming is recommended." />
+      <AreaHeader title="Chat Studio" description="Talk to MiniMax M3 models. The same conversation can run against the native endpoint or any of the OpenAI, Anthropic and Responses compatible surfaces." note="MiniMax-M3.1-Flash and MiniMax-M3 are reasoning models: streaming is recommended." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.9fr) minmax(0, 1.1fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>Prompt</SheetTitle>
@@ -284,8 +284,8 @@ export default function TextPage() {
                 bg="surface.sheet"
                 p="0.75rem"
               >
-                <Box color="content.subtle" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
-                  {message.role}
+                <Box color="content.readout" fontSize="label" fontWeight={500} lineHeight="label">
+                  {message.role === 'user' ? 'You' : 'Assistant'}
                 </Box>
                 <Box color="content.ink" whiteSpace="pre-wrap" mt={1}>
                   {message.text}
@@ -295,8 +295,8 @@ export default function TextPage() {
 
             {reply && (
               <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="0.75rem">
-                <Box color="content.subtle" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
-                  assistant
+                <Box color="content.readout" fontSize="label" fontWeight={500} lineHeight="label">
+                  Assistant
                 </Box>
 
                 {reply.reasoningContent && (

@@ -53,7 +53,7 @@ function Switch({ checked, onChange, className, disabled, id, ariaLabel }: {
             borderRadius: "9999px",
             background: "var(--chakra-colors-surface-sheet)",
             transition: "left 0.2s",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+            boxShadow: "var(--chakra-shadows-sm)",
           }}
         />
       </div>

@@ -381,6 +381,20 @@ describe('copy rules', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('never sets a label in all caps', () => {
+    // Case is meaning: an uppercase label is an eyebrow, and this system has
+    // none. The scan covers TSX and the stylesheets, where the transform can
+    // also hide.
+    const offenders: string[] = [];
+
+    for (const { file, content } of TREE) {
+      if (/text-transform\s*:\s*uppercase/i.test(content)) offenders.push(`${file}: text-transform: uppercase`);
+      if (/textTransform\s*=\s*["']uppercase["']/.test(content)) offenders.push(`${file}: textTransform="uppercase"`);
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
   it('never joins values with a middle dot', () => {
     const offenders: string[] = [];
 
@@ -462,7 +476,7 @@ describe('token rules', () => {
     for (const { file, content } of TREE) {
       for (const match of content.matchAll(/var\((--[a-zA-Z0-9-]+)\)/g)) {
         // The two font variables come from next/font, the rest from the theme.
-        if (match[1] === '--font-archivo' || match[1] === '--font-plex-mono') continue;
+        if (match[1] === '--font-bricolage' || match[1] === '--font-dm-mono') continue;
         if (declared.has(match[1])) continue;
         if (!known?.has(match[1])) offenders.push(`${file}: ${match[1]}`);
       }

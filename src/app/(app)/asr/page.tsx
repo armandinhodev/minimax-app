@@ -19,7 +19,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 import {
   ASR_AUDIO_EXTENSIONS,
@@ -243,9 +243,9 @@ export default function AsrPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="TR" title="Transcription" description="Turn audio into text with MiniMax ASR. Get a plain transcript, speaker segments, or ready-to-use subtitles." note="Audio is billed by its duration. Clips up to 500 seconds and 50MB are accepted." />
+      <AreaHeader title="Transcription" description="Turn audio into text with MiniMax ASR. Get a plain transcript, speaker segments, or ready-to-use subtitles." note="Audio is billed by its duration. Clips up to 500 seconds and 50MB are accepted." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>Audio</SheetTitle>

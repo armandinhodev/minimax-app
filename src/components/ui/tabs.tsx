@@ -33,22 +33,44 @@ function Tabs({ children, className, defaultValue = "", value: controlledValue, 
 
   return (
     <TabsContext.Provider value={{ value: currentValue, onValueChange: handleValueChange }}>
-      <Box display="flex" flexDirection="column" gap="0.5rem" className={className}>
+      <Box display="flex" flexDirection="column" gap="0.75rem" className={className}>
         {children}
       </Box>
     </TabsContext.Provider>
   );
 }
 
+/** Arrow keys move between tabs, the way a tablist is expected to behave. */
+function handleTabKeys(event: React.KeyboardEvent<HTMLElement>) {
+  const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+  if (!keys.includes(event.key)) return;
+
+  const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  if (tabs.length === 0) return;
+
+  const current = tabs.findIndex((tab) => tab === document.activeElement);
+  if (current === -1) return;
+
+  event.preventDefault();
+  let next = current;
+  if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
+  if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+  if (event.key === "Home") next = 0;
+  if (event.key === "End") next = tabs.length - 1;
+
+  tabs[next]?.focus();
+}
+
 function TabsList({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <Box
-      display="inline-flex"
+      role="tablist"
+      onKeyDown={handleTabKeys}
+      display="flex"
       alignItems="center"
-      width="fit-content"
-      padding="3px"
-      borderRadius="0.5rem"
-      background="surface.field"
+      width="100%"
+      borderBottom="1px solid"
+      borderColor="surface.rule"
       gap="0.25rem"
       className={className}
     >
@@ -66,20 +88,26 @@ function TabsTrigger({ children, className, value }: { children?: React.ReactNod
   return (
     <button
       type="button"
+      role="tab"
+      id={value ? `tab-${value}` : undefined}
+      aria-selected={isActive}
+      aria-controls={value ? `panel-${value}` : undefined}
+      tabIndex={isActive ? 0 : -1}
       onClick={() => value && context.onValueChange(value)}
       style={{
-        height: "1.75rem",
-        paddingLeft: "0.375rem",
-        paddingRight: "0.375rem",
+        height: "2.25rem",
+        paddingLeft: "0.65rem",
+        paddingRight: "0.65rem",
         fontSize: "0.875rem",
-        fontWeight: 500,
-        borderRadius: "0.375rem",
+        fontWeight: isActive ? 600 : 500,
+        borderRadius: 0,
         color: isActive ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-content-readout)",
-        background: isActive ? "var(--chakra-colors-surface-sheet)" : "transparent",
+        background: "transparent",
         border: "none",
+        borderBottom: isActive ? "2px solid var(--chakra-colors-interaction-accent)" : "2px solid transparent",
+        marginBottom: "-1px",
         cursor: "pointer",
-        boxShadow: isActive ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)" : "none",
-        transition: "all 0.15s",
+        transition: "color 0.15s, border-color 0.15s",
       }}
       className={className}
     >
@@ -95,7 +123,15 @@ function TabsContent({ children, className, value, style }: { children?: React.R
   if (context.value !== value) return null;
 
   return (
-    <Box flex="1" fontSize="0.875rem" className={className} style={style}>
+    <Box
+      role="tabpanel"
+      id={value ? `panel-${value}` : undefined}
+      aria-labelledby={value ? `tab-${value}` : undefined}
+      flex="1"
+      fontSize="body"
+      className={className}
+      style={style}
+    >
       {children}
     </Box>
   );

@@ -38,7 +38,7 @@ function Slider({ defaultValue, value, min = 0, max = 100, step = 1, onChange, o
           margin: 0,
         }}
       />
-      <div style={{ position: "relative", width: "100%", height: "0.25rem", borderRadius: "9999px", background: "var(--chakra-colors-surface-rule)", overflow: "visible" }}>
+      <div style={{ position: "relative", width: "100%", height: "0.1875rem", borderRadius: "var(--chakra-radii-sm)", background: "var(--chakra-colors-surface-rule)", overflow: "visible" }}>
         <div
           style={{
             position: "absolute",
@@ -47,7 +47,7 @@ function Slider({ defaultValue, value, min = 0, max = 100, step = 1, onChange, o
             height: "100%",
             width: `${percentage}%`,
             background: "var(--chakra-colors-interaction-accent)",
-            borderRadius: "9999px",
+            borderRadius: "var(--chakra-radii-sm)",
             transition: "width 0.2s ease",
           }}
         />
@@ -61,9 +61,8 @@ function Slider({ defaultValue, value, min = 0, max = 100, step = 1, onChange, o
           width: "0.75rem",
           height: "0.75rem",
           borderRadius: "9999px",
-          background: "var(--chakra-colors-surface-sheet)",
+          background: "var(--chakra-colors-surface-plate)",
           border: "2px solid var(--chakra-colors-interaction-accent)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
           pointerEvents: "none",
         }}
       />

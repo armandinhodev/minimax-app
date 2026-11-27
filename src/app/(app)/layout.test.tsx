@@ -62,126 +62,120 @@ describe('AppLayout navigation', () => {
     });
   }
 
-  function getLinks() {
-    return Array.from(container!.querySelectorAll('a')).map((link) => ({
+  function transport() {
+    return container!.querySelector('nav[aria-label="Product areas"]') as HTMLElement;
+  }
+
+  function areaLinks() {
+    return Array.from(transport().querySelectorAll('a')).map((link) => ({
+      href: link.getAttribute('href'),
+      text: link.textContent,
+      active: link.getAttribute('data-active'),
+    }));
+  }
+
+  function subnav() {
+    return container!.querySelector('nav[aria-label$="routes"]') as HTMLElement | null;
+  }
+
+  function subnavLinks() {
+    const nav = subnav();
+    if (!nav) return [];
+    return Array.from(nav.querySelectorAll('a')).map((link) => ({
       href: link.getAttribute('href'),
       text: link.textContent,
       current: link.getAttribute('aria-current'),
     }));
   }
 
-  function getSectionToggle(sectionId: string) {
-    return container!.querySelector(`button[aria-controls="product-nav-${sectionId}-items"]`) as HTMLButtonElement;
-  }
-
-  it('renders product areas while keeping inactive subitems closed by default', () => {
+  it('lists every area in the transport and marks the one in use', () => {
     navigationMocks.pathname = '/music/lyrics';
     renderLayout();
 
-    const links = getLinks();
+    const links = areaLinks();
 
-    expect(links).toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/music', text: expect.stringContaining('Music Generation') }),
-      expect.objectContaining({ href: '/music/lyrics', text: expect.stringContaining('Lyrics Generation') }),
-      expect.objectContaining({ href: '/music/cover-preprocess', text: expect.stringContaining('Cover Preprocess') }),
-      expect.objectContaining({ href: '/library', text: expect.stringContaining('Library') }),
-    ]));
-    expect(links).not.toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/voices', text: expect.stringContaining('Voices') }),
-      expect.objectContaining({ href: '/image/image-to-image', text: expect.stringContaining('Image to Image') }),
-    ]));
-    expect(getSectionToggle('speech').getAttribute('aria-expanded')).toBe('false');
-    expect(getSectionToggle('image').getAttribute('aria-expanded')).toBe('false');
-    expect(getSectionToggle('music').getAttribute('aria-expanded')).toBe('true');
+    expect(links.map((link) => link.href)).toEqual([
+      '/tts',
+      '/asr',
+      '/text',
+      '/image',
+      '/music',
+      '/video',
+      '/video-agent',
+      '/library',
+    ]);
+    expect(links.find((link) => link.href === '/music')?.active).toBe('true');
+    expect(links.filter((link) => link.active === 'true')).toHaveLength(1);
+    expect(transport().querySelector('a[aria-current="page"]')).toBeNull();
   });
 
-  it('opens the active section by default', () => {
-    navigationMocks.pathname = '/voices/clone';
-    renderLayout();
-
-    const links = getLinks();
-
-    expect(getSectionToggle('speech').getAttribute('aria-expanded')).toBe('true');
-    expect(links).toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/tts', text: expect.stringContaining('Text to Speech') }),
-      // The rail lists feature names, so they keep their title case. The
-      // button that clones a voice is an action and says "Clone voice".
-      expect.objectContaining({ href: '/voices/clone', text: expect.stringContaining('Clone Voice') }),
-    ]));
-    expect(links).not.toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/image/image-to-image', text: expect.stringContaining('Image to Image') }),
-      expect.objectContaining({ href: '/music/lyrics', text: expect.stringContaining('Lyrics Generation') }),
-    ]));
-  });
-
-  it('exposes the video studio without changing the existing active navigation', () => {
-    navigationMocks.pathname = '/video/generation';
-    renderLayout();
-    expect(getSectionToggle('video')?.getAttribute('aria-expanded')).toBe('true');
-    expect(getLinks()).toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/video/generation', text: expect.stringContaining('Video Generation') }),
-      expect.objectContaining({ href: '/video/context-ir', text: expect.stringContaining('H3-Context-IR') }),
-      expect.objectContaining({ href: '/video/regeneration', text: expect.stringContaining('2K Regeneration') }),
-      expect.objectContaining({ href: '/video/tasks', text: expect.stringContaining('Tasks') }),
-    ]));
-    expect(getLinks().filter((link) => link.current === 'page')).toHaveLength(1);
-  });
-
-  it('expands an inactive section without changing the active page', () => {
+  it('shows only the routes of the active area in the subnav', () => {
     navigationMocks.pathname = '/music/lyrics';
     renderLayout();
 
-    const speechToggle = getSectionToggle('speech');
+    expect(subnav()?.getAttribute('aria-label')).toBe('Music routes');
+    expect(subnavLinks().map((link) => link.href)).toEqual([
+      '/music',
+      '/music/lyrics',
+      '/music/cover-preprocess',
+    ]);
+    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
+      expect.objectContaining({ href: '/music/lyrics' }),
+    ]);
+    expect(container!.textContent).toContain('Music creation suite');
+  });
 
-    expect(speechToggle.getAttribute('aria-expanded')).toBe('false');
+  it('marks the landing route current when the area opens on it', () => {
+    navigationMocks.pathname = '/tts';
+    renderLayout();
 
-    act(() => {
-      speechToggle.click();
-    });
-
-    expect(speechToggle.getAttribute('aria-expanded')).toBe('true');
-    expect(getLinks()).toEqual(expect.arrayContaining([
-      expect.objectContaining({ href: '/tts', text: expect.stringContaining('Text to Speech') }),
-      expect.objectContaining({ href: '/voices/design', text: expect.stringContaining('Design Voice') }),
-    ]));
-
-    const currentLinks = getLinks().filter((link) => link.current === 'page');
-    expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toEqual(expect.objectContaining({ href: '/music/lyrics' }));
+    expect(subnav()?.getAttribute('aria-label')).toBe('Speech routes');
+    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
+      expect.objectContaining({ href: '/tts', text: 'Text to Speech' }),
+    ]);
   });
 
   it('keeps Voices inactive when a voice tool route is active', () => {
     navigationMocks.pathname = '/voices/clone';
     renderLayout();
 
-    const currentLinks = getLinks().filter((link) => link.current === 'page');
-    const speechSection = container!.querySelector('section[aria-label="Speech navigation"]');
-
-    expect(speechSection?.getAttribute('data-active')).toBe('true');
-    expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toEqual(expect.objectContaining({ href: '/voices/clone', text: expect.stringContaining('Clone Voice') }));
+    expect(areaLinks().find((link) => link.href === '/tts')?.active).toBe('true');
+    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
+      expect.objectContaining({ href: '/voices/clone', text: 'Clone Voice' }),
+    ]);
   });
 
-  it('marks only the landing nav item current on product landing routes', () => {
-    navigationMocks.pathname = '/tts';
+  it('exposes the video modes as routes of the video area', () => {
+    navigationMocks.pathname = '/video/generation';
     renderLayout();
 
-    const currentLinks = getLinks().filter((link) => link.current === 'page');
-
-    expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toEqual(expect.objectContaining({ href: '/tts', text: expect.stringContaining('Text to Speech') }));
+    expect(areaLinks().find((link) => link.href === '/video')?.active).toBe('true');
+    expect(subnavLinks().map((link) => link.href)).toEqual([
+      '/video/generation',
+      '/video/context-ir',
+      '/video/regeneration',
+      '/video/tasks',
+    ]);
+    expect(subnavLinks().filter((link) => link.current === 'page')).toHaveLength(1);
   });
 
-  it('does not mark the Image landing item active on Image to Image', () => {
+  it('drops the subnav for an area with a single route', () => {
+    navigationMocks.pathname = '/library';
+    renderLayout();
+
+    expect(subnav()).toBeNull();
+    expect(areaLinks().find((link) => link.href === '/library')?.active).toBe('true');
+  });
+
+  it('marks a different area when the route belongs to it', () => {
     navigationMocks.pathname = '/image/image-to-image';
     renderLayout();
 
-    const currentLinks = getLinks().filter((link) => link.current === 'page');
-    const imageSection = container!.querySelector('section[aria-label="Image navigation"]');
-
-    expect(imageSection?.getAttribute('data-active')).toBe('true');
-    expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toEqual(expect.objectContaining({ href: '/image/image-to-image', text: expect.stringContaining('Image to Image') }));
+    expect(areaLinks().find((link) => link.href === '/image')?.active).toBe('true');
+    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
+      expect.objectContaining({ href: '/image/image-to-image', text: 'Image to Image' }),
+    ]);
+    expect(areaLinks().filter((link) => link.href === '/image' && link.active === 'true')).toHaveLength(1);
   });
 
   it('opens and closes the mobile drawer accessibly', () => {
@@ -193,6 +187,7 @@ describe('AppLayout navigation', () => {
     expect(container!.querySelector('[role="dialog"]')).toBeNull();
 
     act(() => {
+      openButton.focus();
       openButton.click();
     });
 
@@ -201,12 +196,30 @@ describe('AppLayout navigation', () => {
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
     expect(dialog?.getAttribute('aria-label')).toBe('Main navigation');
     expect(container!.querySelector('button[aria-label="Close navigation menu"]')).not.toBeNull();
-    expect(getLinks().filter((link) => link.current === 'page')).toHaveLength(1);
+
+    // The drawer takes focus while it is open...
+    expect(dialog!.contains(document.activeElement)).toBe(true);
+    expect(openButton.getAttribute('aria-expanded')).toBe('true');
+    expect(openButton.getAttribute('aria-controls')).toBe(dialog?.id);
+
+    // The drawer is the only place where every route is reachable at once.
+    const drawerLinks = Array.from(dialog!.querySelectorAll('a')).map((link) => link.getAttribute('href'));
+    expect(drawerLinks).toEqual(expect.arrayContaining(['/image/image-to-image', '/music/lyrics', '/video/tasks']));
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });
 
     expect(container!.querySelector('[role="dialog"]')).toBeNull();
+    // ...and gives it back to the trigger when it closes.
+    expect(document.activeElement).toBe(openButton);
+    expect(openButton.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('renders the page inside the workbench', () => {
+    navigationMocks.pathname = '/tts';
+    renderLayout();
+
+    expect(container!.querySelector('main')?.textContent).toContain('Page content');
   });
 });

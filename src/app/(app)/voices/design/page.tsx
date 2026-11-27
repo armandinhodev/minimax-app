@@ -9,13 +9,12 @@
 import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 import { VoiceDesigner } from '@/components/voice/VoiceDesigner';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 export default function DesignVoicePage() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="36rem">
-      <ConsoleBand
-        monogram="SP"
+      <AreaHeader
         title="Design a Voice"
         description="Describe the voice you want using natural language. Generate a preview and accept or regenerate."
       />

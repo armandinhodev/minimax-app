@@ -7,12 +7,12 @@ function Textarea({ className, ...props }: React.ComponentProps<typeof ChakraTex
     <ChakraTextarea
       className={className}
       minHeight="4rem"
-      px="0.625rem"
-      py="0.5rem"
+      px="0.7rem"
+      py="0.55rem"
       borderRadius="md"
       border="1px solid"
       borderColor="surface.rule"
-      bg="surface.sheet"
+      bg="surface.plate"
       fontSize="body"
       lineHeight="body"
       color="content.ink"

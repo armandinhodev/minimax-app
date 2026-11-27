@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Field } from '@/components/ui/spec';
-import { StatusLamp } from '@/components/ui/status-lamp';
+import { JobStrip } from '@/components/ui/job-strip';
 import { Textarea } from '@/components/ui/textarea';
 
 import { CreateVideoRegenerationSchema } from '@/application/dto/minimax/video/VideoDTO';
@@ -101,8 +101,8 @@ export function VideoRegenerationSection() {
 
       <Box
         display="grid"
-        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 1.15fr) minmax(0, 0.85fr)' }}
-        gap={6}
+        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }}
+        gap={0}
         alignItems="start"
       >
         <Sheet>
@@ -206,7 +206,7 @@ export function VideoRegenerationSection() {
           </SheetHeader>
           <SheetContent display="grid" gap={3}>
             {polling.task && (
-              <StatusLamp state={polling.task.status} detail={polling.task.id} />
+              <JobStrip state={polling.task.status} detail={polling.task.id} />
             )}
 
             {polling.error && (

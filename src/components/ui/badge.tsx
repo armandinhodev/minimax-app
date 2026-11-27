@@ -3,13 +3,13 @@
 /**
  * Badge — a small label.
  *
- * A label is not a pill: it is a hairline rectangle in the label face. The
- * variants map to the app's three state colors and to its single accent, so
- * a badge never introduces a hue the rest of the app does not use.
+ * A label is a rectangle in the label face, never a pill. The variants map to
+ * the app's three state colors and its single accent, so a badge never
+ * introduces a hue the rest of the app does not use.
  */
 
 function Badge({ variant = "subtle", children, className, onClick, style }: {
-  variant?: "solid" | "subtle" | "outline" | "secondary" | "destructive" | "default" | "success" | "info" | "warning" | "purple";
+  variant?: "solid" | "subtle" | "outline" | "secondary" | "destructive" | "default" | "success" | "info" | "warning";
   children?: React.ReactNode;
   className?: string;
   onClick?: () => void;
@@ -24,7 +24,7 @@ function Badge({ variant = "subtle", children, className, onClick, style }: {
     },
     subtle: {
       background: "var(--chakra-colors-interaction-soft)",
-      color: "var(--chakra-colors-content-ink)",
+      color: "var(--chakra-colors-interaction-accent)",
     },
     outline: {
       border: "1px solid var(--chakra-colors-surface-rule)",
@@ -44,15 +44,11 @@ function Badge({ variant = "subtle", children, className, onClick, style }: {
     },
     info: {
       background: "var(--chakra-colors-interaction-soft)",
-      color: "var(--chakra-colors-content-ink)",
+      color: "var(--chakra-colors-interaction-accent)",
     },
     warning: {
       background: "var(--chakra-colors-state-run-soft)",
       color: "var(--chakra-colors-state-run)",
-    },
-    purple: {
-      background: "var(--chakra-colors-interaction-soft)",
-      color: "var(--chakra-colors-content-ink)",
     },
   };
 
@@ -64,13 +60,13 @@ function Badge({ variant = "subtle", children, className, onClick, style }: {
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        height: "1.25rem",
-        paddingLeft: "0.375rem",
-        paddingRight: "0.375rem",
-        fontFamily: "var(--chakra-fonts-mono)",
-        fontSize: "0.6875rem",
-        letterSpacing: "0.04em",
-        borderRadius: "var(--chakra-radii-md)",
+        height: "1.3rem",
+        paddingLeft: "0.4rem",
+        paddingRight: "0.4rem",
+        fontFamily: "var(--chakra-fonts-body)",
+        fontSize: "0.75rem",
+        fontWeight: 500,
+        borderRadius: "var(--chakra-radii-sm)",
         cursor: onClick ? "pointer" : "default",
         ...(variantStyles[effectiveVariant] || variantStyles.subtle),
         ...style,

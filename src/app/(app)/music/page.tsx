@@ -15,7 +15,7 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 const PROMPT_MAX_LENGTH = 2000;
 const COVER_PROMPT_MIN_LENGTH = 10;
@@ -258,13 +258,13 @@ export default function MusicPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="MU" title="Music Generation" description="Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID." note="Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is saved to Library when the bytes are available." />
+      <AreaHeader title="Music Generation" description="Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID." note="Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is saved to Library when the bytes are available." />
 
       <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>{isCoverMode ? 'Cover generation brief' : 'Composition brief'}</SheetTitle>

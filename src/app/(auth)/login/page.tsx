@@ -53,7 +53,7 @@ export default function LoginPage() {
       style={{
         minHeight: '100vh',
         display: 'grid',
-        background: 'var(--chakra-colors-console-bg)',
+        background: 'var(--chakra-colors-surface-field)',
       }}
     >
       <Box
@@ -66,37 +66,20 @@ export default function LoginPage() {
         maxW="34rem"
         marginInline="auto"
       >
-        {/* La identidad va en el monograma, como en el riel de la nav. */}
         <Box display="flex" alignItems="center" gap={3} mb={8}>
-          <Box
-            aria-hidden="true"
-            display="inline-flex"
-            alignItems="center"
-            justifyContent="center"
-            w="2.25rem"
-            h="2.25rem"
-            border="1px solid"
-            borderColor="console.seam"
-            borderRadius="md"
-            fontFamily="mono"
-            fontSize="0.8125rem"
-            letterSpacing="0.08em"
-            color="console.muted"
-          >
-            MS
-          </Box>
+          <Box aria-hidden="true" w="0.625rem" h="0.625rem" flex="0 0 auto" bg="interaction.accent" />
           <Box
             fontSize="display"
             lineHeight="display"
             fontWeight="600"
             letterSpacing="-0.02em"
-            color="console.text"
+            color="content.ink"
           >
             MiniMax Studio
           </Box>
         </Box>
 
-        <Box color="console.muted" fontSize="body" lineHeight="body" mb={8} maxW="28rem">
+        <Box color="content.readout" fontSize="body" lineHeight="body" mb={8} maxW="28rem">
           Enter your app access key to continue. Speech, image, video, music and chat all run
           against their own MiniMax endpoint.
         </Box>
@@ -108,7 +91,7 @@ export default function LoginPage() {
               fontSize: 'var(--chakra-font-sizes-label)',
               lineHeight: 'var(--chakra-line-heights-label)',
               fontWeight: 500,
-              color: 'var(--chakra-colors-console-muted)',
+              color: 'var(--chakra-colors-content-readout)',
             }}
           >
             Access key

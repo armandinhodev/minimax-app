@@ -13,7 +13,7 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
 import { Field } from '@/components/ui/spec';
 import { Badge } from '@/components/ui/badge';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 const PROMPT_MAX_LENGTH = 2000;
 const LYRICS_MAX_LENGTH = 3500;
@@ -110,13 +110,13 @@ export default function LyricsGenerationPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="MU" title="Lyrics Generation" description="Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music." note="Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500." />
+      <AreaHeader title="Lyrics Generation" description="Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music." note="Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500." />
 
       <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>Lyric brief</SheetTitle>

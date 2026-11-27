@@ -19,7 +19,7 @@ import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { StreamingPlayer } from '@/components/tts/StreamingPlayer';
 import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
 import { Field } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 const MODEL_OPTIONS: SelectOption[] = [
   { value: 'speech-2.8-hd', label: 'speech-2.8-hd' },
@@ -108,13 +108,13 @@ export default function TTSPage() {
   };
 
   return (
-    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="42rem">
-      <ConsoleBand
-        monogram="SP"
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
+      <AreaHeader
         title="Text to Speech"
         description="Convert text to natural-sounding audio using MiniMax TTS. Generate Audio creates a reusable Library item; Streaming TTS is immediate playback only."
       />
 
+      <Box display="grid" gap={0} gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} alignItems="start">
       <Sheet>
         <SheetHeader>
           <SheetTitle>Generate audio</SheetTitle>
@@ -261,6 +261,7 @@ export default function TTSPage() {
           )}
         </SheetContent>
       </Sheet>
+      </Box>
     </Box>
   );
 }

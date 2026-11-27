@@ -6,12 +6,12 @@ function Input({ className, ...props }: React.ComponentProps<typeof ChakraInput>
   return (
     <ChakraInput
       className={className}
-      height="2.25rem"
-      px="0.625rem"
+      height="2.5rem"
+      px="0.7rem"
       borderRadius="md"
       border="1px solid"
       borderColor="surface.rule"
-      bg="surface.sheet"
+      bg="surface.plate"
       fontSize="body"
       color="content.ink"
       _focus={{

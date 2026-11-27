@@ -35,8 +35,12 @@ vi.mock('@/lib/auth-client', () => authClientMocks);
 
 vi.mock('@chakra-ui/react', () => ({
   Box: ({ children, as: Component = 'div', ...props }: { children?: ReactNode; as?: keyof JSX.IntrinsicElements } & Record<string, unknown>) => {
-    void props;
-    return <Component>{children}</Component>;
+    // Keep the accessibility attributes: the readouts and the job strip carry
+    // their meaning there, and a mock that drops them cannot be asserted on.
+    const aria = Object.fromEntries(
+      Object.entries(props).filter(([key]) => key.startsWith('aria-') || key.startsWith('data-') || key === 'role'),
+    );
+    return <Component {...aria}>{children}</Component>;
   },
 }));
 
@@ -161,6 +165,24 @@ describe('Video Studio sections', () => {
     // The task readout keeps every value, each bound to its label.
     expect(specValue(container!, 'Task')).toBe('424010985738629');
     expect(specValue(container!, 'Status')).toBe('succeeded');
+
+    // The job strip names the stage the job reached, not just its state.
+    const currentStage = container!.querySelector('[aria-label="Job stages"] [aria-current="step"]');
+    expect(currentStage?.textContent).toBe('Retrieve');
+  });
+
+  it('shows no job strip before a task exists', async () => {
+    authClientMocks.authFetch.mockImplementation(async () => Response.json({ items: [], total: 0 }));
+
+    await act(async () => {
+      root!.render(<VideoGenerationSection />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // The strip describes a job; with no job it would be decoration.
+    expect(container!.querySelector('[aria-label="Job stages"]')).toBeNull();
   });
 
   it('offers only concrete ratios for text-to-video and switches to adaptive for image-to-video', async () => {

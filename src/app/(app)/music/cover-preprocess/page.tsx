@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { ConsoleBand } from '@/components/ui/console-band';
+import { AreaHeader } from '@/components/ui/area-header';
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
 const MIN_AUDIO_DURATION_SECONDS = 6;
@@ -246,9 +246,9 @@ export default function MusicCoverPreprocessPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="MU" title="Cover Preprocess" description="Prepare reference audio for MiniMax Music Cover and receive a 24-hour cover feature ID." note="Reference audio should be 6 seconds to 6 minutes, no larger than 50 MB, and in a common format like MP3, WAV, or FLAC." />
+      <AreaHeader title="Cover Preprocess" description="Prepare reference audio for MiniMax Music Cover and receive a 24-hour cover feature ID." note="Reference audio should be 6 seconds to 6 minutes, no larger than 50 MB, and in a common format like MP3, WAV, or FLAC." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
         <Sheet>
           <SheetHeader>
             <SheetTitle>Reference audio</SheetTitle>
