@@ -1,18 +1,19 @@
 "use client";
 
 /**
- * JobStrip — the four stages of a generation, as they actually happen.
+ * JobStrip — the four stages of a generation.
  *
- * Compose, Dispatch, Render, Retrieve is a sequence, so it is shown as one.
- * The strip appears only when a job exists; the stage it marks is the stage
- * the job is in.
+ * Compose, Dispatch, Render and Retrieve are a sequence, so they are laid out
+ * as one. Completed steps carry a check, the current step a thick copper rule,
+ * and the backend decides which stage the task is in.
  *
- * See docs/design.md.
+ * See docs/minimax-studio-ui/Minimax-directrices.md.
  */
 
 import { Box } from "@chakra-ui/react";
 
-import { StatusLamp, type LampState } from "@/components/ui/status-lamp";
+import { Icon } from "@/components/ui/icons";
+import type { LampState } from "@/components/ui/status-lamp";
 
 const STAGES = ["Compose", "Dispatch", "Render", "Retrieve"] as const;
 
@@ -34,76 +35,48 @@ function stageOf(state: LampState): number {
   }
 }
 
-function toneOf(state: LampState): string {
-  if (state === "succeeded") return "state.ok";
-  if (state === "failed") return "state.err";
-  return "state.run";
-}
-
 interface JobStripProps {
   state?: LampState;
-  /** A detail the operator needs next to the stage, e.g. the task id. */
-  detail?: string;
 }
 
-export function JobStrip({ state, detail }: JobStripProps) {
+export function JobStrip({ state }: JobStripProps) {
   if (!state) return null;
 
   const current = stageOf(state);
 
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      gap={{ base: 3, md: 5 }}
-      flexWrap="wrap"
-      pb={3}
-      mb={5}
-      borderBottom="1px solid"
-      borderColor="surface.rule"
-      role="group"
-      aria-label="Job stages"
-    >
-      <Box as="ol" display="flex" alignItems="center" gap={{ base: 3, md: 5 }} listStyleType="none" m={0} p={0}>
-        {STAGES.map((stage, index) => {
-          const done = index < current;
-          const active = index === current;
-          const tone = active ? toneOf(state) : "interaction.accent";
+    <Box role="group" aria-label="Job stages" display="grid" gridTemplateColumns="repeat(4, minmax(0, 1fr))" gap="10px">
+      {STAGES.map((stage, index) => {
+        const done = index < current;
+        const active = index === current;
 
-          return (
+        return (
+          <Box
+            key={stage}
+            display="flex"
+            alignItems="center"
+            gap="6px"
+            pb="6px"
+            borderBottom={active ? "3px solid" : "1px solid"}
+            borderColor={active ? "interaction.accent" : done ? "surface.rule" : "surface.separator"}
+            color={active ? "interaction.accent" : done ? "content.ink" : "content.readout"}
+            aria-current={active ? "step" : undefined}
+            minW={0}
+          >
+            {done && <Icon name="check" size={13} />}
             <Box
-              as="li"
-              key={stage}
-              display="flex"
-              alignItems="center"
-              gap={2}
-              aria-current={active ? "step" : undefined}
+              fontSize="help"
+              lineHeight="help"
+              fontWeight={active ? 700 : 500}
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
             >
-              <Box
-                aria-hidden="true"
-                w="0.5rem"
-                h="0.5rem"
-                flex="0 0 auto"
-                bg={active ? tone : done ? "interaction.accent" : "surface.rule"}
-                border="1px solid"
-                borderColor={active ? tone : done ? "interaction.accent" : "surface.rule"}
-              />
-              <Box
-                fontSize="label"
-                lineHeight="label"
-                fontWeight={active ? 600 : 500}
-                color={active ? "content.ink" : done ? "content.readout" : "content.subtle"}
-              >
-                {stage}
-              </Box>
+              {stage}
             </Box>
-          );
-        })}
-      </Box>
-
-      <Box ml={{ base: 0, md: "auto" }}>
-        <StatusLamp state={state} detail={detail} />
-      </Box>
+          </Box>
+        );
+      })}
     </Box>
   );
 }

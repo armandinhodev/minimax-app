@@ -6,9 +6,9 @@ function Textarea({ className, ...props }: React.ComponentProps<typeof ChakraTex
   return (
     <ChakraTextarea
       className={className}
-      minHeight="4rem"
-      px="0.7rem"
-      py="0.55rem"
+      minHeight="72px"
+      px="10px"
+      py="8px"
       borderRadius="md"
       border="1px solid"
       borderColor="surface.rule"
@@ -21,8 +21,8 @@ function Textarea({ className, ...props }: React.ComponentProps<typeof ChakraTex
         boxShadow: "0 0 0 3px var(--chakra-colors-interaction-focus-ring)",
         outline: "none",
       }}
-      _placeholder={{ color: "content.subtle" }}
-      _disabled={{ opacity: 1, cursor: "not-allowed", bg: "surface.field", color: "content.subtle" }}
+      _placeholder={{ color: "content.readout" }}
+      _disabled={{ opacity: 1, cursor: "not-allowed", bg: "surface.field", color: "content.readout" }}
       {...props}
     />
   );

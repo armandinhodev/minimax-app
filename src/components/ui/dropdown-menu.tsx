@@ -18,7 +18,7 @@ function DropdownMenuContent({ children, className }: { children?: React.ReactNo
         marginTop: "0.25rem",
         background: "var(--chakra-colors-surface-plate)",
         borderRadius: "var(--chakra-radii-md)",
-        border: "1px solid var(--chakra-colors-surface-rule)",
+        border: "1px solid var(--chakra-colors-surface-separator)",
         boxShadow: "var(--chakra-shadows-lg)",
         padding: "0.25rem",
         minWidth: "8rem",
@@ -79,7 +79,7 @@ function DropdownMenuLabel({ children, className }: { children?: React.ReactNode
 }
 
 function DropdownMenuSeparator({ className }: { className?: string }) {
-  return <hr style={{ height: "1px", background: "var(--chakra-colors-surface-rule)", margin: "0.25rem 0", border: 0 }} className={className} />;
+  return <hr style={{ height: "1px", background: "var(--chakra-colors-surface-separator)", margin: "0.25rem 0", border: 0 }} className={className} />;
 }
 
 function DropdownMenuGroup({ children, className }: { children?: React.ReactNode; className?: string }) {
@@ -116,7 +116,7 @@ function DropdownMenuSubContent(props: React.HTMLAttributes<HTMLDivElement>) {
         marginLeft: "0.25rem",
         background: "var(--chakra-colors-surface-plate)",
         borderRadius: "var(--chakra-radii-md)",
-        border: "1px solid var(--chakra-colors-surface-rule)",
+        border: "1px solid var(--chakra-colors-surface-separator)",
         boxShadow: "var(--chakra-shadows-lg)",
         padding: "0.25rem",
         minWidth: "8rem",

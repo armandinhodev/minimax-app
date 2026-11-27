@@ -1,17 +1,16 @@
 'use client';
 
 /**
- * AudioPlayer — hex audio → Web Audio API playback.
- * Converts hex string to ArrayBuffer via Uint8Array.from(hex, 'hex'),
- * decodes with AudioContext.decodeAudioData, and plays via AudioBufferSourceNode.
- * Degrades gracefully if Web Audio API is unavailable.
+ * AudioPlayer — hex audio playback on the slate plate.
+ *
+ * The Web Audio path is unchanged (decode, play, pause, seek). The surface is
+ * the playback plate of the studio: title, waveform, time ruler and clock.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
+import { Icon } from '@/components/ui/icons';
 
 /**
  * Convert a hex string to an ArrayBuffer.
@@ -42,11 +41,37 @@ interface AudioPlayerProps {
   hex: string;
   format?: string;
   onDownload?: (hex: string) => void;
+  /** What the clip is, shown on the plate. */
+  title?: string;
+  /** Hides the plate download when the page already offers one. */
+  showDownload?: boolean;
+  downloadLabel?: string;
 }
 
 type PlaybackState = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
-export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProps) {
+/** A stable waveform profile from the title, so the plate is not random. */
+function profile(seed: string, bars = 56): number[] {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) % 100000;
+  }
+  return Array.from({ length: bars }, (_, index) => {
+    hash = (hash * 9301 + 49297) % 233280;
+    const noise = hash / 233280;
+    const envelope = Math.sin((index / bars) * Math.PI) * 0.6 + 0.4;
+    return Math.round((0.2 + noise * 0.8) * envelope * 100);
+  });
+}
+
+export function AudioPlayer({
+  hex,
+  format = 'mp3',
+  onDownload,
+  title = 'Audio',
+  showDownload = true,
+  downloadLabel = 'Download audio',
+}: AudioPlayerProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const audioDataRef = useRef<AudioBuffer | null>(null);
@@ -58,6 +83,9 @@ export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProp
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [webAudioSupported, setWebAudioSupported] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const bars = profile(title);
+  const ticks = Array.from({ length: 28 }, (_, index) => index);
 
   // Detect Web Audio API support
   useEffect(() => {
@@ -199,57 +227,88 @@ export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProp
 
   if (!webAudioSupported) {
     return (
-      <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-        <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content-readout)' }}>
+      <Box display="grid" gap={3}>
+        <Box bg="surface.inset" borderRadius="md" px="14px" py="12px" color="content.readout" fontSize="label">
           Web Audio API is not supported in this browser. Audio playback is unavailable.
-        </p>
-        <Button variant="outline" onClick={handleDownload} disabled={!hex}>
-          Download audio
-        </Button>
+        </Box>
+        {showDownload && (
+          <Button variant="outline" onClick={handleDownload} disabled={!hex}>
+            {downloadLabel}
+          </Button>
+        )}
       </Box>
     );
   }
 
-  return (
-    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
-      {playbackState === 'error' && (
-        <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-state-err)' }}>{errorMessage}</p>
-      )}
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const playing = playbackState === 'playing';
 
-      <Box display="flex" alignItems="center" gap={2}>
-        {playbackState === 'playing' ? (
-          <Button variant="outline" size="sm" onClick={handlePause}>
-            Pause
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePlay}
-            disabled={playbackState === 'loading' || !audioDataRef.current}
-          >
-            {playbackState === 'loading' ? 'Loading...' : 'Play'}
-          </Button>
+  return (
+    <Box display="grid" gap="12px" justifyItems="start">
+      <Box bg="transport.bg" color="transport.text" borderRadius="md" px="16px" py="14px" display="grid" gap="10px" width="100%">
+        <Box fontSize="0.9375rem" fontWeight={700} lineHeight="1.3" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+          {title}
+        </Box>
+
+        {playbackState === 'error' && (
+          <Box color="state.errBright" fontSize="label">
+            {errorMessage}
+          </Box>
         )}
 
-        <Button variant="outline" size="sm" onClick={handleDownload} disabled={!hex}>
-          Download
-        </Button>
+        <Box position="relative" h="44px" display="flex" alignItems="center" gap="2px">
+          {bars.map((height, index) => (
+            <Box
+              key={index}
+              aria-hidden="true"
+              flex="1 1 0"
+              minW="1px"
+              height={`${Math.max(8, height)}%`}
+              bg="transport.text"
+              opacity={index < (progress / 100) * bars.length ? 1 : 0.55}
+              borderRadius="1px"
+            />
+          ))}
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={currentTime}
+            aria-label={`Seek ${title}`}
+            onChange={(event) => handleSeek(Number(event.currentTarget.value))}
+            disabled={!audioDataRef.current}
+            style={{ position: 'absolute', inset: 0, width: '100%', opacity: 0, cursor: 'pointer' }}
+          />
+        </Box>
 
-        <Badge variant="outline" style={{ fontSize: '0.75rem' }}>
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </Badge>
+        <Box display="flex" alignItems="center" gap="2px" aria-hidden="true">
+          {ticks.map((tick) => (
+            <Box key={tick} flex="1 1 0" h={tick % 7 === 0 ? '7px' : '4px'} bg="transport.text" opacity={0.35} />
+          ))}
+        </Box>
+
+        <Box display="flex" alignItems="center" justifyContent="space-between" gap={4}>
+          <button
+            type="button"
+            onClick={playing ? handlePause : handlePlay}
+            disabled={playbackState === 'loading' || !audioDataRef.current}
+            aria-label={playing ? `Pause ${title}` : `Play ${title}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 0, color: 'var(--chakra-colors-transport-text)', cursor: 'pointer', font: 'inherit', fontSize: 'var(--chakra-font-sizes-label)', fontWeight: 700, padding: 0 }}
+          >
+            <Icon name={playing ? 'pause' : 'play'} size={14} />
+            {playing ? 'Pause' : 'Play'}
+          </button>
+          <Box fontFamily="mono" fontSize="mono" color="transport.text" fontVariantNumeric="tabular-nums">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </Box>
+        </Box>
       </Box>
 
-      {audioDataRef.current && (
-        <Slider
-          value={[currentTime]}
-          min={0}
-          max={duration}
-          step={0.1}
-          onValueChange={handleSeek}
-          style={{ width: '100%' }}
-        />
+      {showDownload && (
+        <Button variant="outline" onClick={handleDownload} disabled={!hex}>
+          {downloadLabel}
+        </Button>
       )}
     </Box>
   );

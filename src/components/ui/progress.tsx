@@ -9,14 +9,7 @@ interface ProgressProps extends BoxProps {
 
 function Progress({ value, ...props }: ProgressProps) {
   return (
-    <Box
-      position="relative"
-      height="0.1875rem"
-      borderRadius="sm"
-      bg="surface.rule"
-      overflow="hidden"
-      {...props}
-    >
+    <Box position="relative" height="4px" borderRadius="sm" bg="surface.separator" overflow="hidden" {...props}>
       <Box
         position="absolute"
         top="0"

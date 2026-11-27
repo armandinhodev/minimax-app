@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * StatusLamp — the state readout.
+ * StatusLamp — the state of a job.
  *
- * State is the loudest thing on the page: a lit dot and a mono label, on the
- * soft ground of the state it names. It is the only circle in the system.
- *
- * See docs/design.md.
+ * A bordered badge with a symbol and a word: check for success, clock for
+ * work in progress, cross for failure. The color is never the only signal.
  */
 
 import { Box, type BoxProps } from "@chakra-ui/react";
+
+import { Icon } from "@/components/ui/icons";
 
 export type LampState =
   | "queued"
@@ -20,19 +20,19 @@ export type LampState =
   | "failed"
   | "cancelled";
 
-const LAMP_TONE: Record<LampState, { token: string; soft: string; label: string }> = {
-  queued: { token: "state.run", soft: "state.runSoft", label: "Queued" },
-  running: { token: "state.run", soft: "state.runSoft", label: "Running" },
-  processing: { token: "state.run", soft: "state.runSoft", label: "Processing" },
-  preparing: { token: "state.run", soft: "state.runSoft", label: "Preparing" },
-  succeeded: { token: "state.ok", soft: "state.okSoft", label: "Succeeded" },
-  failed: { token: "state.err", soft: "state.errSoft", label: "Failed" },
-  cancelled: { token: "state.run", soft: "state.runSoft", label: "Cancelled" },
+const LAMP_TONE: Record<LampState, { token: string; label: string; icon: "clock" | "check" | "close" | "pause" }> = {
+  queued: { token: "state.run", label: "Queued", icon: "clock" },
+  running: { token: "state.run", label: "Running", icon: "clock" },
+  processing: { token: "state.run", label: "Processing", icon: "clock" },
+  preparing: { token: "state.run", label: "Preparing", icon: "clock" },
+  succeeded: { token: "state.ok", label: "Succeeded", icon: "check" },
+  failed: { token: "state.err", label: "Failed", icon: "close" },
+  cancelled: { token: "content.readout", label: "Cancelled", icon: "pause" },
 };
 
 interface StatusLampProps extends BoxProps {
   state: LampState;
-  /** Optional detail shown to the right of the state. */
+  /** Optional detail shown next to the state. */
   detail?: string;
 }
 
@@ -43,20 +43,23 @@ export function StatusLamp({ state, detail, ...props }: StatusLampProps) {
     <Box
       display="inline-flex"
       alignItems="center"
-      gap={2}
-      minH="1.875rem"
-      px="0.6rem"
-      py="0.25rem"
-      bg={tone.soft}
+      gap="5px"
+      minH="24px"
+      px="8px"
+      py="2px"
+      bg={state === "cancelled" ? "surface.inset" : "surface.plate"}
+      border="1px solid"
+      borderColor={tone.token}
       borderRadius="sm"
+      color={tone.token}
       {...props}
     >
-      <Box aria-hidden="true" w="0.5rem" h="0.5rem" flex="0 0 auto" bg={tone.token} borderRadius="full" />
-      <Box fontFamily="mono" fontSize="mono" lineHeight="mono" fontWeight="500" color="content.ink">
+      <Icon name={tone.icon} size={13} />
+      <Box fontFamily="body" fontSize="0.8125rem" lineHeight={1} fontWeight={500}>
         {tone.label}
       </Box>
       {detail && (
-        <Box fontFamily="mono" fontSize="label" lineHeight="label" color="content.readout" ml={1}>
+        <Box fontFamily="mono" fontSize="0.75rem" lineHeight={1} color="content.readout" ml={1}>
           {detail}
         </Box>
       )}

@@ -13,7 +13,7 @@ function Switch({ checked, onChange, className, disabled, id, ariaLabel }: {
   };
 
   return (
-    <label style={{ position: "relative", display: "inline-flex", alignItems: "center", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1 }} className={className}>
+    <label style={{ position: "relative", display: "inline-flex", alignItems: "center", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.55 : 1 }} className={className}>
       <input
         id={id}
         type="checkbox"
@@ -33,27 +33,25 @@ function Switch({ checked, onChange, className, disabled, id, ariaLabel }: {
       />
       <div
         style={{
-          width: "2rem",
-          height: "1.15rem",
+          width: "36px",
+          height: "20px",
           borderRadius: "9999px",
           background: checked ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-surface-rule)",
           position: "relative",
-          transition: "background-color 0.2s",
+          transition: "background-color 0.16s",
           cursor: disabled ? "not-allowed" : "pointer",
         }}
       >
         <div
           style={{
-            content: '""',
             position: "absolute",
             top: "2px",
-            left: checked ? "calc(100% - 14px)" : "2px",
-            width: "14px",
-            height: "14px",
+            left: checked ? "18px" : "2px",
+            width: "16px",
+            height: "16px",
             borderRadius: "9999px",
-            background: "var(--chakra-colors-surface-sheet)",
-            transition: "left 0.2s",
-            boxShadow: "var(--chakra-shadows-sm)",
+            background: "var(--chakra-colors-surface-plate)",
+            transition: "left 0.16s",
           }}
         />
       </div>

@@ -4,7 +4,7 @@ import { Box } from "@chakra-ui/react";
 import type { BoxProps } from "@chakra-ui/react";
 
 function Skeleton({ ...props }: BoxProps) {
-  return <Box borderRadius="md" bg="surface.rule" {...props} />;
+  return <Box borderRadius="md" bg="surface.inset" {...props} />;
 }
 
 export { Skeleton };

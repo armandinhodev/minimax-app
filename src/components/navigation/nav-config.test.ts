@@ -38,3 +38,28 @@ describe('video navigation section', () => {
     }
   });
 });
+
+describe('speech navigation section', () => {
+  it('groups text to speech and transcription under one area', () => {
+    const speech = PRODUCT_NAV_SECTIONS.find((item) => item.id === 'speech');
+    if (!speech) throw new Error('Speech section not found');
+
+    expect(PRODUCT_NAV_SECTIONS.map((item) => item.id)).toEqual([
+      'speech',
+      'text',
+      'image',
+      'music',
+      'video',
+      'video-agent',
+      'library',
+    ]);
+    expect(speech.matchPaths).toEqual(['/tts', '/voices', '/asr']);
+    expect(speech.groups.flatMap((group) => group.items).map((item) => item.href)).toEqual([
+      '/tts',
+      '/asr',
+      '/voices',
+      '/voices/clone',
+      '/voices/design',
+    ]);
+  });
+});

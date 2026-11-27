@@ -12,6 +12,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { AreaHeader } from '@/components/ui/area-header';
+import { Chip } from '@/components/ui/chip';
 
 const PROMPT_MAX_LENGTH = 32_000;
 const MAX_IMAGE_COUNT = 10;
@@ -277,11 +278,11 @@ export default function ImageToImagePage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Image to Image" description="Transform 1 to 16 reference images with MiniMax-H3-Image while keeping uploads and API keys server-safe." note="Image edits always apply prompt enhancement. Reference images are forwarded to MiniMax, never fetched by this server." />
+      <AreaHeader title="Image to image" description="Transform reference images into a new frame." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="image">
             <SheetTitle>References and direction</SheetTitle>
             <SheetDescription>
               Attach JPG, PNG, WEBP, HEIC or HEIF images under 64MB each, then describe the transformation, style, composition, and mood.
@@ -333,80 +334,65 @@ export default function ImageToImagePage() {
               />
             </Box>
 
-            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
+            <Box display="grid" gap="8px">
               <Label>Model</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }}>
-                {MODEL_OPTIONS.map((option) => {
-                  const isSelected = option.value === model;
-                  return (
-                    <Button
-                      key={option.value}
-                      id={option.id}
-                      variant={'outline'}
-                      aria-pressed={isSelected}
-                      onClick={() => setModel(option.value)}
-                      disabled={isLoading}
-                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
-                    >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
-                        <strong>{option.label}</strong>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
-                      </span>
-                    </Button>
-                  );
-                })}
+              <Box display="flex" gap="8px" flexWrap="wrap">
+                {MODEL_OPTIONS.map((option) => (
+                  <Chip
+                    key={option.value}
+                    id={option.id}
+                    selected={option.value === model}
+                    disabled={isLoading}
+                    onClick={() => setModel(option.value)}
+                  >
+                    {option.label}
+                  </Chip>
+                ))}
+              </Box>
+              <Box color="content.readout" fontSize="help">
+                Quality model selected. Choose Highspeed for faster results.
               </Box>
             </Box>
 
-            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
+            <Box display="grid" gap="8px">
               <Label>Aspect ratio</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
-                {ASPECT_RATIO_OPTIONS.map((option) => {
-                  const isSelected = option.value === aspectRatio;
-                  return (
-                    <Button
-                      key={option.value}
-                      id={`image-edit-ratio-${option.value.replace(':', '-')}`}
-                      variant={'outline'}
-                      aria-pressed={isSelected}
-                      onClick={() => setAspectRatio(option.value)}
-                      disabled={isLoading || usesCustomSize}
-                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
-                    >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
-                        <strong>{option.label} ({option.value})</strong>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
-                      </span>
-                    </Button>
-                  );
-                })}
+              <Box display="flex" gap="8px" flexWrap="wrap">
+                {ASPECT_RATIO_OPTIONS.map((option) => (
+                  <Chip
+                    key={option.value}
+                    id={`image-edit-ratio-${option.value.replace(':', '-')}`}
+                    selected={option.value === aspectRatio}
+                    disabled={isLoading || usesCustomSize}
+                    onClick={() => setAspectRatio(option.value)}
+                  >
+                    {option.value === 'auto' ? 'Auto' : option.value}
+                  </Chip>
+                ))}
+              </Box>
+              {usesCustomSize && (
+                <Box color="content.readout" fontSize="help">
+                  A custom size replaces the aspect ratio and the area level.
+                </Box>
+              )}
+            </Box>
+
+            <Box display="grid" gap="8px">
+              <Label>Area level</Label>
+              <Box display="flex" gap="8px" flexWrap="wrap">
+                {AREA_OPTIONS.map((option) => (
+                  <Chip
+                    key={option.value}
+                    id={`image-edit-area-${option.value.toLowerCase()}`}
+                    selected={option.value === area}
+                    disabled={isLoading || usesCustomSize}
+                    onClick={() => setArea(option.value)}
+                  >
+                    {option.value}
+                  </Chip>
+                ))}
               </Box>
             </Box>
 
-            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-              <Label>Area level</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
-                {AREA_OPTIONS.map((option) => {
-                  const isSelected = option.value === area;
-                  return (
-                    <Button
-                      key={option.value}
-                      id={`image-edit-area-${option.value.toLowerCase()}`}
-                      variant={'outline'}
-                      aria-pressed={isSelected}
-                      onClick={() => setArea(option.value)}
-                      disabled={isLoading || usesCustomSize}
-                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
-                    >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
-                        <strong>{option.label}</strong>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
-                      </span>
-                    </Button>
-                  );
-                })}
-              </Box>
-            </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
                             <Field label="Custom size" htmlFor="image-edit-size">
@@ -433,28 +419,20 @@ export default function ImageToImagePage() {
               </Field>
             </Box>
 
-            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
+            <Box display="grid" gap="8px">
               <Label>Output format</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
-                {OUTPUT_FORMAT_OPTIONS.map((option) => {
-                  const isSelected = option.value === outputFormat;
-                  return (
-                    <Button
-                      key={option.value}
-                      id={`image-edit-format-${option.value}`}
-                      variant={'outline'}
-                      aria-pressed={isSelected}
-                      onClick={() => setOutputFormat(option.value)}
-                      disabled={isLoading}
-                      style={{ height: 'auto', width: '100%', justifyContent: 'flex-start', padding: '0.75rem' }}
-                    >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
-                        <strong>{option.label}</strong>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
-                      </span>
-                    </Button>
-                  );
-                })}
+              <Box display="flex" gap="8px" flexWrap="wrap">
+                {OUTPUT_FORMAT_OPTIONS.map((option) => (
+                  <Chip
+                    key={option.value}
+                    id={`image-format-${option.value}`}
+                    selected={option.value === outputFormat}
+                    disabled={isLoading}
+                    onClick={() => setOutputFormat(option.value)}
+                  >
+                    {option.label}
+                  </Chip>
+                ))}
               </Box>
             </Box>
 
@@ -473,7 +451,7 @@ export default function ImageToImagePage() {
 
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {actionStatus}
               </Box>
             )}
@@ -484,9 +462,7 @@ export default function ImageToImagePage() {
           </SheetContent>
         </Sheet>
 
-        <Plate minH="28rem" position="sticky" top="4.5rem" title="Results" description={result
-          ? 'The images MiniMax returned, with the frame you asked for.'
-          : 'Generated images appear here as soon as MiniMax returns URL results.'}>
+        <Plate minH="28rem" position="sticky" top="4.5rem" title="Results" description="Latest image batch.">
             {result && (
               <SpecList>
                 <Spec label="Generated" value={String(result.metadata.successCount)} />
@@ -495,13 +471,13 @@ export default function ImageToImagePage() {
               </SpecList>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} from your reference images...
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="sm" p="2rem" minH="22rem" flex="1" display="grid" alignItems="center" justifyItems="center" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" minH="22rem" flex="1" display="grid" alignItems="center" justifyItems="center" textAlign="center" color="content.readout" bg="surface.inset">
                 <Box maxW="22rem">
                   <Box fontFamily="mono" fontSize="label" color="content.subtle" mb={2}>No result yet</Box>
                   Attach your reference images, describe the desired direction, then generate. Results are saved to Library automatically.
@@ -542,7 +518,7 @@ export default function ImageToImagePage() {
             )}
 
             {result && failedItems.length > 0 && (
-              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="state.err" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
+              <Box borderRadius="md" bg="state.errSoft" px="12px" py="10px" color="content.ink" fontSize="label" display="grid" gap="0.25rem">
                 {failedItems.map((item) => (
                   <span key={`failure-${item.index}`}>
                     Image {item.index + 1} failed{item.error?.code ? ` (${item.error.code})` : ''}: {item.error?.message}

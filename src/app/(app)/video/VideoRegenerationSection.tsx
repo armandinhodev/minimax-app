@@ -17,6 +17,7 @@ import { Select } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Field } from '@/components/ui/spec';
 import { JobStrip } from '@/components/ui/job-strip';
+import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
 
 import { CreateVideoRegenerationSchema } from '@/application/dto/minimax/video/VideoDTO';
@@ -92,9 +93,8 @@ export function VideoRegenerationSection() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
-        title="2K Regeneration"
-        description="Regenerate a MiniMax H3 768P result in 2K, either from a source task id or from the 768P source video itself."
-        note="Only MiniMax-H3 reaches 2K. The source must be a 768P output with an audio track."
+        title="2K regeneration"
+        description="Re-render a 768P result in 2K."
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -102,11 +102,11 @@ export function VideoRegenerationSection() {
       <Box
         display="grid"
         gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }}
-        gap={0}
+        gap={4}
         alignItems="start"
       >
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="video">
             <SheetTitle>Parameters</SheetTitle>
             <SheetDescription>
               Either a source task id or the 768P source video itself.
@@ -198,7 +198,7 @@ export function VideoRegenerationSection() {
         </Sheet>
 
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Latest task</SheetTitle>
             <SheetDescription>
               The status is polled while the task runs. Only one task is tracked at a time.
@@ -206,7 +206,10 @@ export function VideoRegenerationSection() {
           </SheetHeader>
           <SheetContent display="grid" gap={3}>
             {polling.task && (
-              <JobStrip state={polling.task.status} detail={polling.task.id} />
+              <Box display="grid" gap="12px">
+                <JobStrip state={polling.task.status} />
+                <StatusLamp state={polling.task.status} detail={polling.task.id} />
+              </Box>
             )}
 
             {polling.error && (
@@ -215,10 +218,9 @@ export function VideoRegenerationSection() {
 
             {!polling.task && !polling.isPolling && !polling.error && (
               <Box
-                border="1px dashed"
-                borderColor="surface.rule"
-                borderRadius="lg"
-                p="1.5rem"
+bg="surface.inset"
+borderRadius="md"
+p="1.5rem"
                 textAlign="center"
                 color="content.subtle"
                 fontSize="body"

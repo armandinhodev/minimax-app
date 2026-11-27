@@ -212,7 +212,7 @@ describe('MusicPage', () => {
       root!.render(<MusicPage />);
     });
 
-    expect(container!.textContent).toContain('Step 2 after Cover Preprocess');
+    expect(container!.textContent).toContain('Cover generation requires a cover feature ID');
     expect(container!.textContent).toContain('expires 24 hours');
     const coverFeatureId = container!.querySelector('#cover-feature-id') as HTMLInputElement;
     const prompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;

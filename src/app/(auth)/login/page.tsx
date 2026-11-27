@@ -53,70 +53,92 @@ export default function LoginPage() {
       style={{
         minHeight: '100vh',
         display: 'grid',
+        placeItems: 'center',
         background: 'var(--chakra-colors-surface-field)',
+        padding: '18px',
       }}
     >
       <Box
-        display="grid"
-        alignContent="center"
-        justifyItems="start"
-        px={{ base: 6, md: 12 }}
-        py={{ base: 10, md: 16 }}
         width="100%"
-        maxW="34rem"
-        marginInline="auto"
+        maxW="416px"
+        bg="surface.plate"
+        border="1px solid"
+        borderColor="surface.separator"
+        borderRadius="lg"
+        overflow="hidden"
       >
-        <Box display="flex" alignItems="center" gap={3} mb={8}>
-          <Box aria-hidden="true" w="0.625rem" h="0.625rem" flex="0 0 auto" bg="interaction.accent" />
+        <Box h="4px" bg="transport.bg" />
+        <Box p={{ base: '24px', md: '28px' }} display="grid" gap="16px">
           <Box
-            fontSize="display"
+            aria-hidden="true"
+            fontFamily="body"
+            fontSize="1.5rem"
+            fontWeight={700}
+            letterSpacing="-0.12em"
+            lineHeight={1}
+            color="interaction.accent"
+          >
+            ///
+          </Box>
+
+          <Box
+            as="h1"
+            fontSize={{ base: '2.125rem', md: '2.875rem' }}
             lineHeight="display"
-            fontWeight="600"
-            letterSpacing="-0.02em"
+            fontWeight={700}
+            letterSpacing="-0.039em"
             color="content.ink"
           >
             MiniMax Studio
           </Box>
+
+          <Box color="content.readout" fontSize="body" lineHeight="body">
+            Enter your studio access key to continue.
+          </Box>
+
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px', width: '100%' }}>
+            <label
+              htmlFor="access-key"
+              style={{
+                fontSize: 'var(--chakra-font-sizes-label)',
+                lineHeight: 'var(--chakra-line-heights-label)',
+                fontWeight: 700,
+                color: 'var(--chakra-colors-content-ink)',
+              }}
+            >
+              Access key
+              <span aria-hidden="true" style={{ color: 'var(--chakra-colors-content-readout)' }}>
+                {' *'}
+              </span>
+            </label>
+            <Input
+              id="access-key"
+              type="password"
+              placeholder="Enter your access key"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              autoComplete="off"
+              autoFocus
+              disabled={isLoading}
+              required
+              aria-required="true"
+            />
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Validating...' : 'Sign in'}
+            </Button>
+
+            <Box color="content.readout" fontSize="help" lineHeight="help">
+              Fields marked * are required.
+            </Box>
+          </form>
         </Box>
-
-        <Box color="content.readout" fontSize="body" lineHeight="body" mb={8} maxW="28rem">
-          Enter your app access key to continue. Speech, image, video, music and chat all run
-          against their own MiniMax endpoint.
-        </Box>
-
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', width: '100%' }}>
-          <label
-            htmlFor="access-key"
-            style={{
-              fontSize: 'var(--chakra-font-sizes-label)',
-              lineHeight: 'var(--chakra-line-heights-label)',
-              fontWeight: 500,
-              color: 'var(--chakra-colors-content-readout)',
-            }}
-          >
-            Access key
-          </label>
-          <Input
-            id="access-key"
-            type="password"
-            placeholder="Enter your app access key"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            autoComplete="off"
-            autoFocus
-            disabled={isLoading}
-          />
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button type="submit" disabled={isLoading} justifySelf="start" mt={2}>
-            {isLoading ? 'Validating...' : 'Sign in'}
-          </Button>
-        </form>
       </Box>
     </main>
   );

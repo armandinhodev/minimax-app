@@ -10,7 +10,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Box } from '@chakra-ui/react';
 
-import { AreaHeader, type Readout } from '@/components/ui/area-header';
+import { AreaHeader } from '@/components/ui/area-header';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import type { VideoMediaValues } from './video-options';
@@ -65,10 +65,6 @@ interface VideoStudioHeaderProps {
   title: string;
   description: string;
   note?: string;
-  /** Key facts of the current job, shown as live readouts. */
-  readouts?: Readout[];
-  /** What the readouts describe. */
-  readoutsLabel?: string;
 }
 
 /**
@@ -81,16 +77,12 @@ export function VideoStudioHeader({
   title,
   description,
   note,
-  readouts,
-  readoutsLabel,
 }: VideoStudioHeaderProps) {
   return (
     <AreaHeader
       title={title}
       description={description}
       note={note}
-      readouts={readouts}
-      readoutsLabel={readoutsLabel}
     />
   );
 }
@@ -125,17 +117,7 @@ export function VideoMessageBanner({ error, notice, nonce, children }: VideoMess
     <div ref={ref}>
       {error && <ErrorDisplay message={error} />}
       {notice && !error && (
-        <Box
-          border="1px solid"
-          borderColor="state.okSoft"
-          borderLeft="3px solid"
-          borderLeftColor="state.ok"
-          borderRadius="md"
-          bg="surface.sheet"
-          p="0.75rem"
-          color="state.ok"
-          fontSize="sm"
-        >
+        <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
           {notice}
         </Box>
       )}

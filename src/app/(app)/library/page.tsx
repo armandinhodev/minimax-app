@@ -12,6 +12,9 @@ import { TTLCounter } from '@/components/shared/TTLCounter';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
 import { AreaHeader } from '@/components/ui/area-header';
+import { VideoPlate } from '@/components/ui/playback-plate';
+import { Chip } from '@/components/ui/chip';
+import { MetricBand } from '@/components/ui/metric-band';
 
 type LibraryFilter = 'all' | LibraryGenerationKind;
 
@@ -168,13 +171,13 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
   const isExpiredCoverPreprocess = isCoverPreprocessGeneration(generation) && !coverGenerationHref;
 
   return (
-    <Sheet>
-      <SheetHeader>
+    <Sheet borderRadius="md">
+      <SheetHeader borderBottom="none" pt="16px" pb="0">
         <Box display="flex" alignItems="flex-start" justifyContent="space-between">
           <Box>
-            <SheetTitle style={{ fontSize: '0.875rem' }}>{isCoverPreprocessGeneration(generation) ? 'Cover preprocess' : getItemTypeLabel(generation.kind)}</SheetTitle>
-            <SheetDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-              {formatDate(generation.createdAt)}
+            <SheetTitle style={{ fontSize: '1.0625rem' }}>{isCoverPreprocessGeneration(generation) ? 'Cover preprocess' : getItemTypeLabel(generation.kind)}</SheetTitle>
+            <SheetDescription style={{ fontSize: '0.8125rem', marginTop: '2px' }}>
+              Created {formatDate(generation.createdAt)}
             </SheetDescription>
           </Box>
           <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
@@ -262,9 +265,9 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
             {enhancedPrompt && <Box whiteSpace="pre-wrap" fontSize="sm">{enhancedPrompt}</Box>}
             {videoAsset?.storageRef && (
               <>
-                <video controls preload="metadata" src={videoAsset.storageRef} aria-label="Generated video" style={{ width: '100%', borderRadius: 'var(--chakra-radii-md)' }} />
+                <VideoPlate title={generation.title ?? 'Generated video'} src={videoAsset.storageRef} />
                 <Box fontSize="xs" color="content.subtle">This provider URL is temporary. Download the video before it expires; an exact expiration time is not provided.</Box>
-                <Button size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
+                <Button variant="outline" size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
               </>
             )}
             <a href="/video/generation">Open Video Studio</a>
@@ -313,12 +316,12 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           {imageAssets[0]?.expiresAt && <TTLCounter expiresAt={imageAssets[0].expiresAt} label="URL TTL" />}
           {coverExpiresAt && <TTLCounter expiresAt={coverExpiresAt} label="Cover ID TTL" />}
           {audioAsset && (
-            <Button size="sm" onClick={() => downloadUrl(getDownloadUrl(generation, audioAsset))}>
+            <Button variant="outline" size="sm" onClick={() => downloadUrl(getDownloadUrl(generation, audioAsset))}>
               Download audio
             </Button>
           )}
           {coverGenerationHref && (
-            <a href={coverGenerationHref} style={{ border: '1px solid var(--chakra-colors-state-ok)', borderRadius: '0.375rem', color: 'var(--chakra-colors-state-ok)', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
+            <a href={coverGenerationHref} style={{ border: '1px solid var(--chakra-colors-surface-rule)', borderRadius: 'var(--chakra-radii-md)', color: 'var(--chakra-colors-content-ink)', fontSize: 'var(--chakra-font-sizes-label)', fontWeight: 700, padding: '0 14px', height: '36px', display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
               Use in cover generation
             </a>
           )}
@@ -411,14 +414,7 @@ export default function LibraryPage() {
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
       <AreaHeader
         title="Library"
-        description="Everything you have generated, with the asset references kept for it."
-        readoutsLabel="Stored"
-        readouts={[
-          { label: 'Total', value: String(generations.length) },
-          { label: 'Audio', value: String(generations.filter((g) => g.kind === 'tts').length) },
-          { label: 'Images', value: String(generations.filter((g) => g.kind === 'image').length) },
-          { label: 'Videos', value: String(generations.filter((g) => g.kind === 'video').length) },
-        ]}
+        description="Review locally stored creations and their production details."
         actions={
           <Box display="flex" gap={2}>
             <Button variant="outline" onClick={() => void loadGenerations()}>
@@ -433,29 +429,39 @@ export default function LibraryPage() {
         }
       />
 
+      <MetricBand
+        metrics={[
+          { label: 'Total', value: String(generations.length) },
+          { label: 'Audio', value: String(generations.filter((g) => g.kind === 'tts').length) },
+          { label: 'Images', value: String(generations.filter((g) => g.kind === 'image').length) },
+          { label: 'Videos', value: String(generations.filter((g) => g.kind === 'video').length) },
+        ]}
+      />
+
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
-        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+        <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
           {actionStatus}
         </Box>
       )}
 
-      {generations.length > 0 && (
-        <Box display="flex" gap={2} flexWrap="wrap">
-          {FILTERS.map((option) => (
-            <Button
-              key={option.value}
-              variant={filter === option.value ? 'solid' : 'outline'}
-              size="sm"
-              onClick={() => setFilter(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </Box>
-      )}
+      <Sheet>
+        <SheetHeader icon="folder">
+          <SheetTitle>Assets</SheetTitle>
+          <SheetDescription>Filter by media type and inspect production details.</SheetDescription>
+        </SheetHeader>
+        <SheetContent>
+          {generations.length > 0 && (
+            <Box display="flex" gap={2} flexWrap="wrap" mb="16px">
+              {FILTERS.map((option) => (
+                <Chip key={option.value} selected={filter === option.value} onClick={() => setFilter(option.value)}>
+                  {option.label}
+                </Chip>
+              ))}
+            </Box>
+          )}
 
-      <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }}>
+          <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', xl: 'repeat(2, minmax(0, 1fr))' }}>
         {filteredGenerations.map((generation) => (
           <LibraryItemCard
             key={generation.id}
@@ -464,24 +470,24 @@ export default function LibraryPage() {
           />
         ))}
         {generations.length === 0 && (
-          <Sheet style={{ gridColumn: '1 / -1' }}>
-            <SheetHeader>
-              <SheetTitle>No Library records yet.</SheetTitle>
-              <SheetDescription>
-                Generate audio, music, images, or video to create Library records you can reopen later.
-              </SheetDescription>
-            </SheetHeader>
-          </Sheet>
+          <Box gridColumn="1 / -1" bg="surface.inset" border="1px solid" borderColor="surface.separator" borderRadius="md" p="20px">
+            <Box fontWeight={700} color="content.ink">No Library records yet.</Box>
+            <Box color="content.readout" fontSize="0.9375rem" lineHeight="1.4" mt="4px">
+              Generate audio, music, images, or video to create Library records you can reopen later.
+            </Box>
+          </Box>
         )}
         {generations.length > 0 && filteredGenerations.length === 0 && (
-          <Sheet style={{ gridColumn: '1 / -1' }}>
-            <SheetHeader>
-              <SheetTitle>No items match this filter</SheetTitle>
-              <SheetDescription>Switch filters or generate new audio, music, images, video, and voices to add more Library records.</SheetDescription>
-            </SheetHeader>
-          </Sheet>
+          <Box gridColumn="1 / -1" bg="surface.inset" border="1px solid" borderColor="surface.separator" borderRadius="md" p="20px">
+            <Box fontWeight={700} color="content.ink">No items match this filter.</Box>
+            <Box color="content.readout" fontSize="0.9375rem" lineHeight="1.4" mt="4px">
+              Switch filters or generate new audio, music, images, video, and voices to add more Library records.
+            </Box>
+          </Box>
         )}
       </Box>
+        </SheetContent>
+      </Sheet>
 
       <ConfirmationDialog
         open={pendingDeleteGeneration !== null}

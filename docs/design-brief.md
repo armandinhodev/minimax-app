@@ -7,6 +7,11 @@ No hace falta que conozcas el código: todo lo relevante está acá.
 > **Cómo usar este documento:** pegalo completo en el pedido. La app ya existe y
 > funciona; lo que buscamos es una **dirección visual nueva** (paleta + sistema +
 > tratamiento de pantallas), no una reescritura funcional.
+>
+> **Estado:** este brief produjo la propuesta "Mesa de montaje" que hoy vive en
+> [`docs/minimax-studio-ui/`](minimax-studio-ui/) y es la fuente de verdad del
+> diseño. La sección 7 conserva la paleta de la iteración anterior como
+> referencia histórica.
 
 ---
 

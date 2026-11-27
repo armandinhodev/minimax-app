@@ -38,11 +38,11 @@ describe('VoiceGroupSection', () => {
     expect(img).not.toBeNull();
     expect(img?.getAttribute('src')).toBe('https://flagcdn.com/40x30/gb.png');
     expect(img?.getAttribute('alt')).toBe('English');
-    expect(img?.getAttribute('width')).toBe('40');
-    expect(img?.getAttribute('height')).toBe('30');
+    expect(img?.getAttribute('width')).toBe('20');
+    expect(img?.getAttribute('height')).toBe('15');
     expect(img?.getAttribute('loading')).toBe('lazy');
     expect(container.textContent).toContain('English');
-    expect(container.querySelector('[data-count]')?.textContent).toBe('2');
+    expect(container.textContent).toContain('(2)');
     expect(container.querySelectorAll('[data-voice-card]')).toHaveLength(2);
   });
 

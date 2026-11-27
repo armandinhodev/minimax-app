@@ -3,6 +3,8 @@
 import { createContext, useContext, useState } from "react";
 import { Box } from "@chakra-ui/react";
 
+import { Icon } from "@/components/ui/icons";
+
 interface TabsContextValue {
   value: string;
   onValueChange: (value: string) => void;
@@ -33,7 +35,7 @@ function Tabs({ children, className, defaultValue = "", value: controlledValue, 
 
   return (
     <TabsContext.Provider value={{ value: currentValue, onValueChange: handleValueChange }}>
-      <Box display="flex" flexDirection="column" gap="0.75rem" className={className}>
+      <Box display="flex" flexDirection="column" gap="12px" className={className}>
         {children}
       </Box>
     </TabsContext.Provider>
@@ -68,10 +70,8 @@ function TabsList({ children, className }: { children?: React.ReactNode; classNa
       onKeyDown={handleTabKeys}
       display="flex"
       alignItems="center"
-      width="100%"
-      borderBottom="1px solid"
-      borderColor="surface.rule"
-      gap="0.25rem"
+      flexWrap="wrap"
+      gap="8px"
       className={className}
     >
       {children}
@@ -95,22 +95,24 @@ function TabsTrigger({ children, className, value }: { children?: React.ReactNod
       tabIndex={isActive ? 0 : -1}
       onClick={() => value && context.onValueChange(value)}
       style={{
-        height: "2.25rem",
-        paddingLeft: "0.65rem",
-        paddingRight: "0.65rem",
-        fontSize: "0.875rem",
-        fontWeight: isActive ? 600 : 500,
-        borderRadius: 0,
-        color: isActive ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-content-readout)",
-        background: "transparent",
-        border: "none",
-        borderBottom: isActive ? "2px solid var(--chakra-colors-interaction-accent)" : "2px solid transparent",
-        marginBottom: "-1px",
+        minHeight: "40px",
+        paddingLeft: "12px",
+        paddingRight: "12px",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "var(--chakra-font-sizes-label)",
+        fontWeight: isActive ? 700 : 600,
+        color: isActive ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-content-ink)",
+        background: isActive ? "var(--chakra-colors-interaction-soft)" : "var(--chakra-colors-surface-plate)",
+        border: `1px solid ${isActive ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-surface-rule)"}`,
+        borderRadius: "var(--chakra-radii-md)",
         cursor: "pointer",
-        transition: "color 0.15s, border-color 0.15s",
+        transition: "background-color 120ms ease, border-color 120ms ease",
       }}
       className={className}
     >
+      {isActive && <Icon name="check" size={14} />}
       {children}
     </button>
   );

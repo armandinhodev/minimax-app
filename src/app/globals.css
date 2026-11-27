@@ -1,9 +1,9 @@
 /*
  * Base styles.
  *
- * The type scale and the colors live in the Chakra theme (docs/design.md);
- * this file only sets the document defaults. No raw colors here: the theme
- * test enforces that every color comes from a token.
+ * The type scale and the colors live in the Chakra theme
+ * (docs/minimax-studio-ui); this file only sets the document defaults.
+ * No raw colors: the theme test enforces that every color comes from a token.
  */
 
 *,
@@ -23,10 +23,7 @@ html {
 }
 
 body {
-  background-color: var(--chakra-colors-surface-field);
-  /* La retícula del tablero: apenas visible, pero da escala al espacio. */
-  background-image: radial-gradient(var(--chakra-colors-surface-grid) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background: var(--chakra-colors-surface-field);
   color: var(--chakra-colors-content-ink);
   font-size: var(--chakra-font-sizes-body);
   line-height: var(--chakra-line-heights-body);
@@ -61,39 +58,39 @@ h6 {
 
 h1 {
   font-size: var(--chakra-font-sizes-display);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.039em;
   line-height: var(--chakra-line-heights-display);
 }
 
 h2 {
   font-size: var(--chakra-font-sizes-title);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.024em;
   line-height: var(--chakra-line-heights-title);
 }
 
 h3 {
-  font-size: var(--chakra-font-sizes-body);
-  font-weight: 600;
-  line-height: var(--chakra-line-heights-body);
+  font-size: var(--chakra-font-sizes-subtitle);
+  font-weight: 700;
+  line-height: var(--chakra-line-heights-subtitle);
 }
 
-/* Values, ids and durations read as instrument readouts. */
 code,
 kbd,
 pre,
 samp {
   font-family: var(--chakra-fonts-mono);
   font-size: var(--chakra-font-sizes-mono);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Keyboard focus is always visible. */
+/* Copper ring, separated from the component by a 2px gap. */
 :focus-visible {
-  outline: 2px solid var(--chakra-colors-interaction-accent);
+  outline: 3px solid var(--chakra-colors-interaction-accent);
   outline-offset: 2px;
 }
 
-/* Motion only ever answers a user action. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -105,7 +102,6 @@ samp {
   }
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -117,7 +113,7 @@ samp {
 
 ::-webkit-scrollbar-thumb {
   background: var(--chakra-colors-scrollbar-thumb);
-  border-radius: var(--chakra-radii-md);
+  border-radius: var(--chakra-radii-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {

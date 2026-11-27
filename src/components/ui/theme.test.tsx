@@ -60,41 +60,39 @@ function hsl(value: string): { hue: number; saturation: number; lightness: numbe
   };
 }
 
-/** The base palette, as docs/design.md describes it. */
+/** The base palette, as docs/minimax-studio-ui/Minimax-paleta.md describes it. */
 const PALETTE: Record<string, string> = {
-  'bench.ink': '#171A16',
-  'bench.graphite': '#232B25',
-  'bench.seam': '#33403A',
-  'bench.workspace': '#E9E4D8',
-  'bench.sheet': '#FCFAF4',
-  'bench.plate': '#FFFDF8',
-  'bench.rule': '#CFC7B8',
-  'bench.readout': '#6A645A',
-  'bench.accent': '#1F5B45',
-  'bench.ok': '#2C6E4A',
-  'bench.run': '#A25F16',
-  'bench.err': '#A8332B',
-  'bench.rail': '#EFE7D7',
+  'bench.ink': '#202B38',
+  'bench.transport': '#293341',
+  'bench.seam': '#3A4552',
+  'bench.workspace': '#E8EBEF',
+  'bench.panel': '#FAFBFC',
+  'bench.plate': '#FFFFFF',
+  'bench.rule': '#77828E',
+  'bench.separator': '#CCD1D5',
+  'bench.muted': '#506070',
+  'bench.accent': '#A33E12',
+  'bench.accentSoft': '#F8E8DE',
+  'bench.ok': '#296546',
+  'bench.run': '#805700',
+  'bench.err': '#A12C32',
 };
 
 /** Text pairs a screen actually renders, with the concrete palette values. */
 const TEXT_PAIRS: Array<[string, string]> = [
-  ['bench.ink', 'bench.sheet'],
-  ['bench.ink', 'bench.rail'],
-  ['bench.readout', 'bench.rail'],
-  ['bench.readout', 'bench.sheet'],
-  ['content.subtle', 'bench.sheet'],
   ['bench.ink', 'bench.workspace'],
+  ['bench.ink', 'bench.panel'],
   ['bench.ink', 'bench.plate'],
-  ['bench.readout', 'bench.workspace'],
-  ['content.inverse', 'bench.accent'],
-  ['transport.text', 'transport.bg'],
-  ['transport.muted', 'transport.bg'],
-  ['transport.faint', 'transport.bg'],
-  ['bench.ok', 'bench.sheet'],
-  ['bench.run', 'bench.sheet'],
-  ['bench.err', 'bench.sheet'],
-  ['bench.accent', 'bench.sheet'],
+  ['bench.muted', 'bench.workspace'],
+  ['bench.muted', 'bench.panel'],
+  ['bench.muted', 'bench.plate'],
+  ['bench.plate', 'bench.transport'],
+  ['bench.plate', 'bench.accent'],
+  ['bench.accent', 'bench.accentSoft'],
+  ['bench.accent', 'bench.panel'],
+  ['bench.ok', 'bench.panel'],
+  ['bench.run', 'bench.panel'],
+  ['bench.err', 'bench.panel'],
 ];
 
 describe('application color system', () => {
@@ -110,14 +108,14 @@ describe('application color system', () => {
     }
   });
 
-  it('keeps the cutting-room palette described in docs/design.md', () => {
+  it('keeps the montage palette described in docs/minimax-studio-ui', () => {
     for (const [token, value] of Object.entries(PALETTE)) {
       expect(system.token(`colors.${token}`), token).toBe(value);
     }
   });
 
   it('has a single interactive accent', () => {
-    expect(system.token('colors.bench.accent')).toBe('#1F5B45');
+    expect(system.token('colors.bench.accent')).toBe('#A33E12');
 
     // No per-product accent palette survives the redesign.
     expect(system.token('colors.bench.speech')).toBeUndefined();
@@ -127,8 +125,6 @@ describe('application color system', () => {
   });
 
   it('keeps fuchsia and magenta out of the palette', () => {
-    // The brief asks for a modern palette without the fuchsia family: any
-    // hue between 285 and 345 with real saturation is a regression.
     const fuchsia: string[] = [];
 
     for (const [token, value] of Object.entries(PALETTE)) {
@@ -141,7 +137,7 @@ describe('application color system', () => {
     expect(fuchsia).toEqual([]);
   });
 
-  it('keeps every text pair legible', () => {
+  it('keeps every text pair legible and the functional rule visible', () => {
     const dim: string[] = [];
 
     for (const [foreground, background] of TEXT_PAIRS) {
@@ -151,33 +147,35 @@ describe('application color system', () => {
       if (ratio < 4.5) dim.push(`${foreground} on ${background}: ${ratio.toFixed(2)}:1`);
     }
 
+    // A control boundary is a functional graphic: 3:1 is the floor.
+    const ruleRatio = contrast(PALETTE['bench.rule'], PALETTE['bench.panel']);
+    expect(ruleRatio).toBeGreaterThanOrEqual(3);
+
     expect(dim).toEqual([]);
   });
 
-  it('wires the two typefaces and keeps the radius cut, not moulded', () => {
-    expect(system.token('fonts.body')).toContain('--font-bricolage');
-    expect(system.token('fonts.mono')).toContain('--font-dm-mono');
-    expect(system.token('fontSizes.display')).toBe('2.125rem');
-    expect(system.token('fontSizes.title')).toBe('1.25rem');
-    expect(system.token('fontSizes.body')).toBe('0.9375rem');
+  it('wires the two typefaces and the panel geometry', () => {
+    expect(system.token('fonts.body')).toContain('Nimbus Sans');
+    expect(system.token('fonts.mono')).toContain('Liberation Mono');
+    expect(system.token('fontSizes.display')).toBe('2.875rem');
+    expect(system.token('fontSizes.title')).toBe('1.4375rem');
+    expect(system.token('fontSizes.metric')).toBe('1.625rem');
 
-    // A panel is 6px at most; a control stays at 4px.
-    expect(parseFloat(String(system.token('radii.lg')))).toBeLessThanOrEqual(6);
-    expect(parseFloat(String(system.token('radii.md')))).toBeLessThanOrEqual(4);
-    expect(parseFloat(String(system.token('radii.xl')))).toBeLessThanOrEqual(8);
-    expect(system.token('radii.2xl')).toBe('10px');
+    // A panel is 10px outside and 5px inside.
+    expect(parseFloat(String(system.token('radii.lg')))).toBe(10);
+    expect(parseFloat(String(system.token('radii.md')))).toBe(5);
+    expect(parseFloat(String(system.token('radii.xl')))).toBeLessThanOrEqual(10);
+    expect(system.token('radii.2xl')).toBe('12px');
   });
 
-  it('keeps the plate and the state tokens the screens use', () => {
+  it('keeps the semantic tokens the screens use', () => {
     const variables = system.tokens.cssVarMap.get('base');
     for (const token of [
       '--chakra-colors-surface-plate',
-      '--chakra-colors-surface-rail',
-      '--chakra-colors-surface-grid',
+      '--chakra-colors-surface-separator',
       '--chakra-colors-transport-text',
-      '--chakra-colors-interaction-accent-bright',
-      '--chakra-colors-interaction-accent-strong',
-      '--chakra-colors-state-err-bright',
+      '--chakra-colors-interaction-soft',
+      '--chakra-colors-state-ok',
     ]) {
       expect(variables?.has(token), token).toBe(true);
     }

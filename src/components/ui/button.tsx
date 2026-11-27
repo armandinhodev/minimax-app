@@ -3,13 +3,13 @@
 /**
  * Button.
  *
- * The primary action uses the app's single accent. Outlines are separated by
- * a hairline, and nothing lifts on hover: a control that moves is decoration.
- *
- * The "transport" variant is for controls that live on the transport bar.
+ * Copper is the next action; white with a rule is everything else. Labels are
+ * 14px bold, controls are 36px high, and nothing moves on hover.
  */
 
 import { Button as ChakraButton, type ButtonProps as ChakraButtonProps } from "@chakra-ui/react";
+
+import { Icon } from "@/components/ui/icons";
 
 type AppButtonVariant =
   | "solid"
@@ -26,74 +26,90 @@ interface ButtonProps extends Omit<ChakraButtonProps, "variant"> {
 
 const FOCUS = { boxShadow: "0 0 0 3px var(--chakra-colors-interaction-focus-ring)" };
 
-function Button({ variant = "solid", colorPalette, _hover, type = "button", ...props }: ButtonProps) {
-  const destructive = variant === "destructive" || colorPalette === "red";
-  const solid = variant === "solid" || variant === "default" || variant === "destructive";
+function Button({ variant = "solid", colorPalette, _hover, type = "button", children, ...props }: ButtonProps) {
+  const destructiveSolid = colorPalette === "red";
+  const destructiveOutline = variant === "destructive";
+  const solid = variant === "solid" || variant === "default" || destructiveSolid;
   const plain = variant === "link" || variant === "ghost";
   const onTransport = variant === "transport";
   const effectiveVariant = solid ? "solid" : plain ? "plain" : "outline";
-  // Un control de seleccion (aria-pressed) se marca con el acento, no con un
-  // bloque relleno: una grilla de opciones en azul pleno compite con la accion
-  // principal de la pagina.
   const pressed = props["aria-pressed"] === true || props["aria-pressed"] === "true";
 
-  // El rojo relleno se reserva para confirmar. En una lista, un boton rojo por
-  // cada fila grita mas que la propia accion.
   const tone = solid
-    ? variant === "destructive"
+    ? destructiveSolid
       ? { bg: "state.err", color: "content.inverse", _hover: { bg: "state.err" } }
       : { bg: "interaction.accent", color: "content.inverse", _hover: { bg: "interaction.accentStrong" } }
     : onTransport
-      ? destructive
+      ? {
+          bg: "transparent",
+          color: "transport.text",
+          borderColor: "transport.seam",
+          _hover: { bg: "transport.active" },
+        }
+      : destructiveOutline
         ? {
-            bg: "transparent",
-            color: "state.errBright",
-            borderColor: "state.errBright",
-            _hover: { bg: "transport.active" },
-          }
-        : {
-            bg: "transparent",
-            color: "transport.text",
-            borderColor: "transport.seam",
-            _hover: { bg: "transport.active" },
-          }
-      : destructive
-        ? {
-            bg: "transparent",
+            bg: "surface.plate",
             color: "state.err",
             borderColor: "state.err",
             _hover: { bg: "state.errSoft" },
           }
-        : pressed
+        : variant === "ghost"
           ? {
-              bg: "interaction.soft",
-              color: "content.ink",
-              borderColor: "interaction.accent",
-              _hover: { bg: "interaction.soft" },
-            }
-          : {
               bg: "transparent",
               color: "content.ink",
-              borderColor: "surface.rule",
+              borderColor: "transparent",
               _hover: { bg: "surface.inset" },
-            };
+            }
+          : variant === "link"
+            ? {
+                bg: "transparent",
+                color: "interaction.accent",
+                borderColor: "transparent",
+                textDecoration: "underline",
+                textUnderlineOffset: "2px",
+                _hover: { color: "interaction.accentStrong" },
+              }
+            : pressed
+              ? {
+                  bg: "interaction.soft",
+                  color: "interaction.accent",
+                  borderColor: "interaction.accent",
+                  _hover: { bg: "interaction.soft" },
+                }
+              : {
+                  bg: "surface.plate",
+                  color: "content.ink",
+                  borderColor: "surface.rule",
+                  _hover: { bg: "surface.inset" },
+                };
 
   return (
     <ChakraButton
       type={type}
       variant={effectiveVariant}
       borderRadius="md"
-      fontSize="body"
-      fontWeight="500"
-      px="0.9rem"
-      // Un boton ocupa lo que su texto ocupa. Sin esto, dentro de un grid el
-      // boton se estiraba a todo el ancho del panel y competia con el titulo.
+      fontSize="label"
+      lineHeight="label"
+      fontWeight={700}
+      height={{ base: "44px", md: "36px" }}
+      px="14px"
+      gap="6px"
       justifySelf="start"
-      transition="background-color 140ms ease, border-color 140ms ease"
+      transition="background-color 120ms ease, border-color 120ms ease"
       _focusVisible={FOCUS}
+      _disabled={{
+        bg: "surface.field",
+        color: "content.readout",
+        borderColor: "surface.separator",
+        cursor: "not-allowed",
+        opacity: 1,
+      }}
       {...tone}
       {...props}
-    />
+    >
+      {pressed && <Icon name="check" size={14} />}
+      {children}
+    </ChakraButton>
   );
 }
 

@@ -3,6 +3,7 @@
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
+import { VideoPlate } from '@/components/ui/playback-plate';
 import { Spec, SpecList } from '@/components/ui/spec';
 
 import { isSafeHttpUrl, type VideoTaskDTO } from '@/application/dto/minimax/video/VideoDTO';
@@ -30,7 +31,7 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
   return (
     <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
       {isPolling && (
-        <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="1.5rem" textAlign="center" color="content.readout">
+        <Box bg="surface.inset" borderRadius="md" p="1.5rem" textAlign="center" color="content.readout">
           Waiting for MiniMax to finish the task...
         </Box>
       )}
@@ -66,24 +67,14 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
           )}
 
           {outputUrl && (
-            <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="surface.sheet">
-              <video
-                data-testid="video-output"
-                src={outputUrl}
-                controls
-                preload="metadata"
-                style={{ width: '100%', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
-              />
-              <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
-                <Box color="content.readout" fontSize="xs">
+            <Box display="grid" gap="12px">
+              <VideoPlate title={`Task ${task.id}`} src={outputUrl} durationLabel={task.duration !== undefined ? `${task.duration}s` : undefined} />
+              <Box display="flex" alignItems="center" justifyContent="space-between" gap="12px" flexWrap="wrap">
+                <Box color="content.readout" fontSize="help" lineHeight="help" maxW="34rem">
                   MiniMax links are time limited and the exact expiry is not published. Download the file while it is available.
                 </Box>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(outputUrl, '_blank', 'noopener,noreferrer')}
-                >
-                  Open
+                <Button variant="outline" size="sm" onClick={() => window.open(outputUrl, '_blank', 'noopener,noreferrer')}>
+                  Download
                 </Button>
               </Box>
             </Box>

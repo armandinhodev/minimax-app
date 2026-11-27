@@ -6,8 +6,8 @@ function Input({ className, ...props }: React.ComponentProps<typeof ChakraInput>
   return (
     <ChakraInput
       className={className}
-      height="2.5rem"
-      px="0.7rem"
+      height={{ base: "44px", md: "36px" }}
+      px="10px"
       borderRadius="md"
       border="1px solid"
       borderColor="surface.rule"
@@ -19,8 +19,8 @@ function Input({ className, ...props }: React.ComponentProps<typeof ChakraInput>
         boxShadow: "0 0 0 3px var(--chakra-colors-interaction-focus-ring)",
         outline: "none",
       }}
-      _placeholder={{ color: "content.subtle" }}
-      _disabled={{ opacity: 1, cursor: "not-allowed", bg: "surface.field", color: "content.subtle" }}
+      _placeholder={{ color: "content.readout" }}
+      _disabled={{ opacity: 1, cursor: "not-allowed", bg: "surface.field", color: "content.readout" }}
       {...props}
     />
   );

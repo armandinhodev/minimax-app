@@ -17,6 +17,7 @@ import { Select } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Field } from '@/components/ui/spec';
 import { JobStrip } from '@/components/ui/job-strip';
+import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
 
 import { CreateVideoContextIRSchema } from '@/application/dto/minimax/video/VideoDTO';
@@ -84,9 +85,8 @@ export function VideoContextIRSection() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
-        title="H3-Context-IR"
-        description="MiniMax interprets the multimodal context and returns a structured, enriched prompt. It never creates a video."
-        note="Use the enriched prompt as the starting point of a Video Generation request."
+        title="Context-IR"
+        description="Enrich a prompt with the data context MiniMax reads."
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -94,11 +94,11 @@ export function VideoContextIRSection() {
       <Box
         display="grid"
         gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }}
-        gap={0}
+        gap={4}
         alignItems="start"
       >
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="video">
             <SheetTitle>Parameters</SheetTitle>
             <SheetDescription>
               The context MiniMax reads to enrich the prompt.
@@ -164,7 +164,7 @@ export function VideoContextIRSection() {
         </Sheet>
 
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Enhanced prompt</SheetTitle>
             <SheetDescription>
               The enriched prompt appears here once MiniMax finishes the task.
@@ -172,7 +172,10 @@ export function VideoContextIRSection() {
           </SheetHeader>
           <SheetContent display="grid" gap={3}>
             {polling.task && (
-              <JobStrip state={polling.task.status} detail={polling.task.id} />
+              <Box display="grid" gap="12px">
+                <JobStrip state={polling.task.status} />
+                <StatusLamp state={polling.task.status} detail={polling.task.id} />
+              </Box>
             )}
 
             {polling.error && (
@@ -189,9 +192,9 @@ export function VideoContextIRSection() {
             ) : (
               !polling.task && !polling.isPolling && (
                 <Box
-                  border="1px dashed"
-                  borderColor="surface.rule"
-                  borderRadius="lg"
+                  bg="surface.inset"
+
+                  borderRadius="md"
                   p="1.5rem"
                   textAlign="center"
                   color="content.subtle"

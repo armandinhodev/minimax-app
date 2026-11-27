@@ -1,20 +1,17 @@
 "use client";
 
 /**
- * The mobile navigation sheet.
+ * The mobile navigation drawer.
  *
- * Below the transport breakpoint the areas move into a drawer. It lists every
- * area and every route, because the transport no longer can. It traps focus
- * while it is open and gives it back to the trigger when it closes.
+ * The same studio index as the sidebar, opened from the dark bar. It traps
+ * focus while open and restores it to the trigger when it closes.
  */
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { clearAppAccessKey } from "@/components/shared/AppKeyGate";
 import { Button } from "@/components/ui/button";
-import { PRODUCT_NAV_SECTIONS, isNavItemActive, matchesPath } from "./nav-config";
+import { Icon } from "@/components/ui/icons";
+import { Brand, SignOutButton, StudioNav } from "./Sidebar";
 import styles from "./navigation.module.css";
 
 export const MOBILE_NAV_DRAWER_ID = "mobile-navigation-drawer";
@@ -27,7 +24,6 @@ interface MobileNavDrawerProps {
 }
 
 export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
-  const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -35,7 +31,7 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
-    const first = panel?.querySelector<HTMLElement>(FOCUSABLE);
+    const first = panel?.querySelector<HTMLElement>('button[aria-label="Close navigation menu"]') ?? panel?.querySelector<HTMLElement>(FOCUSABLE);
     first?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -72,11 +68,6 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
 
   if (!isOpen) return null;
 
-  const handleLogout = () => {
-    clearAppAccessKey();
-    window.location.href = "/login";
-  };
-
   return (
     <div className={styles.drawerRoot} data-testid="mobile-nav-drawer">
       <button
@@ -94,57 +85,16 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
         aria-label="Main navigation"
       >
         <div className={styles.drawerHeader}>
-          <span className={styles.drawerTitle}>Navigation</span>
+          <Brand />
           <Button type="button" variant="transport" size="sm" onClick={onClose} aria-label="Close navigation menu">
-            Close
+            <Icon name="close" size={16} />
           </Button>
         </div>
 
-        <nav aria-label="Product areas" className={styles.drawerNav}>
-          {PRODUCT_NAV_SECTIONS.map((section) => {
-            const isAreaActive = matchesPath(pathname, section.matchPaths);
-            const items = section.groups.flatMap((group) => group.items);
-
-            return (
-              <section key={section.id} className={styles.drawerSection} data-section={section.id} data-active={isAreaActive ? "true" : "false"}>
-                <Link
-                  href={section.href}
-                  className={styles.drawerSectionLink}
-                  onClick={onClose}
-                  aria-current={isAreaActive ? "true" : undefined}
-                >
-                  {section.label}
-                </Link>
-                {items.length > 0 && (
-                  <ul className={styles.drawerLinks}>
-                    {items.map((item) => {
-                      const isActive = isNavItemActive(pathname, item);
-
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            className={styles.drawerLink}
-                            onClick={onClose}
-                            data-active={isActive ? "true" : "false"}
-                            aria-current={isActive ? "page" : undefined}
-                          >
-                            {item.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            );
-          })}
-        </nav>
+        <StudioNav onNavigate={onClose} />
 
         <div className={styles.drawerFooter}>
-          <Button type="button" variant="transport" size="sm" onClick={handleLogout} width="100%">
-            Sign out
-          </Button>
+          <SignOutButton />
         </div>
       </div>
     </div>

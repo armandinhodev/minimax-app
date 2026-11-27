@@ -15,8 +15,8 @@ export default function DesignVoicePage() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="36rem">
       <AreaHeader
-        title="Design a Voice"
-        description="Describe the voice you want using natural language. Generate a preview and accept or regenerate."
+        title="Design voice"
+        description="Describe the voice, preview it and save it."
       />
 
       {/* Voice Designer — Phase 6 component */}

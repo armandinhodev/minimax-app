@@ -1,4 +1,4 @@
-export type ProductAccent = "speech" | "asr" | "text" | "image" | "music" | "video" | "video-agent" | "library";
+export type ProductAccent = "speech" | "text" | "image" | "music" | "video" | "video-agent" | "library";
 
 export type NavMatchMode = "exact" | "prefix";
 
@@ -30,37 +30,17 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Speech",
     shortLabel: "SP",
     href: "/tts",
-    description: "Voice generation suite",
-    matchPaths: ["/tts", "/voices"],
+    description: "Generate speech, transcribe audio and manage voices.",
+    matchPaths: ["/tts", "/voices", "/asr"],
     groups: [
       {
-        label: "Core routes",
+        label: "Speech",
         items: [
-          { href: "/tts", label: "Text to Speech", description: "Create speech from text" },
-          { href: "/voices", label: "Voices", description: "Manage reusable voices" },
-        ],
-      },
-      {
-        label: "Voice tools",
-        items: [
-          { href: "/voices/clone", label: "Clone Voice", description: "Create a voice from audio" },
-          { href: "/voices/design", label: "Design Voice", description: "Build a synthetic voice" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "asr",
-    label: "Transcription",
-    shortLabel: "TR",
-    href: "/asr",
-    description: "Speech-to-Text studio",
-    matchPaths: ["/asr"],
-    groups: [
-      {
-        label: "Workflows",
-        items: [
-          { href: "/asr", label: "Transcribe Audio", description: "Turn audio into text and subtitles" },
+          { href: "/tts", label: "Generate audio (TTS)", description: "Create speech from text" },
+          { href: "/asr", label: "Transcription (ASR)", description: "Turn audio into text and subtitles" },
+          { href: "/voices", label: "Voice gallery", description: "Manage reusable voices" },
+          { href: "/voices/clone", label: "Clone voice", description: "Create a voice from audio" },
+          { href: "/voices/design", label: "Design voice", description: "Build a synthetic voice" },
         ],
       },
     ],
@@ -70,14 +50,12 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Chat",
     shortLabel: "CH",
     href: "/text",
-    description: "MiniMax M3 chat studio",
+    description: "Converse with a language model.",
     matchPaths: ["/text"],
     groups: [
       {
-        label: "Workflows",
-        items: [
-          { href: "/text", label: "Chat Studio", description: "Talk to MiniMax M3 models" },
-        ],
+        label: "Chat",
+        items: [{ href: "/text", label: "Chat", description: "Talk to MiniMax M3 models" }],
       },
     ],
   },
@@ -86,14 +64,14 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Image",
     shortLabel: "IM",
     href: "/image",
-    description: "Image generation studio",
+    description: "Generate and transform images.",
     matchPaths: ["/image"],
     groups: [
       {
-        label: "Workflows",
+        label: "Image",
         items: [
-          { href: "/image", label: "Text to Image", description: "Generate images from prompts" },
-          { href: "/image/image-to-image", label: "Image to Image", description: "Transform an existing image" },
+          { href: "/image", label: "Image generation", description: "Generate images from prompts" },
+          { href: "/image/image-to-image", label: "Image to image", description: "Transform an existing image" },
         ],
       },
     ],
@@ -103,15 +81,15 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Music",
     shortLabel: "MU",
     href: "/music",
-    description: "Music creation suite",
+    description: "Compose tracks, lyrics and covers.",
     matchPaths: ["/music"],
     groups: [
       {
-        label: "Creation tools",
+        label: "Music",
         items: [
-          { href: "/music", label: "Music Generation", description: "Create complete tracks" },
-          { href: "/music/lyrics", label: "Lyrics Generation", description: "Draft lyrics from a brief" },
-          { href: "/music/cover-preprocess", label: "Cover Preprocess", description: "Prepare cover voice features" },
+          { href: "/music", label: "Music generation", description: "Create complete tracks" },
+          { href: "/music/lyrics", label: "Lyrics", description: "Draft lyrics from a brief" },
+          { href: "/music/cover-preprocess", label: "Cover preprocess", description: "Prepare cover voice features" },
         ],
       },
     ],
@@ -121,16 +99,16 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Video",
     shortLabel: "VI",
     href: "/video",
-    description: "H3 multimodal video studio",
+    description: "Render and refine video clips.",
     matchPaths: ["/video"],
     groups: [
       {
-        label: "Video workflows",
+        label: "Video",
         items: [
-          { href: "/video/generation", label: "Video Generation", description: "Create a video from text, images or references" },
-          { href: "/video/context-ir", label: "H3-Context-IR", description: "Enrich a prompt with multimodal context" },
-          { href: "/video/regeneration", label: "2K Regeneration", description: "Re-render a 768P result in 2K" },
-          { href: "/video/tasks", label: "Tasks", description: "Browse and cancel video tasks" },
+          { href: "/video/generation", label: "Video generation", description: "Create a video from text, images or references" },
+          { href: "/video/context-ir", label: "Context-IR", description: "Enrich a prompt with multimodal context" },
+          { href: "/video/regeneration", label: "2K regeneration", description: "Re-render a 768P result in 2K" },
+          { href: "/video/tasks", label: "Video tasks", description: "Browse and cancel video tasks" },
         ],
       },
     ],
@@ -140,14 +118,12 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Video Agent",
     shortLabel: "VA",
     href: "/video-agent",
-    description: "Template based video generation",
+    description: "Create clips from templates.",
     matchPaths: ["/video-agent"],
     groups: [
       {
-        label: "Workflows",
-        items: [
-          { href: "/video-agent", label: "Video Agent", description: "Render a video from a MiniMax template" },
-        ],
+        label: "Video Agent",
+        items: [{ href: "/video-agent", label: "Video Agent", description: "Render a video from a MiniMax template" }],
       },
     ],
   },
@@ -156,7 +132,7 @@ export const PRODUCT_NAV_SECTIONS: ProductNavSection[] = [
     label: "Library",
     shortLabel: "LB",
     href: "/library",
-    description: "Saved audio, music, image, and video assets",
+    description: "Browse local assets.",
     matchPaths: ["/library"],
     groups: [],
   },

@@ -58,13 +58,12 @@ describe('DashboardPage', () => {
   it('renders every product area in the dashboard rundown', async () => {
     await renderDashboard();
 
-    expect(container!.textContent).toContain('MiniMax Studio');
+    expect(container!.textContent).toContain('Studio overview');
     expect(container!.textContent).toContain('Areas');
 
     const hrefs = Array.from(container!.querySelectorAll('a')).map((link) => link.getAttribute('href'));
     expect(hrefs).toEqual(expect.arrayContaining([
       '/tts',
-      '/asr',
       '/text',
       '/image',
       '/music',
@@ -77,7 +76,7 @@ describe('DashboardPage', () => {
   it('renders the empty state as an invitation', async () => {
     await renderDashboard();
 
-    expect(container!.textContent).toContain('Nothing here yet');
+    expect(container!.textContent).toContain('Generate your first asset');
     expect(container!.textContent).toContain('Recent creations');
   });
 

@@ -18,7 +18,6 @@ import { TTLCounter } from '@/components/shared/TTLCounter';
 import { VoiceUpload } from '@/components/voice/VoiceUpload';
 import { saveHistoryItem } from '@/lib/history';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
-import { MAX_UPLOAD_FILE_SIZE_MB, VOICE_UPLOAD_DURATION_LIMITS } from '@/lib/upload-policy';
 import { Field } from '@/components/ui/spec';
 import { AreaHeader } from '@/components/ui/area-header';
 
@@ -97,12 +96,12 @@ export default function CloneVoicePage() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="36rem">
       <AreaHeader
-        title="Clone a Voice"
-        description={`Upload an audio sample (${VOICE_UPLOAD_DURATION_LIMITS.minSeconds}s–${VOICE_UPLOAD_DURATION_LIMITS.maxSeconds / 60}min, MP3/M4A/WAV, ≤${MAX_UPLOAD_FILE_SIZE_MB} MB) to create a voice clone.`}
+        title="Clone voice"
+        description="Create a reusable voice from a clean audio sample."
       />
 
       <Sheet>
-        <SheetHeader>
+        <SheetHeader icon="wave">
           <SheetTitle>Voice clone</SheetTitle>
           <SheetDescription>
             Upload a clean audio sample with clear speech. The clone will be ready shortly after generation.
@@ -127,7 +126,7 @@ export default function CloneVoicePage() {
 
           {error && <ErrorDisplay code={error.code} message={error.message} details={error.details} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+            <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
               {actionStatus}
             </Box>
           )}
@@ -143,7 +142,7 @@ export default function CloneVoicePage() {
       {/* Success State */}
       {clonedVoice && (
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Voice cloned successfully.</SheetTitle>
             <SheetDescription>
               Your voice clone is ready. Use the voice ID <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface-field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{clonedVoice.voiceId}</code> in Text to Speech. Fresh clones may appear there before the MiniMax voice list refreshes.

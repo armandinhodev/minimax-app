@@ -10,13 +10,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
-import Link from 'next/link';
 import { VoiceCard } from '@/components/voice/VoiceCard';
 import { VoiceGroupSection } from '@/components/voice/VoiceGroupSection';
 import { getLanguageInfo } from '@/lib/language-flags';
@@ -136,8 +134,8 @@ export default function VoicesPage() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
       <AreaHeader
-        title="Voices"
-        description="Browse system voices or manage your cloned and designed voices."
+        title="Voice gallery"
+        description="Browse system voices and manage voices you have saved."
         actions={
           <Button variant="outline" onClick={loadVoices} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Refresh'}
@@ -147,101 +145,82 @@ export default function VoicesPage() {
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
-        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+        <Box bg="state.okSoft" borderRadius="md" px="14px" py="12px" color="content.ink" fontSize="label">
           {actionStatus}
         </Box>
       )}
 
-      <Tabs defaultValue="system">
-        <TabsList>
-          <TabsTrigger value="system">System voices</TabsTrigger>
-          <TabsTrigger value="user">My voices ({userVoices.length})</TabsTrigger>
-        </TabsList>
+      <Sheet>
+        <SheetHeader icon="speech">
+          <SheetTitle>Voices</SheetTitle>
+          <SheetDescription>Search your catalog or browse by language.</SheetDescription>
+        </SheetHeader>
+        <SheetContent>
+          <Tabs defaultValue="system">
+            <TabsList>
+              <TabsTrigger value="system">System voices</TabsTrigger>
+              <TabsTrigger value="user">My voices ({userVoices.length})</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="system">
-          <Box mt={4}>
-            <Box mb={4}>
-              <Box maxW="20rem">
-                <Input
-                  placeholder="Filter system voices..."
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                />
+            <TabsContent value="system">
+              <Box display="grid" gap="16px" mt="12px">
+                <Box maxW="24rem">
+                  <Input
+                    placeholder="Search by name or voice ID"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+                </Box>
+                <Box display="grid" gap="24px" gridTemplateColumns="minmax(0, 1fr)">
+                  {filteredSystemGroups.filter((group) => group.voices.length > 0).map((group) => (
+                    <VoiceGroupSection key={group.language} language={group.language} voices={group.voices} />
+                  ))}
+                  {!hasFilteredSystemVoices && (
+                    <p style={{ color: 'var(--chakra-colors-content-readout)', fontSize: '0.9375rem' }}>
+                      {filter ? 'No matching system voices.' : 'No system voices available.'}
+                    </p>
+                  )}
+                </Box>
               </Box>
-            </Box>
-            <Box display="grid" gap={8} gridTemplateColumns="minmax(0, 1fr)">
-              {filteredSystemGroups.filter((group) => group.voices.length > 0).map((group) => (
-                <VoiceGroupSection key={group.language} language={group.language} voices={group.voices} />
-              ))}
-              {!hasFilteredSystemVoices && (
-                <p style={{ color: 'var(--chakra-colors-content-readout)', fontSize: '0.875rem' }}>
-                  {filter ? 'No matching system voices.' : 'No system voices available.'}
-                </p>
-              )}
-            </Box>
-          </Box>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="user">
-          <Box mt={4}>
-            <Box mb={4} border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
-              My voices contains cloned and designed voices you created. Fresh voices may appear here after refresh, and they are available in Text to Speech from local history while MiniMax updates its voice list.
-            </Box>
-            <Box mb={4} display="flex" alignItems="center" justifyContent="space-between">
-              <Box maxW="20rem">
-                <Input
-                  placeholder="Filter my voices..."
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                />
+            <TabsContent value="user">
+              <Box display="grid" gap="16px" mt="12px">
+                <Box maxW="24rem">
+                  <Input
+                    placeholder="Search by name or voice ID"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+                </Box>
+                <Box display="grid" gap="12px" gridTemplateColumns="minmax(0, 1fr)">
+                  {filteredUserVoices.map((voice) => (
+                    <VoiceCard
+                      key={voice.voiceId}
+                      voice={voice}
+                      onDelete={setPendingDeleteVoice}
+                      isDeleting={deletingId === voice.voiceId}
+                    />
+                  ))}
+                  {filteredUserVoices.length === 0 && (
+                    <Box bg="surface.inset" border="1px solid" borderColor="surface.separator" borderRadius="md" p="20px">
+                      <Box fontWeight={700} color="content.ink">
+                        {filter ? 'No matching my voices' : 'No saved voices yet'}
+                      </Box>
+                      <Box color="content.readout" fontSize="0.9375rem" lineHeight="1.4" mt="4px">
+                        {filter
+                          ? 'Clear the filter to see all cloned and designed voices.'
+                          : 'Clone a voice from an audio sample or design one from a prompt, then use it in Text to Speech.'}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
               </Box>
-              <Box display="flex" gap={2}>
-                <Link
-                  href="/voices/clone"
-                  style={{ display: 'inline-flex', height: '1.75rem', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', borderRadius: '0.375rem', border: '1px solid var(--chakra-colors-state-ok)', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem', color: 'var(--chakra-colors-state-ok)', fontWeight: 500 }}
-                >
-                  Clone a Voice
-                </Link>
-                <Link
-                  href="/voices/design"
-                  style={{ display: 'inline-flex', height: '1.75rem', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', borderRadius: '0.375rem', border: '1px solid var(--chakra-colors-interaction-accent)', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem', color: 'var(--chakra-colors-interaction-accent)', fontWeight: 500 }}
-                >
-                  Design a Voice
-                </Link>
-              </Box>
-            </Box>
-            {userVoices.length > 0 && (
-              <Box display="flex" gap={2} flexWrap="wrap" mb={4}>
-                <Badge variant="success">My voices</Badge>
-                <Badge variant="secondary">Cloned</Badge>
-                <Badge variant="info">Designed</Badge>
-              </Box>
-            )}
-            <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }}>
-              {filteredUserVoices.map((voice) => (
-                <VoiceCard
-                  key={voice.voiceId}
-                  voice={voice}
-                  onDelete={setPendingDeleteVoice}
-                  isDeleting={deletingId === voice.voiceId}
-                />
-              ))}
-              {filteredUserVoices.length === 0 && (
-                <Sheet style={{ gridColumn: '1 / -1' }}>
-                  <SheetHeader>
-                    <SheetTitle>{filter ? 'No matching my voices' : 'No custom voices yet'}</SheetTitle>
-                    <SheetDescription>
-                      {filter
-                        ? 'Clear the filter to see all cloned and designed voices.'
-                        : 'Clone a voice from an audio sample or design one from a prompt, then use it in Text to Speech.'}
-                    </SheetDescription>
-                  </SheetHeader>
-                </Sheet>
-              )}
-            </Box>
-          </Box>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+
 
       <ConfirmationDialog
         open={pendingDeleteVoice !== null}

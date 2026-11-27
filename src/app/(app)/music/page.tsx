@@ -258,30 +258,22 @@ export default function MusicPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Music Generation" description="Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID." note="Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is saved to Library when the bytes are available." />
+      <AreaHeader title="Music generation" description="Compose an original track or reinterpret a source recording." />
 
-      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
-        {MUSIC_AVAILABILITY_NOTICE}
-      </Box>
-
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
-            <SheetTitle>{isCoverMode ? 'Cover generation brief' : 'Composition brief'}</SheetTitle>
-            <SheetDescription>
-              {isCoverMode
-                ? 'Step 2 after Cover Preprocess: choose the target cover style and optionally edit the detected lyrics.'
-                : 'Guide the arrangement with genre, mood, tempo, instrumentation, structure, and production references.'}
-            </SheetDescription>
+          <SheetHeader icon="music">
+            <SheetTitle>{isCoverMode ? 'Cover brief' : 'Track brief'}</SheetTitle>
+            <SheetDescription>Choose a model and compose the track.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {isCoverMode && (
-              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
+              <Box borderRadius="md" bg="state.runSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 Cover generation requires a cover feature ID from Cover Preprocess. The ID expires 24 hours after preprocessing.
               </Box>
             )}
 
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="surface.sheet">
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} py="4px">
               <Box>
                 <Label htmlFor="instrumental-mode">Instrumental mode</Label>
                 <Box color="content.readout" fontSize="sm">{isCoverMode ? 'Disabled for MiniMax cover models.' : 'Use prompt-only generation when you do not need vocals.'}</Box>
@@ -359,16 +351,20 @@ export default function MusicPage() {
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+              <Box borderRadius="md" bg="state.runSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {actionStatus}
               </Box>
             )}
+
+            <Box borderRadius="md" bg="surface.inset" px="12px" py="10px" color="content.readout" fontSize="help" lineHeight="help">
+              {MUSIC_AVAILABILITY_NOTICE}
+            </Box>
 
             <Button onClick={handleGenerate} disabled={!canGenerate}>
               {isLoading ? 'Generating music...' : isCoverMode ? 'Generate cover' : 'Generate music'}
@@ -377,13 +373,9 @@ export default function MusicPage() {
         </Sheet>
 
         <Sheet minH="28rem">
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Track preview</SheetTitle>
-            <SheetDescription>
-              {result
-                ? 'The track MiniMax returned, with its format and length.'
-                : isCoverMode ? 'Generated covers appear here with playback, download, and Library persistence.' : 'Generated tracks appear here with playback, download, and Library persistence.'}
-            </SheetDescription>
+            <SheetDescription>Listen to the finished render.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {result && (
@@ -397,13 +389,13 @@ export default function MusicPage() {
               </SpecList>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Composing your track with MiniMax Music. Keep this tab open until generation completes.
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 {isCoverMode ? 'Start from a valid cover feature ID and target cover style. Your generated cover is saved to Library once the audio bytes are available.' : 'Start with a focused brief and complete lyrics. Your generated track will be saved to Library automatically when bytes are available.'}
               </Box>
             )}
@@ -416,11 +408,8 @@ export default function MusicPage() {
                       <Box fontWeight={700}>Generated track</Box>
                       <Box color="content.subtle" fontSize="xs">Trace {result.metadata.traceId ?? result.id}</Box>
                     </Box>
-                    <Button variant="outline" size="sm" onClick={() => downloadMusicHex(result.audio, result.format, result.id)}>
-                      Download MP3
-                    </Button>
-                  </Box>
-                  <AudioPlayer hex={result.audio} format={result.format} onDownload={() => downloadMusicHex(result.audio, result.format, result.id)} />
+                    </Box>
+                  <AudioPlayer hex={result.audio} format={result.format} title="Generated track" downloadLabel="Download MP3" onDownload={() => downloadMusicHex(result.audio, result.format, result.id)} />
                 </Box>
 
                 <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', md: 'repeat(3, minmax(0, 1fr))' }}>

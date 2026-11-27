@@ -198,13 +198,13 @@ export default function TextPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Chat Studio" description="Talk to MiniMax M3 models. The same conversation can run against the native endpoint or any of the OpenAI, Anthropic and Responses compatible surfaces." note="MiniMax-M3.1-Flash and MiniMax-M3 are reasoning models: streaming is recommended." />
+      <AreaHeader title="Chat" description="Compose a message and follow the response live." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="chat">
             <SheetTitle>Prompt</SheetTitle>
-            <SheetDescription>Pick the model and the upstream surface, then send a message.</SheetDescription>
+            <SheetDescription>Configure the model and send a message.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
                         <Field label="Model" htmlFor="text-model">
@@ -260,17 +260,13 @@ export default function TextPage() {
         </Sheet>
 
         <Sheet minH="28rem">
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Conversation</SheetTitle>
-            <SheetDescription>
-              {messages.length === 0 && !reply
-                ? 'Your conversation appears here.'
-                : `${messages.length} message${messages.length === 1 ? '' : 's'} sent`}
-            </SheetDescription>
+            <SheetDescription>Messages in this session.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {messages.length === 0 && !reply && !isSending && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Send a message to start.
               </Box>
             )}
@@ -351,7 +347,7 @@ export default function TextPage() {
             )}
 
             {isSending && !reply && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="1.5rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="1.5rem" textAlign="center" color="content.readout" bg="surface.inset">
                 MiniMax is thinking.
               </Box>
             )}

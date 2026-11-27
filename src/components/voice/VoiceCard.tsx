@@ -1,19 +1,20 @@
 'use client';
 
 /**
- * VoiceCard — voice card with TTL countdown badge.
- * Shows voice name, ID, type badge, TTL countdown (if ttlExpiry set),
- * and supports use-in-T2A and delete actions.
+ * VoiceCard — one voice.
+ *
+ * System voices are rows: icon, name and id, type, and the way into TTS.
+ * Saved voices are cards: name, type, the production facts and the actions.
  */
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { Icon } from '@/components/ui/icons';
+import { Spec } from '@/components/ui/spec';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
-import { FLAG_SIZE_CARD, getFlagUrl, getLanguageInfo } from '@/lib/language-flags';
 
 interface VoiceCardProps {
   voice: VoiceDTO;
@@ -22,91 +23,121 @@ interface VoiceCardProps {
   isDeleting?: boolean;
 }
 
-function VoiceTypeBadge({ type }: { type: VoiceDTO['type'] }) {
-  const variants: Record<VoiceDTO['type'], 'info' | 'secondary' | 'success'> = {
-    system: 'info',
-    clone: 'secondary',
-    design: 'success',
-  };
-  const labels: Record<VoiceDTO['type'], string> = {
-    system: 'System',
-    clone: 'Cloned',
-    design: 'Designed',
-  };
-  return <Badge variant={variants[type]}>{labels[type]}</Badge>;
+function typeLabel(type: VoiceDTO['type']): string {
+  if (type === 'clone') return 'Cloned';
+  if (type === 'design') return 'Designed';
+  return 'System';
 }
 
+function typeVariant(type: VoiceDTO['type']): 'subtle' | 'success' | 'secondary' {
+  if (type === 'clone') return 'secondary';
+  if (type === 'design') return 'success';
+  return 'subtle';
+}
+
+const outlineLink: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "36px",
+  padding: "0 14px",
+  border: "1px solid var(--chakra-colors-surface-rule)",
+  borderRadius: "var(--chakra-radii-md)",
+  background: "var(--chakra-colors-surface-plate)",
+  color: "var(--chakra-colors-content-ink)",
+  fontSize: "var(--chakra-font-sizes-label)",
+  fontWeight: 700,
+  textDecoration: "none",
+};
+
 export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceCardProps) {
-  const createdDate = new Date(voice.createdAt).toLocaleDateString();
-  const info = voice.language ? getLanguageInfo(voice.language) : null;
-  const flagUrl = info?.countryCode ? getFlagUrl(info.countryCode, FLAG_SIZE_CARD) : null;
-  const [imgFailed, setImgFailed] = useState(false);
+  const createdDate = new Date(voice.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  if (voice.type === 'system') {
+    return (
+      <Box
+        display="grid"
+        gridTemplateColumns="36px minmax(0, 1fr) auto auto"
+        gap="12px"
+        alignItems="center"
+        py="10px"
+        borderBottom="1px solid"
+        borderColor="surface.separator"
+      >
+        <Box
+          aria-hidden="true"
+          display="inline-flex"
+          alignItems="center"
+          justifyContent="center"
+          w="36px"
+          h="36px"
+          bg="surface.inset"
+          border="1px solid"
+          borderColor="surface.separator"
+          borderRadius="md"
+          color="content.readout"
+        >
+          <Icon name="wave" size={18} />
+        </Box>
+        <Box minW={0}>
+          <Box fontWeight={700} fontSize="body" lineHeight="1.3" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+            {voice.name}
+          </Box>
+          <Box fontFamily="mono" fontSize="help" lineHeight="help" color="content.readout" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+            {voice.voiceId}
+          </Box>
+        </Box>
+        <Badge variant={typeVariant(voice.type)}>{typeLabel(voice.type)}</Badge>
+        {onUse ? (
+          <Button variant="outline" size="sm" onClick={() => onUse(voice.voiceId)}>
+            Use in TTS
+          </Button>
+        ) : (
+          <Link href="/tts" style={outlineLink}>
+            Use in TTS
+          </Link>
+        )}
+      </Box>
+    );
+  }
 
   return (
-    <Sheet>
-      <SheetHeader>
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-          <Box minW={0} flex={1}>
-            <Box display="flex" alignItems="center" gap={1} minW={0}>
-              {voice.type === 'system' && info && (
-                flagUrl && !imgFailed ? (
-                  <img
-                    src={flagUrl}
-                    width={20}
-                    height={15}
-                    alt={info.displayName}
-                    loading="lazy"
-                    decoding="async"
-                    onError={() => setImgFailed(true)}
-                    style={{ display: 'block' }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '1rem' }} aria-label={info.displayName}>
-                    {info.fallbackEmoji}
-                  </span>
-                )
-              )}
-              <SheetTitle style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{voice.name}</SheetTitle>
-            </Box>
-            <SheetDescription style={{ fontSize: '0.75rem', marginTop: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={voice.voiceId}>
-              {voice.voiceId}
-            </SheetDescription>
+    <Box border="1px solid" borderColor="surface.separator" borderRadius="md" p="16px" display="grid" gap="12px">
+      <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={3}>
+        <Box minW={0}>
+          <Box fontSize="subtitle" lineHeight="subtitle" fontWeight={700} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+            {voice.name}
           </Box>
-          <VoiceTypeBadge type={voice.type} />
+          <Box fontFamily="mono" fontSize="help" lineHeight="help" color="content.readout" mt="2px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+            {voice.voiceId}
+          </Box>
         </Box>
-      </SheetHeader>
-      <SheetContent display="flex" flexDirection="column" gap={2}>
-        <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-          <Badge variant={voice.type === 'system' ? 'secondary' : 'success'}>
-            {voice.type === 'system' ? 'System voice' : 'My voice'}
-          </Badge>
-          <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>Created {createdDate}</span>
-          {voice.ttlExpiry && <TTLCounter expiresAt={voice.ttlExpiry} label="TTL" />}
-        </Box>
-        <Box display="flex" gap={1} style={{ marginTop: '0.25rem' }}>
-          {onUse && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onUse(voice.voiceId)}
-              disabled={isDeleting}
-            >
-              Use in TTS
-            </Button>
-          )}
-          {voice.type !== 'system' && onDelete && (
-            <Button
-              variant="outline"
-              colorPalette="red"
-              size="sm"
-              onClick={() => onDelete(voice)}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          )}
-        </Box>
-      </SheetContent>
-    </Sheet>
+        <Badge variant={typeVariant(voice.type)}>{typeLabel(voice.type)}</Badge>
+      </Box>
+
+      <Box>
+        <Spec label="Created" value={createdDate} />
+        {voice.ttlExpiry && (
+          <Spec label="Expires in" value={<TTLCounter expiresAt={voice.ttlExpiry} label="TTL" />} />
+        )}
+      </Box>
+
+      <Box display="flex" gap="8px" flexWrap="wrap">
+        {onUse ? (
+          <Button variant="outline" onClick={() => onUse(voice.voiceId)} disabled={isDeleting}>
+            Use in TTS
+          </Button>
+        ) : (
+          <Link href="/tts" style={outlineLink}>
+            Use in TTS
+          </Link>
+        )}
+        {onDelete && (
+          <Button variant="destructive" onClick={() => onDelete(voice)} disabled={isDeleting}>
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        )}
+      </Box>
+    </Box>
   );
 }

@@ -1,178 +1,214 @@
 /*
- * The transport bar and the area subnav.
+ * The studio sidebar and the mobile drawer.
  *
- * Structure comes from surfaces and rules, not from cards and shadows. One
- * accent marks the active route; areas have no per-area hue.
- *
- * Colors live in the Chakra theme (docs/design.md); this file may only
+ * Slate ground, one copper mark for the current route, hairline seams.
+ * Colors live in the Chakra theme (docs/minimax-studio-ui); this file may only
  * reference token variables.
  */
 
-.transport {
-  align-items: center;
+.sidebar {
   background: var(--chakra-colors-transport-bg);
-  border-bottom: 1px solid var(--chakra-colors-transport-seam);
   color: var(--chakra-colors-transport-text);
   display: flex;
-  gap: 0.75rem;
-  height: 3.25rem;
-  padding: 0 1.25rem;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  width: 220px;
+}
+
+.sidebarDesktop {
+  flex: 0 0 auto;
   position: sticky;
   top: 0;
-  z-index: 50;
 }
 
 .brand {
   align-items: center;
-  border-radius: var(--chakra-radii-md);
-  color: inherit;
-  display: inline-flex;
+  color: var(--chakra-colors-transport-text);
+  display: flex;
   flex: 0 0 auto;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 700;
   gap: 0.5rem;
+  height: 64px;
   letter-spacing: -0.01em;
-  padding: 0.25rem;
+  padding: 0 20px;
   text-decoration: none;
 }
 
-.brand:hover,
-.brand:focus-visible {
-  background: var(--chakra-colors-transport-active);
-}
-
-.brand:focus-visible,
-.areaLink:focus-visible,
-.subnavLink:focus-visible,
-.drawerSectionLink:focus-visible,
-.drawerLink:focus-visible {
-  box-shadow: 0 0 0 3px var(--chakra-colors-interaction-focus-ring);
-  outline: none;
-}
-
-/* The mark is a cut square, not a badge with a letter. */
 .brandMark {
-  background: var(--chakra-colors-interaction-accent-bright);
-  display: inline-block;
-  height: 0.5rem;
-  width: 0.5rem;
+  color: var(--chakra-colors-transport-text);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+  line-height: 1;
 }
 
-.areaNav {
+.brand:hover .brandMark,
+.brand:focus-visible .brandMark {
+  color: var(--chakra-colors-interaction-soft);
+}
+
+.nav {
   display: flex;
   flex: 1 1 auto;
-  gap: 0.125rem;
-  margin-left: 0.75rem;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-direction: column;
+  min-height: 0;
+  padding: 8px 0 12px;
 }
 
-.areaNav::-webkit-scrollbar {
-  display: none;
+.navRule {
+  background: var(--chakra-colors-transport-seam);
+  height: 1px;
+  margin: 8px 20px;
+}
+
+.overviewLink,
+.areaLink {
+  align-items: center;
+  border-radius: var(--chakra-radii-md);
+  color: var(--chakra-colors-transport-muted);
+  display: flex;
+  gap: 12px;
+  margin: 0 12px;
+  text-decoration: none;
+}
+
+.overviewLink {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+.overviewLink[data-active="true"] {
+  background: var(--chakra-colors-interaction-soft);
+  box-shadow: inset 3px 0 0 var(--chakra-colors-interaction-accent);
+  color: var(--chakra-colors-interaction-accent);
+}
+
+.overviewLink:hover,
+.overviewLink:focus-visible {
+  background: var(--chakra-colors-transport-active);
+  color: var(--chakra-colors-transport-text);
+}
+
+.overviewLink:focus-visible,
+.areaLink:focus-visible,
+.routeLink:focus-visible,
+.brand:focus-visible,
+.signOut:focus-visible {
+  outline: 3px solid var(--chakra-colors-content-inverse);
+  outline-offset: 2px;
+}
+
+.section {
+  display: grid;
 }
 
 .areaLink {
-  border-radius: var(--chakra-radii-md);
-  color: var(--chakra-colors-transport-muted);
-  flex: 0 0 auto;
-  font-size: 0.875rem;
+  padding: 9px 12px;
+  font-size: 0.9375rem;
   font-weight: 500;
-  padding: 0.4rem 0.6rem;
-  text-decoration: none;
-  white-space: nowrap;
 }
 
-.areaLink:hover {
+.areaLink:hover,
+.areaLink:focus-visible {
   background: var(--chakra-colors-transport-active);
   color: var(--chakra-colors-transport-text);
 }
 
 .areaLink[data-active="true"] {
   color: var(--chakra-colors-transport-text);
-  box-shadow: inset 0 -2px 0 var(--chakra-colors-interaction-accent-bright);
-}
-
-.transportSession {
-  align-items: center;
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.5rem;
-}
-
-.menuButton {
-  display: none;
-}
-
-/* The area row: what the active area contains. */
-.subnav {
-  align-items: baseline;
-  background: var(--chakra-colors-surface-sheet);
-  border-bottom: 1px solid var(--chakra-colors-surface-rule);
-  display: flex;
-  gap: 1.5rem;
-  padding: 0.5rem 1.25rem;
-}
-
-.subnavIntro {
-  align-items: baseline;
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.subnavArea {
-  color: var(--chakra-colors-content-ink);
-  font-size: 0.875rem;
   font-weight: 600;
 }
 
-.subnavDescription {
-  color: var(--chakra-colors-content-readout);
-  font-size: 0.75rem;
-}
-
-.subnavNav {
+.areaLabel {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.subnavNav::-webkit-scrollbar {
-  display: none;
+.chevron {
+  flex: 0 0 auto;
+  opacity: 0.7;
+  transition: transform 140ms ease;
 }
 
-.subnavLinks {
-  display: flex;
-  gap: 0.25rem;
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.routes {
+  display: grid;
+  gap: 2px;
   list-style: none;
-  margin: 0;
+  margin: 2px 0 6px;
   padding: 0;
 }
 
-.subnavLink {
+.routeLink {
   border-radius: var(--chakra-radii-md);
-  color: var(--chakra-colors-content-readout);
-  display: inline-block;
-  font-size: 0.8125rem;
-  padding: 0.3rem 0.55rem;
+  color: var(--chakra-colors-transport-muted);
+  display: block;
+  font-size: 0.875rem;
+  margin: 0 12px;
+  padding: 8px 12px 8px 42px;
   text-decoration: none;
-  white-space: nowrap;
 }
 
-.subnavLink:hover {
-  background: var(--chakra-colors-surface-inset);
-  color: var(--chakra-colors-content-ink);
+.routeLink:hover,
+.routeLink:focus-visible {
+  background: var(--chakra-colors-transport-active);
+  color: var(--chakra-colors-transport-text);
 }
 
-.subnavLink[data-active="true"] {
-  box-shadow: inset 0 -2px 0 var(--chakra-colors-interaction-accent);
+.routeLink[data-active="true"] {
+  background: var(--chakra-colors-interaction-soft);
+  box-shadow: inset 3px 0 0 var(--chakra-colors-interaction-accent);
   color: var(--chakra-colors-interaction-accent);
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* Mobile navigation sheet. */
+.sidebarFooter {
+  border-top: 1px solid var(--chakra-colors-transport-seam);
+  flex: 0 0 auto;
+  padding: 14px 20px 18px;
+}
+
+.signOut {
+  background: transparent;
+  border: 0;
+  border-radius: var(--chakra-radii-sm);
+  color: var(--chakra-colors-transport-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 4px 0;
+  text-align: left;
+}
+
+.signOut:hover {
+  color: var(--chakra-colors-interaction-soft);
+}
+
+/* The mobile bar replaces the sidebar below 900px. */
+.mobileBar {
+  align-items: center;
+  background: var(--chakra-colors-transport-bg);
+  color: var(--chakra-colors-transport-text);
+  display: none;
+  gap: 12px;
+  height: 52px;
+  padding: 0 12px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.mobileBar a {
+  height: auto;
+  padding: 0;
+}
+
 .drawerRoot {
   inset: 0;
   position: fixed;
@@ -180,12 +216,11 @@
 }
 
 .drawerOverlay {
-  background: var(--chakra-colors-transport-bg);
+  background: var(--chakra-colors-surface-veil);
   border: 0;
   cursor: pointer;
   height: 100%;
   inset: 0;
-  opacity: 0.6;
   padding: 0;
   position: absolute;
   width: 100%;
@@ -199,11 +234,11 @@
   flex-direction: column;
   height: 100%;
   left: 0;
-  max-width: calc(100vw - 2.5rem);
+  max-width: calc(100vw - 40px);
   overflow-y: auto;
   position: absolute;
   top: 0;
-  width: min(20rem, calc(100vw - 2.5rem));
+  width: 300px;
 }
 
 .drawerHeader {
@@ -211,109 +246,43 @@
   border-bottom: 1px solid var(--chakra-colors-transport-seam);
   display: flex;
   flex: 0 0 auto;
+  height: 64px;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0 12px 0 20px;
 }
 
-.drawerTitle {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.drawerNav {
-  display: grid;
-  flex: 1 1 auto;
-  padding: 0 1rem;
-}
-
-.drawerSection {
-  border-top: 1px solid var(--chakra-colors-transport-seam);
-  padding: 0.625rem 0;
-}
-
-.drawerSection:first-child {
-  border-top: 0;
-}
-
-.drawerSectionLink {
-  color: var(--chakra-colors-transport-text);
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.25rem 0;
-  text-decoration: none;
-}
-
-.drawerSection[data-active="true"] .drawerSectionLink {
-  color: var(--chakra-colors-interaction-accent-bright);
-}
-
-.drawerLinks {
-  display: grid;
-  gap: 1px;
-  list-style: none;
-  margin: 0.25rem 0 0;
+.drawerHeader a {
+  height: auto;
   padding: 0;
-}
-
-.drawerLink {
-  border-radius: var(--chakra-radii-md);
-  color: var(--chakra-colors-transport-muted);
-  display: block;
-  font-size: 0.8125rem;
-  padding: 0.3rem 0.5rem;
-  text-decoration: none;
-}
-
-.drawerLink:hover {
-  background: var(--chakra-colors-transport-active);
-  color: var(--chakra-colors-transport-text);
-}
-
-.drawerLink[data-active="true"] {
-  background: var(--chakra-colors-transport-active);
-  color: var(--chakra-colors-transport-text);
-  box-shadow: inset 2px 0 0 var(--chakra-colors-interaction-accent-bright);
 }
 
 .drawerFooter {
   border-top: 1px solid var(--chakra-colors-transport-seam);
+  flex: 0 0 auto;
   margin-top: auto;
-  padding: 0.875rem 1rem;
-}
-
-@media (max-width: 767px) {
-  .subnav {
-    flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
-    padding: 0.5rem 1rem;
-  }
-
-  .subnavDescription {
-    display: none;
-  }
-
-  .subnavNav {
-    width: 100%;
-  }
-
-  .subnavLinks {
-    flex-wrap: wrap;
-  }
+  padding: 14px 20px 18px;
 }
 
 @media (max-width: 899px) {
-  .transport {
-    padding: 0 1rem;
-  }
-
-  .areaNav,
-  .transportSession {
+  .sidebarDesktop {
     display: none;
   }
 
-  .menuButton {
-    display: inline-flex;
-    margin-left: auto;
+  .mobileBar {
+    display: flex;
   }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .sidebar {
+    width: 190px;
+  }
+}
+
+/* A leaf area (Transcription, Chat, Library) uses the same active block as
+   the overview: soft copper ground, vertical mark, copper label. */
+.areaLink[data-leaf="true"][data-active="true"] {
+  background: var(--chakra-colors-interaction-soft);
+  box-shadow: inset 3px 0 0 var(--chakra-colors-interaction-accent);
+  color: var(--chakra-colors-interaction-accent);
 }

@@ -3,11 +3,10 @@
 /**
  * Spec — a label/value row.
  *
- * Parameters are the densest thing on every screen, so they read as a
- * definition table: label on the left, value on the right in mono. A column
- * of values lines up, so two parameter sets can be compared at a glance.
+ * Read-only production facts read as a definition table: label on the left,
+ * value on the right in mono. Rows share a hairline separator.
  *
- * See docs/design.md.
+ * See docs/minimax-studio-ui/Minimax-directrices.md.
  */
 
 import { Box, type BoxProps } from "@chakra-ui/react";
@@ -25,15 +24,15 @@ export function Spec({ label, value, plain = false, ...props }: SpecProps) {
   return (
     <Box
       display="grid"
-      gridTemplateColumns={{ base: "1fr", md: "10rem minmax(0, 20rem)" }}
-      gap={{ base: 1, md: 4 }}
+      gridTemplateColumns="minmax(0, 1fr) auto"
+      gap={4}
       alignItems="baseline"
-      py="0.5rem"
+      py="9px"
       borderBottom="1px solid"
-      borderColor="surface.rule"
+      borderColor="surface.separator"
       {...props}
     >
-      <Box fontSize="label" lineHeight="label" fontWeight="500" color="content.readout">
+      <Box fontSize="label" lineHeight="label" color="content.readout" minW={0}>
         {label}
       </Box>
       <Box
@@ -42,6 +41,7 @@ export function Spec({ label, value, plain = false, ...props }: SpecProps) {
         lineHeight={plain ? "body" : "mono"}
         fontVariantNumeric="tabular-nums"
         color="content.ink"
+        textAlign="right"
         overflowWrap="anywhere"
       >
         {value}
@@ -54,29 +54,14 @@ interface SpecListProps extends BoxProps {
   children: React.ReactNode;
 }
 
-/** A stack of Spec rows sharing one seam. */
+/** A stack of Spec rows sharing one hairline. */
 export function SpecList({ children, ...props }: SpecListProps) {
   return (
-    <Box borderTop="1px solid" borderColor="surface.rule" {...props}>
+    <Box borderTop="1px solid" borderColor="surface.separator" {...props}>
       {children}
     </Box>
   );
 }
-
-const rowLayout = {
-  display: "grid",
-  // La columna de etiqueta es fija: con una fraccion, el ancho dependia del
-  // contenido del control y dos filas distintas no alineaban sus columnas.
-  // La de control se topa: un valor de "2K" no debe ocupar 600px.
-  gridTemplateColumns: { base: "1fr", md: "10rem minmax(0, 20rem)" },
-  gap: { base: 1, md: 4 },
-  // Arriba, no centrado: con un control alto (un input y su ayuda) la
-  // etiqueta queda flotando en el medio en vez de alinearse con el control.
-  alignItems: "start",
-  py: "0.375rem",
-  borderBottom: "1px solid",
-  borderColor: "surface.rule",
-} as const;
 
 interface FieldProps extends BoxProps {
   /** What the field is, in the user's words. */
@@ -97,30 +82,26 @@ interface FieldProps extends BoxProps {
 /**
  * A labelled control.
  *
- * Same geometry as a Spec row: the label sits on the left and the control on
- * the right, so a form reads as a parameter sheet instead of a stack of
- * rounded inputs.
+ * Label above the control, never beside it: the length of the name must not
+ * move the field column. Two short fields can share a row when they are
+ * comparable.
  */
 export function Field({ label, htmlFor, required = false, children, ...props }: FieldProps) {
   return (
-    <Box {...rowLayout} {...props}>
-      {/* Un <label> real: la asociacion con el control no depende del primitivo. */}
+    <Box display="grid" gap="6px" minW={0} {...props}>
       <label
         htmlFor={htmlFor}
         style={{
-          fontSize: 'var(--chakra-font-sizes-label)',
-          lineHeight: 'var(--chakra-line-heights-label)',
-          fontWeight: 500,
-          color: 'var(--chakra-colors-content-readout)',
-          // Compensa el alto del control (2.25rem) para que la etiqueta
-          // quede opticamente centrada contra el, no pegada al borde.
-          paddingTop: '0.3125rem',
+          fontSize: "var(--chakra-font-sizes-label)",
+          lineHeight: "var(--chakra-line-heights-label)",
+          fontWeight: 700,
+          color: "var(--chakra-colors-content-ink)",
         }}
       >
         {label}
         {required && (
-          <span aria-hidden="true" style={{ color: 'var(--chakra-colors-content-subtle)' }}>
-            {' *'}
+          <span aria-hidden="true" style={{ color: "var(--chakra-colors-content-readout)" }}>
+            {" *"}
           </span>
         )}
       </label>

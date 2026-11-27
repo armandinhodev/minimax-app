@@ -33,10 +33,17 @@ describe('JobStrip', () => {
     }
   });
 
-  it('keeps the state readable next to the stages', () => {
-    const html = renderToStaticMarkup(<JobStrip state="succeeded" detail="task-42" />);
+  it('lists the four stages in order', () => {
+    const html = renderToStaticMarkup(<JobStrip state="running" />);
 
-    expect(html).toContain('Succeeded');
-    expect(html).toContain('task-42');
+    const compose = html.indexOf('Compose');
+    const dispatch = html.indexOf('Dispatch');
+    const render = html.indexOf('Render');
+    const retrieve = html.indexOf('Retrieve');
+
+    expect(compose).toBeGreaterThan(-1);
+    expect(dispatch).toBeGreaterThan(compose);
+    expect(render).toBeGreaterThan(dispatch);
+    expect(retrieve).toBeGreaterThan(render);
   });
 });

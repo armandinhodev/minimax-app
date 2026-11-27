@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Plate } from '@/components/ui/plate';
 import { Field } from '@/components/ui/spec';
 import { JobStrip } from '@/components/ui/job-strip';
+import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
 
 import {
@@ -113,16 +114,8 @@ export function VideoGenerationSection() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
-        title="Video Generation"
-        description="Create a MiniMax H3 video from text, images or multimedia references."
-        note="MiniMax output links are time limited and the exact expiry is not published. Download a result while it is available."
-        readoutsLabel="Request"
-        readouts={[
-          { label: 'Model', value: model },
-          { label: 'Resolution', value: resolution },
-          { label: 'Duration', value: `${duration}s` },
-          { label: 'Aspect ratio', value: composition.ratio },
-        ]}
+        title="Video generation"
+        description="Compose a shot and follow the render through delivery."
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -130,17 +123,16 @@ export function VideoGenerationSection() {
       <Box
         display="grid"
         gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }}
-        gap={0}
+        gap={4}
         alignItems="start"
       >
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="video">
             <SheetTitle>Parameters</SheetTitle>
-            <SheetDescription>
-              Text-to-video, image-to-video or reference-to-video.
-            </SheetDescription>
+            <SheetDescription>Set the inputs for this task.</SheetDescription>
           </SheetHeader>
-          <SheetContent display="grid" gap={0}>
+          <SheetContent display="grid" gap={4}>
+            <Box display="grid" gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={4}>
             <Field label="Model" htmlFor="video-generation-model">
               <Select
                 id="video-generation-model"
@@ -171,7 +163,9 @@ export function VideoGenerationSection() {
                 onValueChange={(value) => setResolution(value as VideoResolution)}
               />
             </Field>
+            </Box>
 
+            <Box display="grid" gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={4}>
             <Field label="Duration (seconds)" htmlFor="video-generation-duration">
               <Input
                 id="video-generation-duration"
@@ -193,6 +187,7 @@ export function VideoGenerationSection() {
                 onValueChange={(value) => composition.setRatio(value as typeof composition.ratio)}
               />
             </Field>
+            </Box>
 
             {supportsPromptExpansionMode(model) && (
               <Field label="Prompt expansion" htmlFor="video-generation-prompt-expansion">
@@ -247,10 +242,10 @@ export function VideoGenerationSection() {
           description="The status is polled while the task runs. Only one task is tracked at a time."
         >
           {polling.task && (
-            <JobStrip
-              state={polling.task.status}
-              detail={polling.task.id}
-            />
+            <Box display="grid" gap="12px">
+              <JobStrip state={polling.task.status} />
+              <StatusLamp state={polling.task.status} detail={polling.task.id} />
+            </Box>
           )}
 
           {polling.error && (
@@ -267,10 +262,9 @@ export function VideoGenerationSection() {
 
           {!polling.task && !polling.isPolling && !polling.error && (
             <Box
-              border="1px dashed"
-              borderColor="surface.rule"
-              borderRadius="lg"
-              p="1.5rem"
+bg="surface.inset"
+borderRadius="md"
+p="1.5rem"
               textAlign="center"
               color="content.subtle"
               fontSize="body"

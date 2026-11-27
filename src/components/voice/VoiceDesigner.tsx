@@ -121,7 +121,7 @@ export function VoiceDesigner({
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
       {/* Prompt */}
       <Sheet>
-        <SheetHeader>
+        <SheetHeader icon="wave">
           <SheetTitle>Voice prompt</SheetTitle>
           <SheetDescription>
             Describe the voice you want in natural language.
@@ -197,7 +197,7 @@ export function VoiceDesigner({
       {/* Preview Player */}
       {previewResult && (
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Voice preview</SheetTitle>
             <SheetDescription>
               Listen to the trial audio. Accept to save or regenerate for a new version.
@@ -214,7 +214,7 @@ export function VoiceDesigner({
             {previewResult.trialAudio && (
               <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
                 <Label>Preview audio (hex)</Label>
-                <AudioPlayer hex={previewResult.trialAudio} format="mp3" />
+                <AudioPlayer hex={previewResult.trialAudio} format="mp3" title="Voice preview" showDownload={false} />
               </Box>
             )}
 
@@ -240,7 +240,7 @@ export function VoiceDesigner({
       {/* Saved Voice */}
       {savedVoice && (
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Voice saved</SheetTitle>
             <SheetDescription>
               Your designed voice is ready. Use voice ID{' '}

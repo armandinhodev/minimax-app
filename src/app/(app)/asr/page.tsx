@@ -8,12 +8,12 @@
  * and the server relays it to POST /v1/speech_to_text.
  */
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
+import { FileDropzone } from '@/components/ui/file-dropzone';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
@@ -102,7 +102,6 @@ export default function AsrPage() {
   const [transcript, setTranscript] = useState<TranscriptResult | null>(null);
   const [subtitles, setSubtitles] = useState<string | null>(null);
   const [streamedText, setStreamedText] = useState('');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isDiarizationFormat = DIARIZATION_FORMATS.includes(responseFormat);
   /**
@@ -243,29 +242,29 @@ export default function AsrPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Transcription" description="Turn audio into text with MiniMax ASR. Get a plain transcript, speaker segments, or ready-to-use subtitles." note="Audio is billed by its duration. Clips up to 500 seconds and 50MB are accepted." />
+      <AreaHeader title="Transcription" description="Turn a recording into text or timed subtitles with speech to text (STT)." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="asr">
             <SheetTitle>Audio</SheetTitle>
-            <SheetDescription>Pick a recording to transcribe. It is sent to MiniMax ASR through this app.</SheetDescription>
+            <SheetDescription>Choose the source and transcript settings.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
                         <Field label="Audio file" htmlFor="asr-file">
-              <Input
-                              id="asr-file"
-                              type="file"
-                              accept={ACCEPTED_EXTENSIONS}
-                              ref={fileInputRef}
-                              onChange={(event) => {
-                                setFile(event.currentTarget.files?.[0] ?? null);
-                                setError(null);
-                                setNotice(null);
-                                setTranscript(null);
-                                setSubtitles(null);
-                              }}
-                            />
+              <FileDropzone
+                id="asr-file"
+                accept={ACCEPTED_EXTENSIONS}
+                file={file}
+                hint="MP3, WAV, M4A or FLAC, up to 500 seconds and 50 MB."
+                onFile={(next) => {
+                  setFile(next);
+                  setError(null);
+                  setNotice(null);
+                  setTranscript(null);
+                  setSubtitles(null);
+                }}
+              />
             </Field>
 
                         <Field label="Output format" htmlFor="asr-format">
@@ -307,7 +306,7 @@ export default function AsrPage() {
             {fileError && !error && <ErrorDisplay message={fileError} />}
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {notice}
               </Box>
             )}
@@ -328,7 +327,7 @@ export default function AsrPage() {
         </Sheet>
 
         <Sheet minH="24rem">
-          <SheetHeader>
+          <SheetHeader icon="file">
             <SheetTitle>Transcript</SheetTitle>
             <SheetDescription>
               {transcript
@@ -344,7 +343,7 @@ export default function AsrPage() {
             )}
 
             {!transcript && !subtitles && streamedText.length === 0 && !isTranscribing && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 {file
                   ? fileError
                     ? `The selected file cannot be transcribed: ${fileError}`
@@ -354,7 +353,7 @@ export default function AsrPage() {
             )}
 
             {isTranscribing && !transcript && !subtitles && streamedText.length === 0 && (
-              <Box border="1px dashed" borderColor="state.runSoft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 MiniMax is transcribing. This request is billed by audio duration.
               </Box>
             )}

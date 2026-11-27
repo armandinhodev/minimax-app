@@ -11,8 +11,10 @@ function Label({ children, htmlFor, className, style }: {
       htmlFor={htmlFor}
       className={className}
       style={{
-        fontSize: "0.875rem",
-        fontWeight: 500,
+        fontSize: "var(--chakra-font-sizes-label)",
+        fontWeight: 700,
+        lineHeight: "var(--chakra-line-heights-label)",
+        color: "var(--chakra-colors-content-ink)",
         display: "flex",
         alignItems: "center",
         gap: "0.5rem",

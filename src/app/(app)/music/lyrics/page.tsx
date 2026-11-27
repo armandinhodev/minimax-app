@@ -110,17 +110,17 @@ export default function LyricsGenerationPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Lyrics Generation" description="Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music." note="Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500." />
+      <AreaHeader title="Lyrics" description="Draft a lyric sheet or revise an existing one." />
 
-      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+      <Box borderRadius="md" bg="state.runSoft" px="12px" py="10px" color="content.ink" fontSize="label">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="file">
             <SheetTitle>Lyric brief</SheetTitle>
-            <SheetDescription>Choose whether MiniMax should write from scratch or revise your existing lyrics.</SheetDescription>
+            <SheetDescription>Choose a mode and write the brief.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             <Box display="grid" gridTemplateColumns={{ base: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
@@ -165,13 +165,13 @@ export default function LyricsGenerationPage() {
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+              <Box borderRadius="md" bg="state.runSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {actionStatus}
               </Box>
             )}
@@ -183,18 +183,18 @@ export default function LyricsGenerationPage() {
         </Sheet>
 
         <Sheet minH="28rem">
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Generated lyrics</SheetTitle>
             <SheetDescription>{result ? result.songTitle || 'Untitled song' : 'Lyrics, title, and style tags appear here after generation.'}</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {!result && !isLoading && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Write a focused brief, then generate lyrics ready for music generation.
               </Box>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Writing lyrics with MiniMax Music. This request is billed, so it is not retried automatically.
               </Box>
             )}

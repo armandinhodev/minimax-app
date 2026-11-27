@@ -80,16 +80,15 @@ export function VideoTasksSection() {
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
-        title="Video Tasks"
-        description="MiniMax keeps task records for 7 days. Cancel a queued task or delete a finished one."
-        note="MiniMax output links are time limited and the exact expiry is not published. Download a result while it is available."
+        title="Video tasks"
+        description="Inspect recent renders and manage active tasks."
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
 
       <Sheet>
-        <SheetHeader>
-          <SheetTitle>Tasks</SheetTitle>
+        <SheetHeader icon="video">
+          <SheetTitle>Task history</SheetTitle>
           <SheetDescription>
             MiniMax keeps task records for 7 days. Cancel a queued task or delete a finished one.
           </SheetDescription>

@@ -20,6 +20,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { AreaHeader } from '@/components/ui/area-header';
+import { VideoPlate } from '@/components/ui/playback-plate';
 
 interface Template {
   id: string;
@@ -163,17 +164,13 @@ export default function VideoAgentPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Video Agent" description="Generate a video from an official MiniMax template. Pick a template, fill what it asks for, and follow the task until the clip is ready." note="Template tasks are billable and run asynchronously. The download link is valid for 9 hours." />
+      <AreaHeader title="Video Agent" description="Generate a clip from an official template." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
-            <SheetTitle>Template</SheetTitle>
-            <SheetDescription>
-              {selected
-                ? selected.description
-                : 'Choose one of the official MiniMax Video Agent templates.'}
-            </SheetDescription>
+          <SheetHeader icon="video-agent">
+            <SheetTitle>Template brief</SheetTitle>
+            <SheetDescription>Required inputs follow the selected template.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {(selected?.requiresMedia || selected?.requiresText) && (
@@ -191,6 +188,12 @@ export default function VideoAgentPage() {
                               onValueChange={setTemplateId}
                             />
             </Field>
+
+            {selected?.description && (
+              <Box bg="surface.inset" borderRadius="md" px="12px" py="10px" color="content.readout" fontSize="label">
+                {selected.description}
+              </Box>
+            )}
 
             {selected?.requiresMedia && (
                             <Field label="Image URL" required htmlFor="video-agent-media">
@@ -226,7 +229,7 @@ export default function VideoAgentPage() {
 
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {notice}
               </Box>
             )}
@@ -238,11 +241,9 @@ export default function VideoAgentPage() {
         </Sheet>
 
         <Sheet minH="24rem">
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Result</SheetTitle>
-            <SheetDescription>
-              {task ? 'The clip MiniMax rendered from your template.' : 'The generated clip appears here.'}
-            </SheetDescription>
+            <SheetDescription>Preview the generated clip.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {task && (
@@ -252,7 +253,7 @@ export default function VideoAgentPage() {
               </SpecList>
             )}
             {!task && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 {selected
                   ? `Ready to render "${selected.name}".`
                   : 'Pick a template to start.'}
@@ -260,14 +261,14 @@ export default function VideoAgentPage() {
             )}
 
             {task && task.status !== 'succeeded' && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 {task.status === 'failed' ? 'The task failed.' : 'MiniMax is rendering the video.'}
               </Box>
             )}
 
             {task?.videoUrl && (
               <Box display="grid" gap="0.5rem">
-                <video src={task.videoUrl} controls style={{ width: '100%', borderRadius: '0.75rem' }} />
+                <VideoPlate title="Generated clip" src={task.videoUrl} />
                 <Box color="content.subtle" fontSize="0.78rem">
                   The link expires 9 hours after the task completed.
                 </Box>

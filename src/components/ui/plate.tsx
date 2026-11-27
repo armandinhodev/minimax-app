@@ -1,16 +1,17 @@
 "use client";
 
 /**
- * Plate — the surface a result appears on.
+ * Plate — the white panel where a result is inspected.
  *
- * The artifact is the reason the screen exists, so it gets the brightest
- * surface in the app, framed by one rule and a caption bar of labelled slots.
- * A plate is not a card: its caption is data, not decoration.
+ * It shares the panel language (10px outside, rail header, hairline) and adds
+ * the production facts as spec rows. The artifact itself lives inside.
  *
- * See docs/design.md.
+ * See docs/minimax-studio-ui/Minimax-directrices.md.
  */
 
 import { Box, type BoxProps } from "@chakra-ui/react";
+
+import { Icon, type IconName } from "@/components/ui/icons";
 
 export interface PlateCaption {
   label: string;
@@ -18,26 +19,34 @@ export interface PlateCaption {
 }
 
 interface PlateProps extends BoxProps {
+  icon?: IconName;
   title?: string;
   description?: string;
-  /** Labelled facts shown in the caption bar, in mono. */
+  /** Labelled facts shown as spec rows under the result. */
   caption?: PlateCaption[];
   /** What to show before there is a result. */
   empty?: string;
+  /** Actions that belong to the plate, shown under the caption. */
+  actions?: React.ReactNode;
   children?: React.ReactNode;
 }
 
-export function Plate({ title, description, caption, empty, children, ...props }: PlateProps) {
-  const hasCaption = caption !== undefined && caption.length > 0;
-
+export function Plate({
+  icon = "folder",
+  title,
+  description,
+  caption,
+  empty,
+  actions,
+  children,
+  ...props
+}: PlateProps) {
   return (
     <Box
-      bg="surface.plate"
+      bg="surface.sheet"
       border="1px solid"
-      borderColor="surface.rule"
-      borderLeft="3px solid"
-      borderLeftColor="interaction.accent"
-      borderRadius="sm"
+      borderColor="surface.separator"
+      borderRadius="lg"
       overflow="hidden"
       display="flex"
       flexDirection="column"
@@ -45,42 +54,82 @@ export function Plate({ title, description, caption, empty, children, ...props }
       {...props}
     >
       {(title || description) && (
-        <Box px="1.125rem" py="0.7rem" display="grid" gap="0.15rem" bg="surface.rail" borderBottom="1px solid" borderColor="surface.rule">
-          {title && (
-            <Box fontSize="1rem" lineHeight="1.25" fontWeight="600" color="content.ink">
-              {title}
-            </Box>
-          )}
-          {description && (
-            <Box fontSize="label" lineHeight="label" color="content.readout">
-              {description}
-            </Box>
-          )}
+        <Box
+          display="flex"
+          alignItems="flex-start"
+          gap="12px"
+          px="20px"
+          py="16px"
+          borderBottom="1px solid"
+          borderColor="surface.separator"
+        >
+          <Box
+            aria-hidden="true"
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            w="40px"
+            h="40px"
+            flex="0 0 auto"
+            bg="surface.inset"
+            border="1px solid"
+            borderColor="surface.separator"
+            borderRadius="md"
+            color="content.readout"
+          >
+            <Icon name={icon} size={20} />
+          </Box>
+          <Box minW={0} flex="1 1 auto">
+            {title && (
+              <Box fontSize="title" lineHeight="title" fontWeight={700} letterSpacing="-0.024em" color="content.ink">
+                {title}
+              </Box>
+            )}
+            {description && (
+              <Box fontSize="0.9375rem" lineHeight="1.4" color="content.readout" mt="2px">
+                {description}
+              </Box>
+            )}
+          </Box>
         </Box>
       )}
 
-      <Box px="1.125rem" py={title || description ? "0.5rem" : "1.125rem"} minW={0} flex="1 1 auto" display="flex" flexDirection="column">
+      <Box px="20px" py="16px" minW={0} flex="1 1 auto" display="flex" flexDirection="column" gap="16px">
         {children ?? (empty && (
-          <Box flex="1" display="grid" alignItems="center" justifyItems="center" textAlign="center" minH="12rem" p="2rem" border="1px dashed" borderColor="surface.rule" color="content.readout">
-            <Box maxW="24rem">{empty}</Box>
+          <Box
+            flex="1"
+            display="grid"
+            alignItems="center"
+            justifyItems="center"
+            textAlign="center"
+            minH="10rem"
+            p="20px"
+            bg="surface.inset"
+            border="1px solid"
+            borderColor="surface.separator"
+            borderRadius="md"
+            color="content.readout"
+            fontSize="body"
+          >
+            <Box maxW="26rem">{empty}</Box>
           </Box>
         ))}
       </Box>
 
-      {hasCaption && (
-        <Box
-          display="flex"
-          flexWrap="wrap"
-          gap={{ base: 4, md: 6 }}
-          borderTop="1px solid"
-          borderColor="surface.rule"
-          bg="surface.sheet"
-          px="1.125rem"
-          py="0.625rem"
-        >
-          {caption!.map((slot) => (
-            <Box key={slot.label} display="grid" gap="0.1rem" minW={0}>
-              <Box color="content.readout" fontSize="label" lineHeight="label" fontWeight={500}>
+      {caption && caption.length > 0 && (
+        <Box px="20px">
+          {caption.map((slot) => (
+            <Box
+              key={slot.label}
+              display="grid"
+              gridTemplateColumns="minmax(0, 1fr) auto"
+              gap={4}
+              alignItems="baseline"
+              py="9px"
+              borderTop="1px solid"
+              borderColor="surface.separator"
+            >
+              <Box color="content.readout" fontSize="label" lineHeight="label">
                 {slot.label}
               </Box>
               <Box
@@ -89,6 +138,7 @@ export function Plate({ title, description, caption, empty, children, ...props }
                 lineHeight="mono"
                 color="content.ink"
                 fontVariantNumeric="tabular-nums"
+                textAlign="right"
                 overflow="hidden"
                 textOverflow="ellipsis"
               >
@@ -96,6 +146,12 @@ export function Plate({ title, description, caption, empty, children, ...props }
               </Box>
             </Box>
           ))}
+        </Box>
+      )}
+
+      {actions && (
+        <Box px="20px" py="16px" mt="auto">
+          {actions}
         </Box>
       )}
     </Box>

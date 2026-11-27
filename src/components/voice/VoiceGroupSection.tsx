@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
-import { Badge } from '@/components/ui/badge';
 import { VoiceCard } from '@/components/voice/VoiceCard';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import { FLAG_SIZE_HEADER, getFlagUrl, getLanguageInfo } from '@/lib/language-flags';
@@ -18,13 +17,13 @@ export function VoiceGroupSection({ language, voices, onDelete, deletingId }: Vo
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
-    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
-      <Box display="flex" alignItems="center" gap={2}>
+    <Box display="grid" gap="10px" gridTemplateColumns="minmax(0, 1fr)">
+      <Box display="flex" alignItems="center" gap="8px">
         {flagUrl && !imgFailed ? (
           <img
             src={flagUrl}
-            width={40}
-            height={30}
+            width={20}
+            height={15}
             alt={info.displayName}
             loading="lazy"
             decoding="async"
@@ -32,19 +31,26 @@ export function VoiceGroupSection({ language, voices, onDelete, deletingId }: Vo
             style={{ display: 'block' }}
           />
         ) : (
-          <span style={{ fontSize: '1.5rem' }} aria-label={info.displayName}>
+          <span style={{ fontSize: '1rem' }} aria-label={info.displayName}>
             {info.fallbackEmoji}
           </span>
         )}
-        <Box fontSize="1.125rem" fontWeight="semibold">{info.displayName}</Box>
-        <Badge variant="secondary">{voices.length}</Badge>
+        <Box fontSize="subtitle" fontWeight={700}>
+          {info.displayName}
+        </Box>
+        <Box color="content.readout" fontSize="help">
+          ({voices.length})
+        </Box>
       </Box>
-      <Box display="grid" gap={4} gridTemplateColumns={{ base: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }}>
+
+      <Box display="grid">
         {voices.map((voice) => (
           <VoiceCard key={voice.voiceId} voice={voice} onDelete={onDelete} isDeleting={deletingId === voice.voiceId} />
         ))}
         {voices.length === 0 && (
-          <p style={{ color: 'var(--chakra-colors-content-readout)', gridColumn: '1 / -1', fontSize: '0.875rem' }}>No voices in this group match the current filter.</p>
+          <p style={{ color: 'var(--chakra-colors-content-readout)', fontSize: '0.875rem' }}>
+            No voices in this group match the current filter.
+          </p>
         )}
       </Box>
     </Box>

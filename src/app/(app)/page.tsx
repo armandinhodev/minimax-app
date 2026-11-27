@@ -12,7 +12,11 @@ import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 
 import type { LibraryGenerationDTO, LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
-import { AreaHeader, ReadoutStrip } from '@/components/ui/area-header';
+import { AreaHeader } from '@/components/ui/area-header';
+import { MetricBand } from '@/components/ui/metric-band';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Icon } from '@/components/ui/icons';
+import { AREA_ICONS } from '@/components/navigation/Sidebar';
 import { PRODUCT_NAV_SECTIONS } from '@/components/navigation/nav-config';
 import { authFetch } from '@/lib/auth-client';
 
@@ -33,8 +37,7 @@ const KINDS_BY_AREA: Record<string, Array<keyof LibrarySummaryDTO['byKind']>> = 
 };
 
 const AREA_DESCRIPTION: Record<string, string> = {
-  speech: 'Generate speech from text',
-  asr: 'Turn audio into text and subtitles',
+  speech: 'Generate speech and transcribe audio',
   text: 'Talk to MiniMax M3 models',
   image: 'Create images from prompts',
   music: 'Compose songs and instrumentals',
@@ -71,7 +74,6 @@ function formatDate(timestamp: number): string {
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<LibrarySummaryDTO>(EMPTY_SUMMARY);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -85,8 +87,6 @@ export default function DashboardPage() {
         setSummary(buildSummary(data.generations ?? []));
       } catch (error) {
         console.error('Failed to load dashboard summary.', error);
-      } finally {
-        if (isMounted) setIsLoading(false);
       }
     }
 
@@ -97,129 +97,149 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <Box display="grid" gap={8} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <AreaHeader
-        title="MiniMax Studio"
-        description="Dispatch a job to MiniMax, follow its state and retrieve the asset. Every area speaks to its own upstream endpoint."
-        actions={
-          <ReadoutStrip
-            label="Library"
-            readouts={[
-              { label: 'Generations', value: String(summary.totalGenerations) },
-              { label: 'Completed', value: String(summary.completedGenerations) },
-              { label: 'Assets', value: String(summary.totalAssets) },
-            ]}
-          />
-        }
+        title="Studio overview"
+        description="Choose an area or pick up a recent creation."
       />
 
-      <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
-        <h2>Areas</h2>
+      <MetricBand
+        metrics={[
+          { label: 'Generations', value: String(summary.totalGenerations) },
+          { label: 'Completed', value: String(summary.completedGenerations) },
+          { label: 'Assets', value: String(summary.totalAssets) },
+        ]}
+      />
 
-        <Box borderTop="1px solid" borderColor="surface.rule">
-          {PRODUCT_NAV_SECTIONS.map((area) => {
-            const kinds = KINDS_BY_AREA[area.id] ?? [];
-            const count = kinds.reduce((total, kind) => total + summary.byKind[kind], 0);
+      <Box
+        display="grid"
+        gap={4}
+        gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 2fr) minmax(0, 1fr)' }}
+        alignItems="start"
+      >
+        <Sheet>
+          <SheetHeader icon="overview">
+            <SheetTitle>Areas</SheetTitle>
+            <SheetDescription>Choose a production workspace.</SheetDescription>
+          </SheetHeader>
+          <SheetContent>
+            {PRODUCT_NAV_SECTIONS.map((area, index) => {
+              const kinds = KINDS_BY_AREA[area.id] ?? [];
+              const count = kinds.reduce((total, kind) => total + summary.byKind[kind], 0);
+              const value = area.id === 'library' ? String(summary.totalAssets) + ' assets' : kinds.length > 0 ? String(count) : '—';
 
-            return (
-              <Link
-                key={area.id}
-                href={area.href}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <Box
-                  display="grid"
-                  gridTemplateColumns={{ base: 'minmax(0, 1fr) 3rem', md: 'minmax(0, 1fr) 4rem' }}
-                  gap={{ base: 2, md: 4 }}
-                  alignItems="center"
-                  py="0.75rem"
-                  borderBottom="1px solid"
-                  borderColor="surface.rule"
+              return (
+                <Link
+                  key={area.id}
+                  href={area.href}
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
                 >
-                  <Box minW={0}>
-                    <Box fontWeight="600" fontSize="body" lineHeight="body">
-                      {area.label}
-                    </Box>
-                    <Box color="content.subtle" fontSize="label" lineHeight="label">
-                      {AREA_DESCRIPTION[area.id] ?? area.description}
-                    </Box>
-                  </Box>
-
                   <Box
-                    display={{ base: 'none', md: 'block' }}
-                    textAlign="right"
-                    fontFamily="mono"
-                    fontSize="mono"
-                    color="content.readout"
-                    fontVariantNumeric="tabular-nums"
+                    display="grid"
+                    gridTemplateColumns="36px minmax(0, 1fr) auto"
+                    gap="12px"
+                    alignItems="center"
+                    py="12px"
+                    borderTop={index === 0 ? 'none' : '1px solid'}
+                    borderColor="surface.separator"
                   >
-                    {kinds.length > 0 ? count : '—'}
+                    <Box
+                      aria-hidden="true"
+                      display="inline-flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      w="36px"
+                      h="36px"
+                      bg="surface.inset"
+                      border="1px solid"
+                      borderColor="surface.separator"
+                      borderRadius="md"
+                      color="content.readout"
+                    >
+                      <Icon name={AREA_ICONS[area.id]} size={18} />
+                    </Box>
+                    <Box minW={0}>
+                      <Box fontWeight={700} fontSize="body" lineHeight="1.3">
+                        {area.label}
+                      </Box>
+                      <Box color="content.readout" fontSize="label" lineHeight="label" mt="1px">
+                        {AREA_DESCRIPTION[area.id] ?? area.description}
+                      </Box>
+                    </Box>
+                    <Box
+                      fontFamily="mono"
+                      fontSize="mono"
+                      color="content.readout"
+                      fontVariantNumeric="tabular-nums"
+                      textAlign="right"
+                    >
+                      {value}
+                    </Box>
                   </Box>
-                </Box>
-              </Link>
-            );
-          })}
-        </Box>
-      </Box>
+                </Link>
+              );
+            })}
+          </SheetContent>
+        </Sheet>
 
-      <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
-        <h2>Recent creations</h2>
-
-        {!isLoading && summary.recentGenerations.length === 0 && (
-          <Box
-            border="1px dashed"
-            borderColor="surface.rule"
-            borderRadius="lg"
-            p="1.5rem"
-            color="content.subtle"
-            fontSize="body"
-          >
-            Nothing here yet. Generate a speech, an image or a video to fill the library.
-          </Box>
-        )}
-
-        {summary.recentGenerations.length > 0 && (
-          <Box borderTop="1px solid" borderColor="surface.rule">
-            {summary.recentGenerations.map((generation) => (
-              <Link
-                key={generation.id}
-                href={getGenerationHref(generation)}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+        <Sheet>
+          <SheetHeader icon="folder">
+            <SheetTitle>Recent creations</SheetTitle>
+            <SheetDescription>Latest outputs from this studio.</SheetDescription>
+          </SheetHeader>
+          <SheetContent display="grid" gap="16px">
+            {summary.recentGenerations.length === 0 ? (
+              <Box
+                display="grid"
+                gap="6px"
+                placeItems="center"
+                textAlign="center"
+                minH="180px"
+                bg="surface.inset"
+                border="1px solid"
+                borderColor="surface.separator"
+                borderRadius="md"
+                p="20px"
               >
-                <Box
-                  display="grid"
-                  gridTemplateColumns={{ base: '1fr', md: 'minmax(0, 1fr) 9rem 10rem' }}
-                  gap={{ base: 1, md: 4 }}
-                  alignItems="baseline"
-                  py="0.625rem"
-                  borderBottom="1px solid"
-                  borderColor="surface.rule"
-                >
-                  <Box fontWeight="600" fontSize="body" lineHeight="body" minW={0}>
-                    {generation.title ?? generation.prompt ?? getGenerationLabel(generation)}
-                  </Box>
-                  <Box
-                    display={{ base: 'none', md: 'block' }}
-                    fontFamily="mono"
-                    fontSize="mono"
-                    color="content.readout"
-                  >
-                    {getGenerationLabel(generation)}
-                  </Box>
-                  <Box
-                    textAlign={{ base: 'left', md: 'right' }}
-                    fontFamily="mono"
-                    fontSize="mono"
-                    color="content.subtle"
-                    fontVariantNumeric="tabular-nums"
-                  >
-                    {formatDate(generation.createdAt)}
-                  </Box>
+                <Icon name="library" size={28} />
+                <Box fontWeight={700} fontSize="label">Generate your first asset</Box>
+                <Box color="content.readout" fontSize="help" lineHeight="help">
+                  Speech, image, video or music: the latest outputs land here.
                 </Box>
-              </Link>
-            ))}
-          </Box>
-        )}
+              </Box>
+            ) : (
+              <Box display="grid">
+                {summary.recentGenerations.map((generation, index) => (
+                  <Link
+                    key={generation.id}
+                    href={getGenerationHref(generation)}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <Box
+                      display="grid"
+                      gridTemplateColumns="minmax(0, 1fr) auto"
+                      gap="4px 12px"
+                      alignItems="baseline"
+                      py="10px"
+                      borderTop={index === 0 ? 'none' : '1px solid'}
+                      borderColor="surface.separator"
+                    >
+                      <Box fontWeight={700} fontSize="label" lineHeight="label" minW={0} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                        {generation.title ?? generation.prompt ?? getGenerationLabel(generation)}
+                      </Box>
+                      <Box fontFamily="mono" fontSize="0.75rem" color="content.readout" whiteSpace="nowrap">
+                        {formatDate(generation.createdAt)}
+                      </Box>
+                      <Box color="content.readout" fontSize="help" lineHeight="help">
+                        {getGenerationLabel(generation)}
+                      </Box>
+                    </Box>
+                  </Link>
+                ))}
+              </Box>
+            )}
+          </SheetContent>
+        </Sheet>
       </Box>
     </Box>
   );

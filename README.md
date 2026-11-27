@@ -79,8 +79,7 @@ completa está en [`docs/architecture/api-organization.md`](docs/architecture/ap
 
 | Área | Rutas |
 | --- | --- |
-| Speech | `/tts`, `/voices`, `/voices/clone`, `/voices/design` |
-| Transcripción | `/asr` |
+| Speech (TTS/STT) | `/tts`, `/asr`, `/voices`, `/voices/clone`, `/voices/design` |
 | Chat | `/text` |
 | Imagen | `/image`, `/image/image-to-image` |
 | Música | `/music`, `/music/lyrics`, `/music/cover-preprocess` |
@@ -90,9 +89,10 @@ completa está en [`docs/architecture/api-organization.md`](docs/architecture/ap
 
 ## Diseño
 
-El sistema visual está documentado en [`docs/design.md`](docs/design.md): papel
-cálido, verde bosque como único acento, Bricolage Grotesque + DM Mono, transporte
-superior y paneles con riel y costuras.
+El sistema visual está documentado en [`docs/design.md`](docs/design.md). La
+propuesta de referencia es [`docs/minimax-studio-ui/`](docs/minimax-studio-ui/):
+pizarra y cobre, Nimbus Sans + Liberation Mono, sidebar, paneles con cabecera de
+riel y placas de reproducción.
 
 Dos suites lo mantienen:
 

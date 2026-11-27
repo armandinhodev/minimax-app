@@ -246,13 +246,13 @@ export default function MusicCoverPreprocessPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Cover Preprocess" description="Prepare reference audio for MiniMax Music Cover and receive a 24-hour cover feature ID." note="Reference audio should be 6 seconds to 6 minutes, no larger than 50 MB, and in a common format like MP3, WAV, or FLAC." />
+      <AreaHeader title="Cover preprocess" description="Prepare reference audio for cover generation." />
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={0} alignItems="start">
+      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
-          <SheetHeader>
+          <SheetHeader icon="wave">
             <SheetTitle>Reference audio</SheetTitle>
-            <SheetDescription>Provide exactly one source: a hosted audio URL or a local audio upload converted to base64 in the browser.</SheetDescription>
+            <SheetDescription>Provide one source: a URL or a file.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
                         <Field label="Audio URL" htmlFor="cover-audio-url">
@@ -279,13 +279,13 @@ export default function MusicCoverPreprocessPage() {
             )}
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+              <Box borderRadius="md" bg="state.runSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box borderRadius="md" bg="state.okSoft" px="12px" py="10px" color="content.ink" fontSize="label">
                 {actionStatus}
               </Box>
             )}
@@ -297,18 +297,18 @@ export default function MusicCoverPreprocessPage() {
         </Sheet>
 
         <Sheet minH="28rem">
-          <SheetHeader>
+          <SheetHeader icon="folder">
             <SheetTitle>Preprocess result</SheetTitle>
             <SheetDescription>{result ? 'The cover feature ID and the analysis MiniMax returned.' : 'Cover feature ID and MiniMax analysis appear here.'}</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {!result && !isLoading && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Preprocess a reference track first. Cover generation uses the returned cover feature ID in the next step.
               </Box>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
+              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
                 Uploading and preprocessing reference audio. This request is billed, so it is not retried automatically.
               </Box>
             )}

@@ -29,16 +29,24 @@ export function ConfirmationDialog({
       <Portal>
         <Dialog.Backdrop bg="surface.veil" />
         <Dialog.Positioner p={4}>
-          <Dialog.Content role="alertdialog" maxW="md" borderRadius="xl" boxShadow="xl">
+          <Dialog.Content
+            role="alertdialog"
+            maxW="md"
+            bg="surface.plate"
+            border="1px solid"
+            borderColor="surface.separator"
+            borderRadius="lg"
+            boxShadow="overlay"
+          >
             <Dialog.Header>
-              <Dialog.Title>{title}</Dialog.Title>
+              <Dialog.Title fontSize="title" fontWeight={700} letterSpacing="-0.024em">{title}</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body color="content.ink">{description}</Dialog.Body>
             <Dialog.Footer gap={2}>
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                 {cancelLabel}
               </Button>
-              <Button variant="destructive" onClick={onConfirm} loading={loading}>
+              <Button colorPalette="red" onClick={onConfirm} loading={loading}>
                 {confirmLabel}
               </Button>
             </Dialog.Footer>

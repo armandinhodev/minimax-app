@@ -1,65 +1,93 @@
 "use client";
 
 /**
- * Sheet — a panel of the workbench.
+ * Sheet — a white panel of the bench.
  *
- * Panels meet at a seam instead of floating apart: a tinted rail header, a
- * hairline frame and a 2px accent edge on the left. The result is not a sheet:
- * it is a plate.
+ * 10px outside, 5px inside, one hairline separation derived from the rule.
+ * The header is a rail: an icon tile, the panel title and one line of purpose.
+ * No shadows, no accent edge.
  *
- * See docs/design.md.
+ * See docs/minimax-studio-ui/Minimax-directrices.md.
  */
 
 import { Box, type BoxProps } from "@chakra-ui/react";
+
+import { Icon, type IconName } from "@/components/ui/icons";
 
 interface SheetProps extends BoxProps {
   size?: "default" | "sm";
 }
 
-const sheetPadding = "1.125rem";
+const sheetPadding = "20px";
 
 function Sheet({ size = "default", bg, borderColor, ...props }: SheetProps) {
-  const padding = size === "sm" ? "0.875rem" : "0";
+  const padding = size === "sm" ? "16px" : "0";
 
   return (
     <Box
       bg={bg ?? "surface.sheet"}
-      borderRadius="sm"
+      borderRadius="lg"
       p={padding}
       border="1px solid"
-      borderColor={borderColor ?? "surface.rule"}
-      borderLeft="3px solid"
-      borderLeftColor="interaction.accent"
+      borderColor={borderColor ?? "surface.separator"}
       overflow="hidden"
       {...props}
     />
   );
 }
 
-function SheetHeader({ ...props }: BoxProps) {
+interface SheetHeaderProps extends BoxProps {
+  /** The pictogram of the panel: wave, image, folder, file… */
+  icon?: IconName;
+}
+
+function SheetHeader({ icon, children, ...props }: SheetHeaderProps) {
   return (
     <Box
-      bg="surface.rail"
-      borderBottom="1px solid"
-      borderColor="surface.rule"
+      display="flex"
+      alignItems="flex-start"
+      gap="12px"
       px={sheetPadding}
-      pt="0.7rem"
-      pb="0.6rem"
+      py="16px"
+      borderBottom="1px solid"
+      borderColor="surface.separator"
       {...props}
-    />
+    >
+      {icon && (
+        <Box
+          aria-hidden="true"
+          display="inline-flex"
+          alignItems="center"
+          justifyContent="center"
+          w="40px"
+          h="40px"
+          flex="0 0 auto"
+          bg="surface.inset"
+          border="1px solid"
+          borderColor="surface.separator"
+          borderRadius="md"
+          color="content.readout"
+        >
+          <Icon name={icon} size={20} />
+        </Box>
+      )}
+      <Box minW={0} flex="1 1 auto">{children}</Box>
+    </Box>
   );
 }
 
 function SheetTitle({ ...props }: BoxProps) {
-  return <Box fontSize="1rem" lineHeight="1.25" fontWeight="600" color="content.ink" {...props} />;
+  return (
+    <Box fontSize="title" lineHeight="title" fontWeight={700} letterSpacing="-0.024em" color="content.ink" {...props} />
+  );
 }
 
 function SheetDescription({ ...props }: BoxProps) {
-  return <Box fontSize="label" lineHeight="label" color="content.readout" mt="0.2rem" {...props} />;
+  return <Box fontSize="0.9375rem" lineHeight="1.4" color="content.readout" mt="2px" {...props} />;
 }
 
 function SheetContent({ ...props }: BoxProps) {
-  return <Box px={sheetPadding} py="0.875rem" {...props} />;
+  return <Box px={sheetPadding} py="16px" {...props} />;
 }
 
 function SheetFooter({ ...props }: BoxProps) {
@@ -69,10 +97,9 @@ function SheetFooter({ ...props }: BoxProps) {
       alignItems="center"
       gap={2}
       borderTop="1px solid"
-      borderColor="surface.rule"
-      bg="surface.rail"
+      borderColor="surface.separator"
       px={sheetPadding}
-      py="0.625rem"
+      py="12px"
       {...props}
     />
   );

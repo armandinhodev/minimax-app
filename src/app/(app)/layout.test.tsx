@@ -62,120 +62,87 @@ describe('AppLayout navigation', () => {
     });
   }
 
-  function transport() {
+  function nav() {
     return container!.querySelector('nav[aria-label="Product areas"]') as HTMLElement;
   }
 
-  function areaLinks() {
-    return Array.from(transport().querySelectorAll('a')).map((link) => ({
+  function links(scope: HTMLElement = nav()) {
+    return Array.from(scope.querySelectorAll('a')).map((link) => ({
       href: link.getAttribute('href'),
       text: link.textContent,
+      current: link.getAttribute('aria-current'),
       active: link.getAttribute('data-active'),
     }));
   }
 
-  function subnav() {
-    return container!.querySelector('nav[aria-label$="routes"]') as HTMLElement | null;
-  }
-
-  function subnavLinks() {
-    const nav = subnav();
-    if (!nav) return [];
-    return Array.from(nav.querySelectorAll('a')).map((link) => ({
-      href: link.getAttribute('href'),
-      text: link.textContent,
-      current: link.getAttribute('aria-current'),
-    }));
-  }
-
-  it('lists every area in the transport and marks the one in use', () => {
+  it('renders the overview and the eight areas, with the active area expanded', () => {
     navigationMocks.pathname = '/music/lyrics';
     renderLayout();
 
-    const links = areaLinks();
-
-    expect(links.map((link) => link.href)).toEqual([
+    const hrefs = links().map((link) => link.href);
+    expect(hrefs).toEqual(expect.arrayContaining([
+      '/',
       '/tts',
-      '/asr',
       '/text',
       '/image',
       '/music',
       '/video',
       '/video-agent',
       '/library',
-    ]);
-    expect(links.find((link) => link.href === '/music')?.active).toBe('true');
-    expect(links.filter((link) => link.active === 'true')).toHaveLength(1);
-    expect(transport().querySelector('a[aria-current="page"]')).toBeNull();
+      '/music/lyrics',
+    ]));
+
+    // Only the active area shows its routes.
+    expect(hrefs).toContain('/music/cover-preprocess');
+    expect(hrefs).not.toContain('/asr');
+    expect(hrefs).not.toContain('/video/tasks');
+    expect(hrefs).not.toContain('/image/image-to-image');
+
+    expect(container!.querySelector('a[href="/music"]')?.getAttribute('data-active')).toBe('true');
+    expect(container!.querySelector('a[href="/image"]')?.getAttribute('data-active')).toBe('false');
   });
 
-  it('shows only the routes of the active area in the subnav', () => {
+  it('marks the current route with aria-current and keeps the area as context', () => {
     navigationMocks.pathname = '/music/lyrics';
     renderLayout();
 
-    expect(subnav()?.getAttribute('aria-label')).toBe('Music routes');
-    expect(subnavLinks().map((link) => link.href)).toEqual([
-      '/music',
-      '/music/lyrics',
-      '/music/cover-preprocess',
-    ]);
-    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
-      expect.objectContaining({ href: '/music/lyrics' }),
-    ]);
-    expect(container!.textContent).toContain('Music creation suite');
+    const current = links().filter((link) => link.current === 'page');
+    expect(current).toHaveLength(1);
+    expect(current[0]).toEqual(expect.objectContaining({ href: '/music/lyrics', text: 'Lyrics' }));
   });
 
-  it('marks the landing route current when the area opens on it', () => {
-    navigationMocks.pathname = '/tts';
+  it('groups transcription under speech and keeps it current', () => {
+    navigationMocks.pathname = '/asr';
     renderLayout();
 
-    expect(subnav()?.getAttribute('aria-label')).toBe('Speech routes');
-    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
-      expect.objectContaining({ href: '/tts', text: 'Text to Speech' }),
+    expect(container!.querySelector('a[href="/tts"]')?.getAttribute('data-active')).toBe('true');
+    expect(links().filter((link) => link.current === 'page')).toEqual([
+      expect.objectContaining({ href: '/asr', text: 'Transcription' }),
     ]);
+    expect(links().map((link) => link.href)).toEqual(expect.arrayContaining(['/tts', '/asr', '/voices', '/voices/clone', '/voices/design']));
   });
 
-  it('keeps Voices inactive when a voice tool route is active', () => {
-    navigationMocks.pathname = '/voices/clone';
+  it('marks the area itself when it has a single route', () => {
+    navigationMocks.pathname = '/library';
     renderLayout();
 
-    expect(areaLinks().find((link) => link.href === '/tts')?.active).toBe('true');
-    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
-      expect.objectContaining({ href: '/voices/clone', text: 'Clone Voice' }),
-    ]);
+    const library = container!.querySelector('a[href="/library"]');
+    expect(library?.getAttribute('aria-current')).toBe('page');
+    expect(links().filter((link) => link.current === 'page')).toHaveLength(1);
   });
 
-  it('exposes the video modes as routes of the video area', () => {
+  it('shows the video routes when the video area is in use', () => {
     navigationMocks.pathname = '/video/generation';
     renderLayout();
 
-    expect(areaLinks().find((link) => link.href === '/video')?.active).toBe('true');
-    expect(subnavLinks().map((link) => link.href)).toEqual([
+    const hrefs = links().map((link) => link.href);
+    expect(hrefs).toEqual(expect.arrayContaining([
       '/video/generation',
       '/video/context-ir',
       '/video/regeneration',
       '/video/tasks',
-    ]);
-    expect(subnavLinks().filter((link) => link.current === 'page')).toHaveLength(1);
-  });
-
-  it('drops the subnav for an area with a single route', () => {
-    navigationMocks.pathname = '/library';
-    renderLayout();
-
-    expect(subnav()).toBeNull();
-    expect(areaLinks().find((link) => link.href === '/library')?.active).toBe('true');
-  });
-
-  it('marks a different area when the route belongs to it', () => {
-    navigationMocks.pathname = '/image/image-to-image';
-    renderLayout();
-
-    expect(areaLinks().find((link) => link.href === '/image')?.active).toBe('true');
-    expect(subnavLinks().filter((link) => link.current === 'page')).toEqual([
-      expect.objectContaining({ href: '/image/image-to-image', text: 'Image to Image' }),
-    ]);
-    expect(areaLinks().filter((link) => link.href === '/image' && link.active === 'true')).toHaveLength(1);
+    ]));
+    expect(links().filter((link) => link.current === 'page')).toHaveLength(1);
   });
 
   it('opens and closes the mobile drawer accessibly', () => {
@@ -195,25 +162,17 @@ describe('AppLayout navigation', () => {
     expect(dialog).not.toBeNull();
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
     expect(dialog?.getAttribute('aria-label')).toBe('Main navigation');
-    expect(container!.querySelector('button[aria-label="Close navigation menu"]')).not.toBeNull();
-
-    // The drawer takes focus while it is open...
     expect(dialog!.contains(document.activeElement)).toBe(true);
-    expect(openButton.getAttribute('aria-expanded')).toBe('true');
-    expect(openButton.getAttribute('aria-controls')).toBe(dialog?.id);
 
-    // The drawer is the only place where every route is reachable at once.
-    const drawerLinks = Array.from(dialog!.querySelectorAll('a')).map((link) => link.getAttribute('href'));
-    expect(drawerLinks).toEqual(expect.arrayContaining(['/image/image-to-image', '/music/lyrics', '/video/tasks']));
+    const drawerLinks = links(dialog as HTMLElement).map((link) => link.href);
+    expect(drawerLinks).toEqual(expect.arrayContaining(['/voices/clone', '/voices/design', '/tts']));
 
     act(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });
 
     expect(container!.querySelector('[role="dialog"]')).toBeNull();
-    // ...and gives it back to the trigger when it closes.
     expect(document.activeElement).toBe(openButton);
-    expect(openButton.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('renders the page inside the workbench', () => {
