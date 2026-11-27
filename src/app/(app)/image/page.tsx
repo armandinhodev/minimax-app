@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 const PROMPT_MAX_LENGTH = 32_000;
 const MAX_IMAGE_COUNT = 10;
@@ -193,18 +194,8 @@ export default function ImagePage() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
-        <Box maxW="48rem">
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Image Generation</h1>
-          <Box color="content.readout" mt={1}>
-            Create polished visual assets with MiniMax-H3-Image. The app uses URL output for fast preview, download, and Library access.
-          </Box>
-        </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="21rem">
-          Provider URLs are not guaranteed to stay available. Download final images when you like a result.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+      <ConsoleBand monogram="IM" title="Image Generation" description="Create polished visual assets with MiniMax-H3-Image. The app uses URL output for fast preview, download, and Library access." note="Provider URLs are not guaranteed to stay available. Download final images when you like a result." />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.25fr)' }} gap={6} alignItems="start">
         <Sheet>
@@ -215,7 +206,7 @@ export default function ImagePage() {
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="image-prompt">Prompt</Label>
                 <Box as="span" color={remainingCharacters < 0 ? 'red.600' : 'gray.500'} fontSize="sm">
@@ -236,9 +227,9 @@ export default function ImagePage() {
               </Box>
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Model</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)' }}>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }}>
                 {MODEL_OPTIONS.map((option) => {
                   const isSelected = option.value === model;
                   return (
@@ -262,9 +253,9 @@ export default function ImagePage() {
               </Box>
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Aspect Ratio</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, 1fr)' }}>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
                 {ASPECT_RATIO_OPTIONS.map((option) => {
                   const isSelected = option.value === aspectRatio;
                   return (
@@ -293,9 +284,9 @@ export default function ImagePage() {
               )}
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Area Level</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, 1fr)' }}>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
                 {AREA_OPTIONS.map((option) => {
                   const isSelected = option.value === area;
                   return (
@@ -319,7 +310,7 @@ export default function ImagePage() {
               </Box>
             </Box>
 
-            <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
+            <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
                             <Field label="Custom Size (optional)" htmlFor="image-size">
                 <Input
                                   id="image-size"
@@ -344,9 +335,9 @@ export default function ImagePage() {
               </Field>
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Output Format</Label>
-              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, 1fr)' }}>
+              <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
                 {OUTPUT_FORMAT_OPTIONS.map((option) => {
                   const isSelected = option.value === outputFormat;
                   return (
@@ -370,7 +361,7 @@ export default function ImagePage() {
               </Box>
             </Box>
 
-            <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
+            <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
                             <Field label="Output Compression" htmlFor="image-compression">
                 <Input
                                   id="image-compression"

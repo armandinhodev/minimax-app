@@ -19,6 +19,7 @@ import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { StreamingPlayer } from '@/components/tts/StreamingPlayer';
 import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 const MODEL_OPTIONS: SelectOption[] = [
   { value: 'speech-2.8-hd', label: 'speech-2.8-hd' },
@@ -107,13 +108,12 @@ export default function TTSPage() {
   };
 
   return (
-    <Box display="grid" gap={6} maxW="42rem">
-      <Box>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Text to Speech</h1>
-        <Box color="content.readout" mt={1}>
-          Convert text to natural-sounding audio using MiniMax TTS. Generate Audio creates a reusable Library item; Streaming TTS is immediate playback only.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="42rem">
+      <ConsoleBand
+        monogram="SP"
+        title="Text to Speech"
+        description="Convert text to natural-sounding audio using MiniMax TTS. Generate Audio creates a reusable Library item; Streaming TTS is immediate playback only."
+      />
 
       <Sheet>
         <SheetHeader>
@@ -144,7 +144,7 @@ export default function TTSPage() {
           />
 
           {/* Model & Format */}
-          <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4}>
+          <Box display="grid" gridTemplateColumns="repeat(2, minmax(0, 1fr))" gap={4}>
                         <Field label="Model">
               <Select
                               value={model}
@@ -185,7 +185,7 @@ export default function TTSPage() {
 
           {/* Audio Preview — Phase 6 AudioPlayer component */}
           {audioHex && (
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Preview</Label>
               <AudioPlayer hex={audioHex} format={format} />
             </Box>

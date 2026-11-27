@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
 const MIN_AUDIO_DURATION_SECONDS = 6;
@@ -244,18 +245,8 @@ export default function MusicCoverPreprocessPage() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
-        <Box maxW="52rem">
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Cover Preprocess</h1>
-          <Box color="content.readout" mt={1}>
-            Prepare reference audio for MiniMax Music Cover and receive a 24-hour cover feature ID.
-          </Box>
-        </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
-          Reference audio should be 6 seconds to 6 minutes, no larger than 50 MB, and in a common format like MP3, WAV, or FLAC.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+      <ConsoleBand monogram="MU" title="Cover Preprocess" description="Prepare reference audio for MiniMax Music Cover and receive a 24-hour cover feature ID." note="Reference audio should be 6 seconds to 6 minutes, no larger than 50 MB, and in a common format like MP3, WAV, or FLAC." />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
         <Sheet>
@@ -322,7 +313,7 @@ export default function MusicCoverPreprocessPage() {
               </Box>
             )}
             {result && (
-              <Box display="grid" gap={4}>
+              <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
                 <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" display="grid" gap={3}>
                   <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                     <Box>
@@ -341,7 +332,7 @@ export default function MusicCoverPreprocessPage() {
                   <Textarea value={result.formattedLyrics} readOnly minH="10rem" />
                 </Field>
 
-                <Box display="grid" gap={2}>
+                <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
                   <Label>Structure result</Label>
                   <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" color="content.ink" overflowX="auto">
                     {result.structureResult || 'No structure result returned'}

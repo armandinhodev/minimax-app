@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Monitor } from '@/components/ui/monitor';
 import { Field } from '@/components/ui/spec';
 import { StatusLamp } from '@/components/ui/status-lamp';
 import { Textarea } from '@/components/ui/textarea';
@@ -110,11 +111,18 @@ export function VideoGenerationSection() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
         title="Video Generation"
-        description="Create a MiniMax H3 video from text, images or multimedia references. The model, resolution and duration follow the official limits."
+        description="Create a MiniMax H3 video from text, images or multimedia references."
         note="MiniMax output links are time limited and the exact expiry is not published. Download a result while it is available."
+        readoutsLabel="Request"
+        readouts={[
+          { label: 'Model', value: model },
+          { label: 'Resolution', value: resolution },
+          { label: 'Duration', value: `${duration}s` },
+          { label: 'Aspect ratio', value: composition.ratio },
+        ]}
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -234,46 +242,43 @@ export function VideoGenerationSection() {
           </SheetContent>
         </Sheet>
 
-        <Sheet>
-          <SheetHeader>
-            <SheetTitle>Latest task</SheetTitle>
-            <SheetDescription>
-              The status is polled while the task runs. Only one task is tracked at a time.
-            </SheetDescription>
-          </SheetHeader>
-          <SheetContent display="grid" gap={3}>
-            {polling.task && (
-              <StatusLamp
-                state={polling.task.status}
-                detail={polling.task.id}
-              />
-            )}
+        <Monitor
+          title="Latest task"
+          description="The status is polled while the task runs. Only one task is tracked at a time."
+        >
+          {polling.task && (
+            <StatusLamp
+              state={polling.task.status}
+              detail={polling.task.id}
+            />
+          )}
 
-            {polling.error && (
-              <Box color="state.err" fontSize="body" lineHeight="body">{polling.error}</Box>
-            )}
+          {polling.error && (
+            <Box color="state.err" fontSize="body" lineHeight="body" mt={3}>{polling.error}</Box>
+          )}
 
+          <Box mt={3}>
             <VideoTaskResult
               task={polling.task}
               isPolling={polling.isPolling}
               onCancel={(task) => { void handleCancel(task.id, task.taskType); }}
             />
+          </Box>
 
-            {!polling.task && !polling.isPolling && !polling.error && (
-              <Box
-                border="1px dashed"
-                borderColor="surface.rule"
-                borderRadius="lg"
-                p="1.5rem"
-                textAlign="center"
-                color="content.subtle"
-                fontSize="body"
-              >
-                Create a task to see its status, output and playback here.
-              </Box>
-            )}
-          </SheetContent>
-        </Sheet>
+          {!polling.task && !polling.isPolling && !polling.error && (
+            <Box
+              border="1px dashed"
+              borderColor="console.seam"
+              borderRadius="lg"
+              p="1.5rem"
+              textAlign="center"
+              color="console.muted"
+              fontSize="body"
+            >
+              Create a task to see its status, output and playback here.
+            </Box>
+          )}
+        </Monitor>
       </Box>
     </Box>
   );

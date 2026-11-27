@@ -9,7 +9,8 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
+import type { LibraryAssetDTO, LibraryGenerationDTO, LibraryGenerationKind, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 type LibraryFilter = 'all' | LibraryGenerationKind;
 
@@ -232,7 +233,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           </p>
         )}
         {generation.kind === 'video' && (
-          <Box display="grid" gap={2}>
+          <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
             <Box fontSize="sm" color="fg.muted">Task: {generation.providerTaskId} · {getStringMetadata(generation.metadata, 'providerStatus') ?? generation.status}</Box>
             {enhancedPrompt && <Box whiteSpace="pre-wrap" fontSize="sm">{enhancedPrompt}</Box>}
             {videoAsset?.storageRef && (
@@ -302,7 +303,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
               Missing audio
             </Button>
           )}
-          <Button variant="destructive" size="sm" onClick={() => onDelete(generation)}>
+          <Button variant="outline" colorPalette="red" size="sm" onClick={() => onDelete(generation)}>
             Remove
           </Button>
         </Box>
@@ -385,25 +386,31 @@ export default function LibraryPage() {
   const filteredGenerations = filter === 'all' ? generations : generations.filter((generation) => generation.kind === filter);
 
   return (
-    <Box display="grid" gap={6}>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Library</h1>
-          <Box color="content.readout" mt={1}>
-            Your backend Library records from SQLite metadata and server-side asset references.
-          </Box>
-        </Box>
-        <Box display="flex" gap={2}>
-          <Button variant="outline" colorPalette="blue" onClick={() => void loadGenerations()}>
-            Refresh
-          </Button>
-          {generations.length > 0 && (
-            <Button variant="destructive" onClick={() => setIsClearDialogOpen(true)}>
-              Clear All
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
+      <ConsoleBand
+        monogram="LB"
+        title="Library"
+        description="Your backend Library records from SQLite metadata and server-side asset references."
+        readoutsLabel="Stored"
+        readouts={[
+          { label: 'Total', value: String(generations.length) },
+          { label: 'Audio', value: String(generations.filter((g) => g.kind === 'tts').length) },
+          { label: 'Images', value: String(generations.filter((g) => g.kind === 'image').length) },
+          { label: 'Videos', value: String(generations.filter((g) => g.kind === 'video').length) },
+        ]}
+        actions={
+          <Box display="flex" gap={2}>
+            <Button variant="console" onClick={() => void loadGenerations()}>
+              Refresh
             </Button>
-          )}
-        </Box>
-      </Box>
+            {generations.length > 0 && (
+              <Button variant="console" colorPalette="red" onClick={() => setIsClearDialogOpen(true)}>
+                Clear All
+              </Button>
+            )}
+          </Box>
+        }
+      />
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
@@ -428,7 +435,7 @@ export default function LibraryPage() {
         </Box>
       )}
 
-      <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}>
+      <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }}>
         {filteredGenerations.map((generation) => (
           <LibraryItemCard
             key={generation.id}

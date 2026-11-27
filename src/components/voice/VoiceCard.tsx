@@ -97,7 +97,8 @@ export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceC
           )}
           {voice.type !== 'system' && onDelete && (
             <Button
-              variant="destructive"
+              variant="outline"
+              colorPalette="red"
               size="sm"
               onClick={() => onDelete(voice)}
               disabled={isDeleting}

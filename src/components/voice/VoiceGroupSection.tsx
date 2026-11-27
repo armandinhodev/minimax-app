@@ -18,7 +18,7 @@ export function VoiceGroupSection({ language, voices, onDelete, deletingId }: Vo
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
-    <Box display="grid" gap={3}>
+    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
       <Box display="flex" alignItems="center" gap={2}>
         {flagUrl && !imgFailed ? (
           <img
@@ -39,7 +39,7 @@ export function VoiceGroupSection({ language, voices, onDelete, deletingId }: Vo
         <Box fontSize="1.125rem" fontWeight="semibold">{info.displayName}</Box>
         <Badge variant="secondary">{voices.length}</Badge>
       </Box>
-      <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}>
+      <Box display="grid" gap={4} gridTemplateColumns={{ base: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }}>
         {voices.map((voice) => (
           <VoiceCard key={voice.voiceId} voice={voice} onDelete={onDelete} isDeleting={deletingId === voice.voiceId} />
         ))}

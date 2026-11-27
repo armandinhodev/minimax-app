@@ -66,10 +66,10 @@ const FIELDS: Array<{
  */
 export function VideoMediaFields({ idPrefix, values, disabled, onChange }: VideoMediaFieldsProps) {
   return (
-    <Box display="grid" gap={0}>
+    <Box display="grid" gap={0} gridTemplateColumns="minmax(0, 1fr)">
       {FIELDS.map((field) => (
         <Field key={field.key} label={field.label}>
-          <Box display="grid" gap={1}>
+          <Box display="grid" gap={1} gridTemplateColumns="minmax(0, 1fr)">
             <Input
               id={`${idPrefix}-${field.id}`}
               value={values[field.key]}

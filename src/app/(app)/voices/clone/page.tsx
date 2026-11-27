@@ -20,6 +20,7 @@ import { saveHistoryItem } from '@/lib/history';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import { MAX_UPLOAD_FILE_SIZE_MB, VOICE_UPLOAD_DURATION_LIMITS } from '@/lib/upload-policy';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 // TTL for cloned voices: 168 hours (7 days) from MiniMax
 const CLONE_TTL_MS = 168 * 60 * 60 * 1000;
@@ -94,13 +95,12 @@ export default function CloneVoicePage() {
   const ttlExpiry = clonedVoice?.ttlExpiry ?? Date.now() + CLONE_TTL_MS;
 
   return (
-    <Box display="grid" gap={6} maxW="36rem">
-      <Box>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Clone a Voice</h1>
-        <Box color="content.readout" mt={1}>
-          Upload an audio sample ({VOICE_UPLOAD_DURATION_LIMITS.minSeconds}s–{VOICE_UPLOAD_DURATION_LIMITS.maxSeconds / 60}min, MP3/M4A/WAV, ≤{MAX_UPLOAD_FILE_SIZE_MB} MB) to create a voice clone.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="36rem">
+      <ConsoleBand
+        monogram="SP"
+        title="Clone a Voice"
+        description={`Upload an audio sample (${VOICE_UPLOAD_DURATION_LIMITS.minSeconds}s–${VOICE_UPLOAD_DURATION_LIMITS.maxSeconds / 60}min, MP3/M4A/WAV, ≤${MAX_UPLOAD_FILE_SIZE_MB} MB) to create a voice clone.`}
+      />
 
       <Sheet>
         <SheetHeader>

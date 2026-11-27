@@ -90,7 +90,7 @@ export function VideoRegenerationSection() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
         title="2K Regeneration"
         description="Regenerate a MiniMax H3 768P result in 2K, either from a source task id or from the 768P source video itself."
@@ -128,7 +128,7 @@ export function VideoRegenerationSection() {
 
             {regenerationMode === 'task' ? (
               <Field label="Source task id" htmlFor="video-regeneration-source-task-id">
-                <Box display="grid" gap={1}>
+                <Box display="grid" gap={1} gridTemplateColumns="minmax(0, 1fr)">
                   <Input
                     id="video-regeneration-source-task-id"
                     value={sourceTaskId}
@@ -144,7 +144,7 @@ export function VideoRegenerationSection() {
             ) : (
               <>
                 <Field label="768P base video URL" htmlFor="video-regeneration-base-video">
-                  <Box display="grid" gap={1}>
+                  <Box display="grid" gap={1} gridTemplateColumns="minmax(0, 1fr)">
                     <Input
                       id="video-regeneration-base-video"
                       value={baseVideo}

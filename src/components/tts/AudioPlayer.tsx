@@ -199,7 +199,7 @@ export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProp
 
   if (!webAudioSupported) {
     return (
-      <Box display="grid" gap={2}>
+      <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
         <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
           Web Audio API is not supported in this browser. Audio playback is unavailable.
         </p>
@@ -211,7 +211,7 @@ export function AudioPlayer({ hex, format = 'mp3', onDownload }: AudioPlayerProp
   }
 
   return (
-    <Box display="grid" gap={3}>
+    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
       {playbackState === 'error' && (
         <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-state.err)' }}>{errorMessage}</p>
       )}

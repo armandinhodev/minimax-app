@@ -9,22 +9,22 @@
 import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 import { VoiceDesigner } from '@/components/voice/VoiceDesigner';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 export default function DesignVoicePage() {
   return (
-    <Box display="grid" gap={6} maxW="36rem">
-      <Box>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Design a Voice</h1>
-        <Box color="content.readout" mt={1}>
-          Describe the voice you want using natural language. Generate a preview and accept or regenerate.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="36rem">
+      <ConsoleBand
+        monogram="SP"
+        title="Design a Voice"
+        description="Describe the voice you want using natural language. Generate a preview and accept or regenerate."
+      />
 
       {/* Voice Designer — Phase 6 component */}
       <VoiceDesigner />
 
       {/* Saved Voice — shown via VoiceDesigner internal state */}
-      <Box display="grid" gap={4}>
+      <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
         <Link
           href="/tts"
           style={{ display: 'inline-flex', height: '2rem', width: 'fit-content', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', borderRadius: 'var(--chakra-radii-md)', border: '1px solid transparent', backgroundColor: 'var(--chakra-colors-interaction-accent)', padding: '0 0.75rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--chakra-colors-content-inverse)' }}

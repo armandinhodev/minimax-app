@@ -118,6 +118,9 @@ const config = defineConfig({
           runSoft: { value: 'rgba(168, 89, 31, 0.12)' },
           err: { value: '{colors.bench.err}' },
           errSoft: { value: 'rgba(155, 44, 44, 0.12)' },
+          // El error sobre el riel oscuro: el rojo de estado no se lee
+          // contra el grafito, asi que la banda usa una version mas clara.
+          errBright: { value: '#D96A62' },
         },
 
         scrollbar: {

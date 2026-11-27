@@ -36,7 +36,7 @@ export const TextInput = memo(function TextInput({
   const isNearLimit = charCount > WARN_CHARS;
 
   return (
-    <Box display="grid" gap={2}>
+    <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Label htmlFor={id}>{label}</Label>
         <Badge

@@ -118,7 +118,7 @@ export function VoiceDesigner({
   const ttlExpiry = savedVoice?.ttlExpiry ?? Date.now() + DESIGN_TTL_MS;
 
   return (
-    <Box display="grid" gap={6}>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
       {/* Prompt */}
       <Sheet>
         <SheetHeader>
@@ -128,7 +128,7 @@ export function VoiceDesigner({
           </SheetDescription>
         </SheetHeader>
         <SheetContent display="grid" gap={3}>
-          <Box display="grid" gap={2}>
+          <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Label htmlFor="designer-prompt">Prompt</Label>
               <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
@@ -161,7 +161,7 @@ export function VoiceDesigner({
           </Box>
 
           {/* Preview Text */}
-          <Box display="grid" gap={2}>
+          <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Label htmlFor="designer-preview-text">Preview Text</Label>
               <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
@@ -205,7 +205,7 @@ export function VoiceDesigner({
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Voice ID</Label>
               <code style={{ fontSize: '0.875rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
                 {previewResult.voice.voiceId}
@@ -213,14 +213,14 @@ export function VoiceDesigner({
             </Box>
 
             {previewResult.trialAudio && (
-              <Box display="grid" gap={2}>
+              <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
                 <Label>Preview Audio (hex)</Label>
                 <AudioPlayer hex={previewResult.trialAudio} format="mp3" />
               </Box>
             )}
 
             {previewResult.trialAudioUrl && !previewResult.trialAudio && (
-              <Box display="grid" gap={2}>
+              <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
                 <Label>Preview Audio</Label>
                 <audio controls src={previewResult.trialAudioUrl} style={{ width: '100%' }} />
               </Box>

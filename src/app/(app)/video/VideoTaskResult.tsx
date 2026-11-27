@@ -27,7 +27,7 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
     : undefined;
 
   return (
-    <Box display="grid" gap={3}>
+    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
       {isPolling && (
         <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="1.5rem" textAlign="center" color="content.readout">
           Waiting for MiniMax to finish the task...
@@ -35,7 +35,7 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
       )}
 
       {task && (
-        <Box display="grid" gap={2}>
+        <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
           <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
             <Box color="content.ink" fontSize="sm">
               {task.id} · {task.status}

@@ -19,6 +19,7 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 interface Template {
   id: string;
@@ -161,19 +162,8 @@ export default function VideoAgentPage() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
-        <Box maxW="52rem">
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Video Agent</h1>
-          <Box color="content.readout" mt={1}>
-            Generate a video from an official MiniMax template. Pick a template, fill what it asks
-            for, and follow the task until the clip is ready.
-          </Box>
-        </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
-          Template tasks are billable and run asynchronously. The download link is valid for 9 hours.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+      <ConsoleBand monogram="VA" title="Video Agent" description="Generate a video from an official MiniMax template. Pick a template, fill what it asks for, and follow the task until the clip is ready." note="Template tasks are billable and run asynchronously. The download link is valid for 9 hours." />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.9fr) minmax(0, 1.1fr)' }} gap={6} alignItems="start">
         <Sheet>

@@ -10,6 +10,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Box } from '@chakra-ui/react';
 
+import { ConsoleBand, type ConsoleReadout } from '@/components/ui/console-band';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import type { VideoMediaValues } from './video-options';
@@ -64,35 +65,34 @@ interface VideoStudioHeaderProps {
   title: string;
   description: string;
   note?: string;
+  /** Key facts of the current job, shown as live readouts. */
+  readouts?: ConsoleReadout[];
+  /** What the readouts describe. */
+  readoutsLabel?: string;
 }
 
 /**
  * The masthead every Video Studio route shares.
  *
- * A title, one line of description, and at most one note. No eyebrow, no
- * card: the hierarchy comes from the type scale.
+ * It carries the identity of the area and the live configuration, so the
+ * sheet below does not have to repeat them.
  */
-export function VideoStudioHeader({ title, description, note }: VideoStudioHeaderProps) {
+export function VideoStudioHeader({
+  title,
+  description,
+  note,
+  readouts,
+  readoutsLabel,
+}: VideoStudioHeaderProps) {
   return (
-    <Box display="grid" gap={2}>
-      <h1>{title}</h1>
-      <Box color="content.readout" fontSize="body" lineHeight="body" maxW="54rem">
-        {description}
-      </Box>
-      {note && (
-        <Box
-          borderLeft="2px solid"
-          borderColor="surface.rule"
-          pl={3}
-          color="content.subtle"
-          fontSize="label"
-          lineHeight="label"
-          maxW="54rem"
-        >
-          {note}
-        </Box>
-      )}
-    </Box>
+    <ConsoleBand
+      monogram="VI"
+      title={title}
+      description={description}
+      note={note}
+      readouts={readouts}
+      readoutsLabel={readoutsLabel}
+    />
   );
 }
 

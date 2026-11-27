@@ -20,7 +20,8 @@ import Link from 'next/link';
 import { VoiceCard } from '@/components/voice/VoiceCard';
 import { VoiceGroupSection } from '@/components/voice/VoiceGroupSection';
 import { getLanguageInfo } from '@/lib/language-flags';
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 export default function VoicesPage() {
   const [systemVoices, setSystemVoices] = useState<VoiceDTO[]>([]);
@@ -133,18 +134,17 @@ export default function VoicesPage() {
   const hasFilteredSystemVoices = filteredSystemGroups.some((group) => group.voices.length > 0);
 
   return (
-    <Box display="grid" gap={6}>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Box>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Voices</h1>
-          <Box color="content.readout" mt={1}>
-            Browse system voices or manage your cloned and designed voices.
-          </Box>
-        </Box>
-        <Button variant="outline" colorPalette="blue" onClick={loadVoices} disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </Button>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)">
+      <ConsoleBand
+        monogram="SP"
+        title="Voices"
+        description="Browse system voices or manage your cloned and designed voices."
+        actions={
+          <Button variant="console" onClick={loadVoices} disabled={isLoading}>
+            {isLoading ? 'Loading...' : 'Refresh'}
+          </Button>
+        }
+      />
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
@@ -170,7 +170,7 @@ export default function VoicesPage() {
                 />
               </Box>
             </Box>
-            <Box display="grid" gap={8}>
+            <Box display="grid" gap={8} gridTemplateColumns="minmax(0, 1fr)">
               {filteredSystemGroups.filter((group) => group.voices.length > 0).map((group) => (
                 <VoiceGroupSection key={group.language} language={group.language} voices={group.voices} />
               ))}
@@ -218,7 +218,7 @@ export default function VoicesPage() {
                 <Badge variant="info">Designed</Badge>
               </Box>
             )}
-            <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}>
+            <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }}>
               {filteredUserVoices.map((voice) => (
                 <VoiceCard
                   key={voice.voiceId}

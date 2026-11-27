@@ -249,10 +249,10 @@ export const StreamingPlayer = memo(function StreamingPlayer({ text, voiceId, mo
     void audioContextRef.current?.close();
   }, [stopCurrentPlayback]);
 
-  if (!webAudioSupported) return <Box display="grid" gap={2}><p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>Web Audio API is not supported. Streaming audio is unavailable.</p></Box>;
+  if (!webAudioSupported) return <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)"><p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>Web Audio API is not supported. Streaming audio is unavailable.</p></Box>;
 
   return (
-    <Box display="grid" gap={3}>
+    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
       {errorMessage && <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-state.err)' }}>{errorMessage}</p>}
       <Box display="flex" alignItems="center" gap={2}>
         {streamState === 'idle' || streamState === 'error' ? <Button variant="outline" size="sm" onClick={handleStart} disabled={!enabled || !text || !voiceId}>Start Stream</Button> : streamState === 'streaming' || streamState === 'connecting' ? <Button variant="outline" size="sm" onClick={handleStop}>Stop</Button> : null}

@@ -257,7 +257,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
   };
 
   return (
-    <Box display="grid" gap={3}>
+    <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
       {/* Drop zone */}
       <Box
         border="2px dashed"
@@ -281,7 +281,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
         />
 
         {!file ? (
-          <Box display="grid" gap={2}>
+          <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
             <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
               Drag and drop an audio file, or{' '}
               <button
@@ -314,7 +314,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
 
       {/* Waveform preview */}
       {waveformData.length > 0 && (
-        <Box display="grid" gap={1}>
+        <Box display="grid" gap={1} gridTemplateColumns="minmax(0, 1fr)">
           <Label style={{ fontSize: '0.75rem' }}>Waveform Preview</Label>
           <Box display="flex" alignItems="flex-end" gap="1px" h={48}>
             {waveformData.map((amplitude, i) => (

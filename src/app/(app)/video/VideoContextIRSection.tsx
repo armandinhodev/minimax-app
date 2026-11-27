@@ -82,7 +82,7 @@ export function VideoContextIRSection() {
     : undefined;
 
   return (
-    <Box display="grid" gap={6} width="100%">
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
         title="H3-Context-IR"
         description="MiniMax interprets the multimodal context and returns a structured, enriched prompt. It never creates a video."

@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 const PROMPT_MAX_LENGTH = 2000;
 const LYRICS_MAX_LENGTH = 3500;
@@ -107,18 +108,8 @@ export default function LyricsGenerationPage() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
-        <Box maxW="52rem">
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Lyrics Generation</h1>
-          <Box color="content.readout" mt={1}>
-            Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music.
-          </Box>
-        </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
-          Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+      <ConsoleBand monogram="MU" title="Lyrics Generation" description="Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music." note="Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500." />
 
       <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
@@ -131,7 +122,7 @@ export default function LyricsGenerationPage() {
             <SheetDescription>Choose whether MiniMax should write from scratch or revise your existing lyrics.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gridTemplateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
+            <Box display="grid" gridTemplateColumns={{ base: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
                             <Field label="Mode" htmlFor="lyrics-title">
                 <Select value={mode} onValueChange={setMode} options={MODE_OPTIONS} disabled={isLoading} />
               </Field>
@@ -140,7 +131,7 @@ export default function LyricsGenerationPage() {
               </Field>
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="lyrics-prompt">Prompt</Label>
                 <Box as="span" color={prompt.length > PROMPT_MAX_LENGTH ? 'red.600' : 'gray.500'} fontSize="sm">{prompt.length}/{PROMPT_MAX_LENGTH}</Box>
@@ -156,7 +147,7 @@ export default function LyricsGenerationPage() {
               />
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="source-lyrics">Existing lyrics {mode === 'edit' ? '(required)' : '(optional)'}</Label>
                 <Box as="span" color={lyrics.length > LYRICS_MAX_LENGTH ? 'red.600' : 'gray.500'} fontSize="sm">{lyrics.length}/{LYRICS_MAX_LENGTH}</Box>
@@ -207,7 +198,7 @@ export default function LyricsGenerationPage() {
               </Box>
             )}
             {result && (
-              <Box display="grid" gap={4}>
+              <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
                 <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                   <Box color="content.readout" fontSize="sm">
                     {result.styleTags.length ? result.styleTags.join(' · ') : 'No style tags returned'}

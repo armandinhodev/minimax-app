@@ -78,7 +78,7 @@ export function VideoTasksSection() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
         title="Video Tasks"
         description="MiniMax keeps task records for 7 days. Cancel a queued task or delete a finished one."
@@ -95,7 +95,7 @@ export function VideoTasksSection() {
           </SheetDescription>
         </SheetHeader>
         <SheetContent display="grid" gap={3}>
-          <Box display="grid" gap={3} gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }}>
+          <Box display="grid" gap={3} gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
                         <Field label="Status" htmlFor="video-task-filter-status">
               <Select
                               id="video-task-filter-status"
@@ -131,7 +131,7 @@ export function VideoTasksSection() {
           ) : tasks.length === 0 ? (
             <Box color="content.readout" fontSize="sm">No task matches the current filters.</Box>
           ) : (
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               {tasks.map((task) => (
                 <Box
                   key={task.id}

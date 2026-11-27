@@ -71,14 +71,45 @@ centered except media previews.
 
 - **Rail** — 264px, `console`, collapsible groups. The active item is marked
   with a 2px `accent` bar and a lighter surface, never with a filled pill.
-- **Sheet** — the workspace is one column, max width 1180px, on the `field`
-  ground. Panels are `sheet` with a hairline `rule` border.
+- **Band** — every screen opens with the console band: `console` ground, the
+  area monogram, the title, one line of what the area does, and at most one
+  constraint worth reading. It is the one bold element on the page and the
+  thing that makes the app read as equipment instead of a website.
+- **Sheet** — the workspace is one column, max width 1152px (`72rem`), on the
+  `field` ground. Panels are `sheet` with a hairline `rule` border.
 - **Parameters** — rows with the label on the left and the value on the
   right, the value in mono. Dense and scannable.
 - **Result** — a monitor block below the form, separated by a hairline rule.
   Never a floating card.
 - **Below 768px** — the rail collapses to the drawer, panels stack, and
   parameter rows put the label above the value.
+
+### Primitives
+
+| Primitive | What it is |
+| --- | --- |
+| `Sheet` | A panel on the light workspace. No shadow, no accent border. |
+| `ConsoleBand` | The dark header of a screen. Monogram, title, description, note, and a readout strip. |
+| `ReadoutStrip` | A row of values in mono under a hairline. The instrument readout. |
+| `Monitor` | The dark inset where a result appears. A screen, not a second card. |
+| `Spec` | A label/value row. The value is mono and tabular. |
+| `Field` | A labelled control. Same geometry as `Spec`: label left, control right. |
+| `StatusLamp` | The state readout. The loudest thing on a page. |
+| `Badge` | A hairline rectangle in the label face. Never a pill. |
+
+### Rules the band imposes
+
+- **The band carries identity, the sheet carries controls.** The band may
+  repeat a value only when it says what it is: the readout strip is labelled
+  (`REQUEST`, `LIBRARY`) so it is not read as a copy of the form below.
+- **The band is the only dark block on the page**, and the monitor is the only
+  other one. Everything else is on the light ground.
+- **A button is sized to its label.** A primary action is never stretched to
+  the width of the sheet; it competes with the band for attention.
+- **Controls align down the column.** The label column of a parameter row is
+  a fixed 10rem, so every control starts at the same x, whatever its content.
+- **No grid track is sized by its content.** A column is `minmax(0, 1fr)`, so
+  a long id or a prompt clips instead of pushing the page sideways.
 
 ## Principles
 
@@ -95,6 +126,9 @@ centered except media previews.
 6. **Nothing animates on load.** Motion only answers a user action.
 7. **Errors and empty states point at the next action.** They never apologize
    and never state a mood.
+8. **Destructive is a hairline until it confirms.** A filled red button
+   appears once, on the confirmation. On a list, a red block per row outshouts
+   the action it names.
 
 ## Writing
 
@@ -112,6 +146,12 @@ rounded rectangle with the same soft shadow and a 4px colored left border,
 headings were the same size as body text, and the palette carried eight
 accent hues that encoded nothing. That decoration was replaced by structure
 that carries information.
+
+A later pass applied the vocabulary of this system without its thesis: the
+panels became `Sheet`, the type scale was honoured, and the result was still
+a stack of light rectangles — disciplined, but generic. **A system without a
+distinctive decision is not a design.** The console band is that decision:
+the one dark, monogrammed, unmistakable element that opens every screen.
 
 ## Anti-patterns
 

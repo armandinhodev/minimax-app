@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 
 import type { LibraryGenerationDTO, LibrarySummaryDTO } from '@/application/dto/library/LibraryDTO';
+import { ConsoleBand, ReadoutStrip } from '@/components/ui/console-band';
 import { PRODUCT_NAV_SECTIONS } from '@/components/navigation/nav-config';
 import { authFetch } from '@/lib/auth-client';
 
@@ -96,23 +97,25 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <Box display="grid" gap={8} width="100%">
-      <Box display="grid" gap={2}>
-        <h1>MiniMax Studio</h1>
-        <Box color="content.readout" fontSize="body" lineHeight="body" maxW="54rem">
-          Dispatch a job to MiniMax, follow its state and retrieve the asset. Every area speaks to
-          its own upstream endpoint.
-        </Box>
-      </Box>
+    <Box display="grid" gap={8} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+      <ConsoleBand
+        monogram="MS"
+        title="MiniMax Studio"
+        description="Dispatch a job to MiniMax, follow its state and retrieve the asset. Every area speaks to its own upstream endpoint."
+        actions={
+          <ReadoutStrip
+            label="Library"
+            readouts={[
+              { label: 'Generations', value: String(summary.totalGenerations) },
+              { label: 'Completed', value: String(summary.completedGenerations) },
+              { label: 'Assets', value: String(summary.totalAssets) },
+            ]}
+          />
+        }
+      />
 
-      <Box display="grid" gap={3}>
-        <Box display="flex" alignItems="baseline" justifyContent="space-between" gap={4} flexWrap="wrap">
-          <h2>Instruments</h2>
-          <Box color="content.subtle" fontSize="label" lineHeight="label" fontFamily="mono">
-            {summary.totalGenerations} generations · {summary.completedGenerations} completed ·{' '}
-            {summary.totalAssets} assets
-          </Box>
-        </Box>
+      <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
+        <h2>Instruments</h2>
 
         <Box borderTop="1px solid" borderColor="surface.rule">
           {PRODUCT_NAV_SECTIONS.map((area) => {
@@ -177,7 +180,7 @@ export default function DashboardPage() {
         </Box>
       </Box>
 
-      <Box display="grid" gap={3}>
+      <Box display="grid" gap={3} gridTemplateColumns="minmax(0, 1fr)">
         <h2>Recent creations</h2>
 
         {!isLoading && summary.recentGenerations.length === 0 && (

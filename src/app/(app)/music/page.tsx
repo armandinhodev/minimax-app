@@ -15,6 +15,7 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
 import { Field } from '@/components/ui/spec';
+import { ConsoleBand } from '@/components/ui/console-band';
 
 const PROMPT_MAX_LENGTH = 2000;
 const COVER_PROMPT_MIN_LENGTH = 10;
@@ -256,18 +257,8 @@ export default function MusicPage() {
   };
 
   return (
-    <Box display="grid" gap={6} width="100%">
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={4} flexWrap="wrap">
-        <Box maxW="52rem">
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700 }}>Music Generation</h1>
-          <Box color="content.readout" mt={1}>
-            Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID.
-          </Box>
-        </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
-          Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is stored by the backend when bytes are available.
-        </Box>
-      </Box>
+    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
+      <ConsoleBand monogram="MU" title="Music Generation" description="Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID." note="Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is stored by the backend when bytes are available." />
 
       <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
@@ -311,7 +302,7 @@ export default function MusicPage() {
               </Field>
             )}
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="music-prompt">{isCoverMode ? 'Target cover style' : 'Style prompt'}</Label>
                 <Box as="span" color={promptCharacters > promptMaxLength ? 'red.600' : 'gray.500'} fontSize="sm">
@@ -332,7 +323,7 @@ export default function MusicPage() {
               </Box>
             </Box>
 
-            <Box display="grid" gap={2}>
+            <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="music-lyrics">{isCoverMode ? 'Lyrics (optional)' : 'Lyrics'}</Label>
                 <Box as="span" color={lyricsCharacters > lyricsMaxLength ? 'red.600' : 'gray.500'} fontSize="sm">
@@ -353,11 +344,11 @@ export default function MusicPage() {
               </Box>
             </Box>
 
-            <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
+            <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
                             <Field label="Model">
                 <Select value={model} onValueChange={handleModelChange} options={MODEL_OPTIONS} disabled={isLoading} />
               </Field>
-              <Box display="grid" gap={2}>
+              <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
                 <Label>Audio settings</Label>
                 <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" px="0.75rem" py="0.5rem" color="content.ink" fontSize="sm">
                   MP3 · 44.1 kHz · 256 kbps
@@ -406,7 +397,7 @@ export default function MusicPage() {
             )}
 
             {result && (
-              <Box display="grid" gap={4}>
+              <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
                 <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" display="grid" gap={3}>
                   <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                     <Box>
@@ -420,7 +411,7 @@ export default function MusicPage() {
                   <AudioPlayer hex={result.audio} format={result.format} onDownload={() => downloadMusicHex(result.audio, result.format, result.id)} />
                 </Box>
 
-                <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}>
+                <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', md: 'repeat(3, minmax(0, 1fr))' }}>
                   <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" p="0.75rem">
                     <Box color="content.subtle" fontSize="xs">Mode</Box>
                     <Box fontWeight={700}>{isCoverMode ? 'Cover' : instrumental ? 'Instrumental' : 'Vocal'}</Box>

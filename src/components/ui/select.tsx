@@ -187,11 +187,19 @@ function BaseSelect({
           height="2.25rem"
           fontSize="body"
         >
-          <ChakraSelect.ValueText placeholder={placeholder}>
+          <ChakraSelect.ValueText
+            placeholder={placeholder}
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+            minW={0}
+          >
             {selectedOption ? (
-              <Box display="inline-flex" alignItems="center" gap={2}>
+              <Box display="inline-flex" alignItems="center" gap={2} minW={0} maxW="100%">
                 {selectedOption.flag && <FlagImage flag={selectedOption.flag} size={FLAG_SIZE_PX} />}
-                <span>{selectedOption.label}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {selectedOption.label}
+                </span>
               </Box>
             ) : null}
           </ChakraSelect.ValueText>

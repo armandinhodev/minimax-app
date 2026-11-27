@@ -25,7 +25,7 @@ export function Spec({ label, value, plain = false, ...props }: SpecProps) {
   return (
     <Box
       display="grid"
-      gridTemplateColumns={{ base: "1fr", md: "minmax(9.5rem, 0.45fr) minmax(0, 20rem)" }}
+      gridTemplateColumns={{ base: "1fr", md: "10rem minmax(0, 20rem)" }}
       gap={{ base: 1, md: 4 }}
       alignItems="baseline"
       py="0.5rem"
@@ -65,12 +65,13 @@ export function SpecList({ children, ...props }: SpecListProps) {
 
 const rowLayout = {
   display: "grid",
-  // La columna de control se topa: un valor de "2K" no debe ocupar 600px.
-  // La de etiqueta tiene ancho para "Duration (seconds)" en una linea.
-  gridTemplateColumns: { base: "1fr", md: "minmax(9.5rem, 0.45fr) minmax(0, 20rem)" },
+  // La columna de etiqueta es fija: con una fraccion, el ancho dependia del
+  // contenido del control y dos filas distintas no alineaban sus columnas.
+  // La de control se topa: un valor de "2K" no debe ocupar 600px.
+  gridTemplateColumns: { base: "1fr", md: "10rem minmax(0, 20rem)" },
   gap: { base: 1, md: 4 },
   alignItems: "center",
-  py: "0.5rem",
+  py: "0.375rem",
   borderBottom: "1px solid",
   borderColor: "surface.rule",
 } as const;
