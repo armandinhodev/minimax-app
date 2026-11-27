@@ -229,13 +229,13 @@ export default function TTSPage() {
                   aria-pressed={useWebSocketTransport}
                   onClick={() => setUseWebSocketTransport((prev) => !prev)}
                 >
-                  {useWebSocketTransport ? 'WebSocket' : 'HTTP SSE'}
+                  {useWebSocketTransport ? 'WebSocket' : 'Server-sent events'}
                 </Button>
               </Box>
               <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="interaction.accent" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
                 {useWebSocketTransport
-                  ? 'The server holds a WebSocket to MiniMax and relays the audio as it arrives. The API key never reaches the browser.'
-                  : 'The server relays the MiniMax HTTP stream as Server-Sent Events.'}
+                  ? 'The server holds a WebSocket to MiniMax and relays the audio as it arrives. Your access key never reaches the browser.'
+                  : 'The server relays the MiniMax stream as server-sent events.'}
               </Box>
               <TextInput
                 value={streamingText}

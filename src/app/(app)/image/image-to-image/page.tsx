@@ -281,7 +281,7 @@ export default function ImageToImagePage() {
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.25fr)' }} gap={6} alignItems="start">
         <Sheet>
           <SheetHeader>
-            <SheetTitle>References and Direction</SheetTitle>
+            <SheetTitle>References and direction</SheetTitle>
             <SheetDescription>
               Attach JPG, PNG, WEBP, HEIC or HEIF images under 64MB each, then describe the transformation, style, composition, and mood.
             </SheetDescription>

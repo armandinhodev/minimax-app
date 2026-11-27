@@ -145,6 +145,10 @@ centered except media previews.
   joining them.
 - **The copy speaks about the user's world.** "Saved to Library", not "saved to
   backend Library". No mention of SQLite, HTTP or of the app itself.
+- **A proper noun is not title case.** "Generate with Whisper" is one
+  capitalised word, not two: the rule catches a capitalised word that is not
+  the first one, and tolerates acronyms (`URL`, `MP3`), camelCase (`MiniMax`)
+  and hyphenated names (`H3-Image`).
 
 ## How the rules are kept
 
@@ -152,8 +156,13 @@ centered except media previews.
 is broken, the same way `theme.test.tsx` guards the color tokens. It checks
 that no field label carries an optionality marker, that labels, panel titles
 and button labels are sentence case, that no visible string joins values with
-a middle dot, that every color token exists in the theme, and that no raw
-Chakra palette color sneaks back in.
+a middle dot, that the copy the user reads never names the implementation,
+that every color token exists in the theme, that every CSS variable it
+references exists, and that no raw Chakra palette color sneaks back in.
+
+The scan resolves the repository root from the test file, not from the
+working directory, and the first case asserts that it found the source tree:
+a scan that finds nothing protects nothing, and that must fail loudly.
 
 A copy pass that is not enforced is a copy pass that comes back.
 

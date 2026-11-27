@@ -91,6 +91,8 @@ const config = defineConfig({
           rule: { value: '{colors.bench.rule}' },
           border: { value: '{colors.bench.rule}' },
           inset: { value: 'rgba(15, 18, 22, 0.04)' },
+          // El velo que baja el fondo cuando un dialogo se abre.
+          veil: { value: 'rgba(15, 18, 22, 0.56)' },
         },
 
         // Type colors.

@@ -18,7 +18,7 @@ import { Select, type SelectOption } from '@/components/ui/select';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
-import { Field } from '@/components/ui/spec';
+import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { ConsoleBand } from '@/components/ui/console-band';
 
 import {
@@ -367,10 +367,12 @@ export default function AsrPage() {
 
             {transcript && (
               <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
-                <Box display="flex" gap={4} flexWrap="wrap" color="content.readout" fontSize="sm">
-                  <span>Duration: {transcript.duration.toFixed(2)}s</span>
-                  {transcript.nSpeakers !== undefined && <span>Speakers: {transcript.nSpeakers}</span>}
-                </Box>
+                <SpecList>
+                  <Spec label="Duration" value={`${transcript.duration.toFixed(2)}s`} />
+                  {transcript.nSpeakers !== undefined && (
+                    <Spec label="Speakers" value={String(transcript.nSpeakers)} />
+                  )}
+                </SpecList>
 
                 {transcript.segments && transcript.segments.length > 0 ? (
                   <Box display="grid" gap="0.25rem">

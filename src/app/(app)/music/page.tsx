@@ -414,7 +414,7 @@ export default function MusicPage() {
                   <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                     <Box>
                       <Box fontWeight={700}>Generated track</Box>
-                      <Box color="content.readout" fontSize="sm">Trace: {result.metadata.traceId ?? result.id}</Box>
+                      <Box color="content.subtle" fontSize="xs">Trace {result.metadata.traceId ?? result.id}</Box>
                     </Box>
                     <Button variant="outline" size="sm" onClick={() => downloadMusicHex(result.audio, result.format, result.id)}>
                       Download MP3

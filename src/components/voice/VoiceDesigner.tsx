@@ -227,7 +227,7 @@ export function VoiceDesigner({
 
             <Box display="flex" gap={2}>
               <Button onClick={handleAccept} disabled={isLoading}>
-                Accept & Save
+                Accept and save
               </Button>
               <Button variant="outline" onClick={handleRegenerate} disabled={isLoading}>
                 Regenerate

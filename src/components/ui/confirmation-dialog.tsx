@@ -27,7 +27,7 @@ export function ConfirmationDialog({
   return (
     <Dialog.Root open={open} onOpenChange={({ open }) => onOpenChange(open)} placement="center">
       <Portal>
-        <Dialog.Backdrop bg="blackAlpha.500" />
+        <Dialog.Backdrop bg="surface.veil" />
         <Dialog.Positioner p={4}>
           <Dialog.Content role="alertdialog" maxW="md" borderRadius="xl" boxShadow="xl">
             <Dialog.Header>

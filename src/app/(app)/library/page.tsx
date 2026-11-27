@@ -496,7 +496,7 @@ export default function LibraryPage() {
         open={isClearDialogOpen}
         onOpenChange={setIsClearDialogOpen}
         title="Clear all Library records?"
-        description="This removes every SQLite Library record and attached local server asset file. This action cannot be undone."
+        description="This removes every Library record and the asset files stored with them. This action cannot be undone."
         confirmLabel="Clear all"
         onConfirm={handleConfirmClearAll}
       />
