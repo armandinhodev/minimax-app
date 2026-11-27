@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
-import { Field } from '@/components/ui/spec';
+import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { ConsoleBand } from '@/components/ui/console-band';
 
 const MODEL_OPTIONS: SelectOption[] = [
@@ -227,7 +227,7 @@ export default function TextPage() {
                             />
             </Field>
 
-                        <Field label="System prompt (optional)" htmlFor="text-system">
+                        <Field label="System prompt" htmlFor="text-system">
               <Textarea
                               id="text-system"
                               value={system}
@@ -253,7 +253,7 @@ export default function TextPage() {
 
             {error && <ErrorDisplay message={error} />}
 
-            <Button onClick={handleSend} disabled={!canSend} colorPalette="blue">
+            <Button onClick={handleSend} disabled={!canSend}>
               {isSending ? 'Thinking...' : 'Send'}
             </Button>
           </SheetContent>
@@ -279,7 +279,7 @@ export default function TextPage() {
               <Box
                 key={`${message.role}-${index}`}
                 border="1px solid"
-                borderColor={message.role === 'user' ? 'gray.200' : 'blue.100'}
+                borderColor={message.role === 'user' ? 'surface.rule' : 'interaction.soft'}
                 borderRadius="xl"
                 bg="surface.sheet"
                 p="0.75rem"
@@ -337,11 +337,15 @@ export default function TextPage() {
                 )}
 
                 {reply.usage && (
-                  <Box color="content.subtle" fontSize="0.78rem" mt={2}>
-                    {reply.usage.inputTokens !== undefined && <>Input {reply.usage.inputTokens} tokens · </>}
-                    {reply.usage.outputTokens !== undefined && <>Output {reply.usage.outputTokens} tokens</>}
-                    {reply.finishReason && <> · {reply.finishReason}</>}
-                  </Box>
+                  <SpecList>
+                    {reply.usage.inputTokens !== undefined && (
+                      <Spec label="Input tokens" value={String(reply.usage.inputTokens)} />
+                    )}
+                    {reply.usage.outputTokens !== undefined && (
+                      <Spec label="Output tokens" value={String(reply.usage.outputTokens)} />
+                    )}
+                    {reply.finishReason && <Spec label="Finish reason" value={reply.finishReason} />}
+                  </SpecList>
                 )}
               </Box>
             )}

@@ -170,7 +170,7 @@ describe('TTSPage', () => {
     expect(container!.querySelector('[data-streaming-player]')?.getAttribute('data-text')).toBe('');
   });
 
-  it('previews generated hex audio and relies on backend Library recording', async () => {
+  it('previews generated hex audio and relies on Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ audio: '00010203' }),
@@ -194,7 +194,7 @@ describe('TTSPage', () => {
 
     expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
-    expect(container!.textContent).toContain('Audio generated and saved to backend Library');
+    expect(container!.textContent).toContain('Audio generated and saved to Library');
     expect(container!.querySelector('[data-audio-player]')).not.toBeNull();
   });
 
@@ -249,6 +249,6 @@ describe('TTSPage', () => {
 
     expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
-    expect(container!.textContent).toContain('Audio generated and saved to backend Library');
+    expect(container!.textContent).toContain('Audio generated and saved to Library');
   });
 });

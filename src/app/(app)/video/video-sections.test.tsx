@@ -471,7 +471,7 @@ describe('Video Studio sections', () => {
     expect(container!.textContent).toContain('No task loaded yet.');
 
     await act(async () => {
-      findButton(container!, 'Refresh Tasks').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      findButton(container!, 'Refresh tasks').dispatchEvent(new MouseEvent('click', { bubbles: true }));
       await Promise.resolve();
       await Promise.resolve();
     });

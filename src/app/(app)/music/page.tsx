@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
-import { Field } from '@/components/ui/spec';
+import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { ConsoleBand } from '@/components/ui/console-band';
 
 const PROMPT_MAX_LENGTH = 2000;
@@ -248,7 +248,7 @@ export default function MusicPage() {
 
       const data = await response.json() as MusicGenerationResult;
       setResult(data);
-      setActionStatus('Music generated and saved to backend Library. The preview remains available on this page.');
+      setActionStatus('Music generated and saved to Library. The preview remains available on this page.');
     } catch {
       setError({ code: null, message: 'Failed to generate music. Check your connection and try again.' });
     } finally {
@@ -258,16 +258,16 @@ export default function MusicPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="MU" title="Music Generation" description="Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID." note="Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is stored by the backend when bytes are available." />
+      <ConsoleBand monogram="MU" title="Music Generation" description="Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID." note="Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is saved to Library when the bytes are available." />
 
-      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
         <Sheet>
           <SheetHeader>
-            <SheetTitle>{isCoverMode ? 'Cover Generation Brief' : 'Composition Brief'}</SheetTitle>
+            <SheetTitle>{isCoverMode ? 'Cover generation brief' : 'Composition brief'}</SheetTitle>
             <SheetDescription>
               {isCoverMode
                 ? 'Step 2 after Cover Preprocess: choose the target cover style and optionally edit the detected lyrics.'
@@ -276,7 +276,7 @@ export default function MusicPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {isCoverMode && (
-              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
+              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
                 Cover generation requires a cover feature ID from Cover Preprocess. The ID expires 24 hours after preprocessing.
               </Box>
             )}
@@ -305,7 +305,7 @@ export default function MusicPage() {
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="music-prompt">{isCoverMode ? 'Target cover style' : 'Style prompt'}</Label>
-                <Box as="span" color={promptCharacters > promptMaxLength ? 'red.600' : 'gray.500'} fontSize="sm">
+                <Box as="span" color={promptCharacters > promptMaxLength ? 'state.err' : 'content.subtle'} fontSize="sm">
                   {promptCharacters}/{promptMaxLength}
                 </Box>
               </Box>
@@ -325,8 +325,8 @@ export default function MusicPage() {
 
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-                <Label htmlFor="music-lyrics">{isCoverMode ? 'Lyrics (optional)' : 'Lyrics'}</Label>
-                <Box as="span" color={lyricsCharacters > lyricsMaxLength ? 'red.600' : 'gray.500'} fontSize="sm">
+                <Label htmlFor="music-lyrics">Lyrics</Label>
+                <Box as="span" color={lyricsCharacters > lyricsMaxLength ? 'state.err' : 'content.subtle'} fontSize="sm">
                   {lyricsCharacters}/{lyricsMaxLength}
                 </Box>
               </Box>
@@ -350,40 +350,52 @@ export default function MusicPage() {
               </Field>
               <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
                 <Label>Audio settings</Label>
-                <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" px="0.75rem" py="0.5rem" color="content.ink" fontSize="sm">
-                  MP3 · 44.1 kHz · 256 kbps
-                </Box>
+                <SpecList>
+                  <Spec label="Format" value="MP3" />
+                  <Spec label="Sample rate" value="44.1 kHz" />
+                  <Spec label="Bitrate" value="256 kbps" />
+                </SpecList>
               </Box>
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
 
-            <Button onClick={handleGenerate} disabled={!canGenerate} colorPalette="purple">
-              {isLoading ? 'Generating music...' : isCoverMode ? 'Generate Cover' : 'Generate Music'}
+            <Button onClick={handleGenerate} disabled={!canGenerate}>
+              {isLoading ? 'Generating music...' : isCoverMode ? 'Generate cover' : 'Generate music'}
             </Button>
           </SheetContent>
         </Sheet>
 
         <Sheet minH="28rem">
           <SheetHeader>
-            <SheetTitle>Track Preview</SheetTitle>
+            <SheetTitle>Track preview</SheetTitle>
             <SheetDescription>
               {result
-                ? `${result.metadata.durationSeconds ? `${Math.round(result.metadata.durationSeconds)}s · ` : ''}${result.format.toUpperCase()} · ${result.metadata.sampleRate ?? DEFAULT_SAMPLE_RATE} Hz`
+                ? 'The track MiniMax returned, with its format and length.'
                 : isCoverMode ? 'Generated covers appear here with playback, download, and Library persistence.' : 'Generated tracks appear here with playback, download, and Library persistence.'}
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
+            {result && (
+              <SpecList>
+                <Spec
+                  label="Length"
+                  value={result.metadata.durationSeconds ? `${Math.round(result.metadata.durationSeconds)}s` : 'unknown'}
+                />
+                <Spec label="Format" value={result.format.toUpperCase()} />
+                <Spec label="Sample rate" value={`${result.metadata.sampleRate ?? DEFAULT_SAMPLE_RATE} Hz`} />
+              </SpecList>
+            )}
             {isLoading && (
               <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Composing your track with MiniMax Music. Keep this tab open until generation completes.
@@ -392,7 +404,7 @@ export default function MusicPage() {
 
             {!isLoading && !result && (
               <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
-                {isCoverMode ? 'Start from a valid cover feature ID and target cover style. Your generated cover will be saved to backend Library automatically when bytes are available.' : 'Start with a focused brief and complete lyrics. Your generated track will be saved to backend Library automatically when bytes are available.'}
+                {isCoverMode ? 'Start from a valid cover feature ID and target cover style. Your generated cover is saved to Library once the audio bytes are available.' : 'Start with a focused brief and complete lyrics. Your generated track will be saved to Library automatically when bytes are available.'}
               </Box>
             )}
 
@@ -404,7 +416,7 @@ export default function MusicPage() {
                       <Box fontWeight={700}>Generated track</Box>
                       <Box color="content.readout" fontSize="sm">Trace: {result.metadata.traceId ?? result.id}</Box>
                     </Box>
-                    <Button variant="outline" colorPalette="blue" size="sm" onClick={() => downloadMusicHex(result.audio, result.format, result.id)}>
+                    <Button variant="outline" size="sm" onClick={() => downloadMusicHex(result.audio, result.format, result.id)}>
                       Download MP3
                     </Button>
                   </Box>

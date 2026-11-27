@@ -122,7 +122,7 @@ export function VoiceDesigner({
       {/* Prompt */}
       <Sheet>
         <SheetHeader>
-          <SheetTitle>Voice Prompt</SheetTitle>
+          <SheetTitle>Voice prompt</SheetTitle>
           <SheetDescription>
             Describe the voice you want in natural language.
           </SheetDescription>
@@ -131,7 +131,7 @@ export function VoiceDesigner({
           <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Label htmlFor="designer-prompt">Prompt</Label>
-              <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>
                 {prompt.length}/{MAX_PROMPT_CHARS}
               </span>
             </Box>
@@ -147,7 +147,7 @@ export function VoiceDesigner({
 
           {/* Example suggestions */}
           <Box display="flex" flexWrap="wrap" gap={1}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>Examples:</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>Examples:</span>
             {EXAMPLE_PROMPTS.map((example) => (
               <Badge
                 key={example}
@@ -163,8 +163,8 @@ export function VoiceDesigner({
           {/* Preview Text */}
           <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
             <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Label htmlFor="designer-preview-text">Preview Text</Label>
-              <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
+              <Label htmlFor="designer-preview-text">Preview text</Label>
+              <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>
                 {previewText.length}/{MAX_PREVIEW_CHARS}
               </span>
             </Box>
@@ -180,7 +180,7 @@ export function VoiceDesigner({
 
           {error && <ErrorDisplay code={error.code} message={error.message} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}
@@ -188,9 +188,8 @@ export function VoiceDesigner({
           <Button
             onClick={handleDesign}
             disabled={isLoading || !!previewResult || !!savedVoice}
-            colorPalette="green"
           >
-            {isLoading ? 'Designing...' : 'Design Voice'}
+            {isLoading ? 'Designing...' : 'Design voice'}
           </Button>
         </SheetContent>
       </Sheet>
@@ -199,7 +198,7 @@ export function VoiceDesigner({
       {previewResult && (
         <Sheet>
           <SheetHeader>
-            <SheetTitle>Voice Preview</SheetTitle>
+            <SheetTitle>Voice preview</SheetTitle>
             <SheetDescription>
               Listen to the trial audio. Accept to save or regenerate for a new version.
             </SheetDescription>
@@ -207,30 +206,30 @@ export function VoiceDesigner({
           <SheetContent display="grid" gap={4}>
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Label>Voice ID</Label>
-              <code style={{ fontSize: '0.875rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
+              <code style={{ fontSize: '0.875rem', backgroundColor: 'var(--chakra-colors-surface-field)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
                 {previewResult.voice.voiceId}
               </code>
             </Box>
 
             {previewResult.trialAudio && (
               <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-                <Label>Preview Audio (hex)</Label>
+                <Label>Preview audio (hex)</Label>
                 <AudioPlayer hex={previewResult.trialAudio} format="mp3" />
               </Box>
             )}
 
             {previewResult.trialAudioUrl && !previewResult.trialAudio && (
               <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-                <Label>Preview Audio</Label>
+                <Label>Preview audio</Label>
                 <audio controls src={previewResult.trialAudioUrl} style={{ width: '100%' }} />
               </Box>
             )}
 
             <Box display="flex" gap={2}>
-              <Button onClick={handleAccept} disabled={isLoading} colorPalette="green">
+              <Button onClick={handleAccept} disabled={isLoading}>
                 Accept & Save
               </Button>
-              <Button variant="outline" colorPalette="blue" onClick={handleRegenerate} disabled={isLoading}>
+              <Button variant="outline" onClick={handleRegenerate} disabled={isLoading}>
                 Regenerate
               </Button>
             </Box>
@@ -242,16 +241,16 @@ export function VoiceDesigner({
       {savedVoice && (
         <Sheet>
           <SheetHeader>
-            <SheetTitle>Voice Saved</SheetTitle>
+            <SheetTitle>Voice saved</SheetTitle>
             <SheetDescription>
               Your designed voice is ready. Use voice ID{' '}
-              <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{savedVoice.voiceId}</code> in Text to Speech. Fresh designed voices may appear there before the MiniMax voice list refreshes.
+              <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface-field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{savedVoice.voiceId}</code> in Text to Speech. Fresh designed voices may appear there before the MiniMax voice list refreshes.
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             <Box display="flex" alignItems="center" gap={2}>
               <TTLCounter expiresAt={ttlExpiry} label="Voice TTL" />
-              <span style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content-readout)' }}>
                 Expires after 7 days of inactivity.
               </span>
             </Box>

@@ -12,7 +12,7 @@ function Separator({ orientation = "horizontal", ...props }: SeparatorProps) {
   return (
     <Box
       flexShrink={0}
-      bg="gray.200"
+      bg="surface.rule"
       height={isHorizontal ? "1px" : "100%"}
       width={isHorizontal ? "100%" : "1px"}
       alignSelf="stretch"

@@ -122,8 +122,8 @@ export function VideoTasksSection() {
             </Field>
           </Box>
 
-          <Button variant="outline" colorPalette="blue" onClick={() => { void refreshTasks(); }} disabled={isRefreshing}>
-            {isRefreshing ? 'Loading tasks...' : 'Refresh Tasks'}
+          <Button variant="outline" onClick={() => { void refreshTasks(); }} disabled={isRefreshing}>
+            {isRefreshing ? 'Loading tasks...' : 'Refresh tasks'}
           </Button>
 
           {!hasLoaded ? (
@@ -147,9 +147,10 @@ export function VideoTasksSection() {
                 >
                   <Box fontSize="sm" color="content.ink">
                     <strong>{task.id}</strong>
-                    <Box color="content.readout" fontSize="xs">
-                      {task.taskType} · {task.status}
-                      {task.model ? ` · ${task.model}` : ''}
+                    <Box color="content.readout" fontSize="xs" display="flex" gap={2} flexWrap="wrap">
+                      <span>{task.taskType}</span>
+                      <span>{task.status}</span>
+                      {task.model && <span>{task.model}</span>}
                     </Box>
                   </Box>
                   {(task.status === 'queued' || task.status === 'running' || task.status === 'succeeded' || task.status === 'failed') && (

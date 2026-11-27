@@ -117,7 +117,7 @@ describe('LyricsGenerationPage', () => {
       changeTextarea(prompt, 'Hopeful synth-pop.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Lyrics');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate lyrics');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -149,7 +149,7 @@ describe('LyricsGenerationPage', () => {
     });
 
     expect(container!.textContent).toContain('Paste the lyrics you want MiniMax to edit.');
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Lyrics') as HTMLButtonElement;
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate lyrics') as HTMLButtonElement;
     expect(generateButton.disabled).toBe(true);
     expect(authClientMocks.authFetch).not.toHaveBeenCalled();
   });

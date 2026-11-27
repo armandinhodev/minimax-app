@@ -80,14 +80,13 @@ export function VoiceCard({ voice, onUse, onDelete, isDeleting = false }: VoiceC
           <Badge variant={voice.type === 'system' ? 'secondary' : 'success'}>
             {voice.type === 'system' ? 'System voice' : 'My voice'}
           </Badge>
-          <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>Created {createdDate}</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>Created {createdDate}</span>
           {voice.ttlExpiry && <TTLCounter expiresAt={voice.ttlExpiry} label="TTL" />}
         </Box>
         <Box display="flex" gap={1} style={{ marginTop: '0.25rem' }}>
           {onUse && (
             <Button
               variant="outline"
-              colorPalette="green"
               size="sm"
               onClick={() => onUse(voice.voiceId)}
               disabled={isDeleting}

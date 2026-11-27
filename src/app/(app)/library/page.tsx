@@ -5,6 +5,7 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { Spec, SpecList } from '@/components/ui/spec';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TTLCounter } from '@/components/shared/TTLCounter';
@@ -184,62 +185,85 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
       </SheetHeader>
       <SheetContent display="grid" gap={2}>
         {generation.prompt && (
-          <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content-readout)' }}>
             &ldquo;{truncateText(generation.prompt, 80)}&rdquo;
           </p>
         )}
-        {sourceLabel && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.ink)' }}>Source: {sourceLabel}</p>
-        )}
-        {generation.model && (
-          <p style={{ fontSize: '0.75rem' }}>
-            Model: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.model}</code>
-          </p>
-        )}
+        {sourceLabel && <Spec label="Source" value={sourceLabel} />}
+        {generation.model && <Spec label="Model" value={generation.model} />}
         {getStringMetadata(generation.metadata, 'voiceId') && (
-          <p style={{ fontSize: '0.75rem' }}>
-            Voice: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{getStringMetadata(generation.metadata, 'voiceId')}</code>
-          </p>
+          <Spec label="Voice" value={getStringMetadata(generation.metadata, 'voiceId') ?? ''} />
         )}
         {generation.providerFileId && (
-          <p style={{ fontSize: '0.75rem' }}>
-            File: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{generation.providerFileId}</code>
-          </p>
+          <Spec label="File" value={generation.providerFileId} />
         )}
         {generation.kind === 'image' && (
-          <Box display="flex" gap={2} flexWrap="wrap" color="content.readout" fontSize="0.75rem">
-            {aspectRatio && <span>Ratio: {aspectRatio}</span>}
-            {getNumberMetadata(generation.metadata, 'seed') !== undefined && <span>Seed: {getNumberMetadata(generation.metadata, 'seed')}</span>}
-            {getBooleanMetadata(generation.metadata, 'promptOptimizer') !== undefined && <span>Optimizer: {getBooleanMetadata(generation.metadata, 'promptOptimizer') ? 'On' : 'Off'}</span>}
-          </Box>
+          <SpecList>
+            {aspectRatio && <Spec label="Aspect ratio" value={aspectRatio} />}
+            {getNumberMetadata(generation.metadata, 'seed') !== undefined && (
+              <Spec label="Seed" value={String(getNumberMetadata(generation.metadata, 'seed'))} />
+            )}
+            {getBooleanMetadata(generation.metadata, 'promptOptimizer') !== undefined && (
+              <Spec
+                label="Prompt optimizer"
+                value={getBooleanMetadata(generation.metadata, 'promptOptimizer') ? 'On' : 'Off'}
+              />
+            )}
+          </SpecList>
         )}
         {generation.kind === 'music' && (
-          <Box display="flex" gap={2} flexWrap="wrap" color="content.readout" fontSize="0.75rem">
-            {audioAsset?.format && <span>Format: {audioAsset.format.toUpperCase()}</span>}
-            {getNumberMetadata(generation.metadata, 'durationSeconds') !== undefined && <span>Duration: {Math.round(getNumberMetadata(generation.metadata, 'durationSeconds') ?? 0)}s</span>}
-            {getNumberMetadata(generation.metadata, 'audioDurationSeconds') !== undefined && <span>Reference duration: {Math.round(getNumberMetadata(generation.metadata, 'audioDurationSeconds') ?? 0)}s</span>}
-            {getNumberMetadata(generation.metadata, 'sampleRate') !== undefined && <span>Sample rate: {getNumberMetadata(generation.metadata, 'sampleRate')} Hz</span>}
-            {getNumberMetadata(generation.metadata, 'bitrate') !== undefined && <span>Bitrate: {Math.round((getNumberMetadata(generation.metadata, 'bitrate') ?? 0) / 1000)} kbps</span>}
-          </Box>
+          <SpecList>
+            {audioAsset?.format && <Spec label="Format" value={audioAsset.format.toUpperCase()} />}
+            {getNumberMetadata(generation.metadata, 'durationSeconds') !== undefined && (
+              <Spec
+                label="Duration"
+                value={`${Math.round(getNumberMetadata(generation.metadata, 'durationSeconds') ?? 0)}s`}
+              />
+            )}
+            {getNumberMetadata(generation.metadata, 'audioDurationSeconds') !== undefined && (
+              <Spec
+                label="Reference duration"
+                value={`${Math.round(getNumberMetadata(generation.metadata, 'audioDurationSeconds') ?? 0)}s`}
+              />
+            )}
+            {getNumberMetadata(generation.metadata, 'sampleRate') !== undefined && (
+              <Spec
+                label="Sample rate"
+                value={`${getNumberMetadata(generation.metadata, 'sampleRate')} Hz`}
+              />
+            )}
+            {getNumberMetadata(generation.metadata, 'bitrate') !== undefined && (
+              <Spec
+                label="Bitrate"
+                value={`${Math.round((getNumberMetadata(generation.metadata, 'bitrate') ?? 0) / 1000)} kbps`}
+              />
+            )}
+          </SpecList>
         )}
         {isExpiredCoverPreprocess && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.run)' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state-run)' }}>
             This cover feature ID expired. Run Cover Preprocess again before using it for cover generation.
           </p>
         )}
         {isCoverPreprocessGeneration(generation) && !isExpiredCoverPreprocess && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.ok)' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state-ok)' }}>
             This intermediate Library record stores the cover feature ID metadata only. Reference audio bytes were not saved.
           </p>
         )}
         {generation.kind === 'video' && (
           <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-            <Box fontSize="sm" color="fg.muted">Task: {generation.providerTaskId} · {getStringMetadata(generation.metadata, 'providerStatus') ?? generation.status}</Box>
+            <SpecList>
+              <Spec label="Task" value={generation.providerTaskId ?? 'not returned'} />
+              <Spec
+                label="Status"
+                value={getStringMetadata(generation.metadata, 'providerStatus') ?? generation.status}
+              />
+            </SpecList>
             {enhancedPrompt && <Box whiteSpace="pre-wrap" fontSize="sm">{enhancedPrompt}</Box>}
             {videoAsset?.storageRef && (
               <>
                 <video controls preload="metadata" src={videoAsset.storageRef} aria-label="Generated video" style={{ width: '100%', borderRadius: 'var(--chakra-radii-md)' }} />
-                <Box fontSize="xs" color="fg.muted">This provider URL is temporary. Download the video before it expires; an exact expiration time is not provided.</Box>
+                <Box fontSize="xs" color="content.subtle">This provider URL is temporary. Download the video before it expires; an exact expiration time is not provided.</Box>
                 <Button size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
               </>
             )}
@@ -262,10 +286,10 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
                     style={{ width: '100%', aspectRatio: aspectRatio ? aspectRatio.replace(':', ' / ') : '1 / 1', objectFit: 'cover', display: 'block' }}
                   />
                   <Box display="flex" gap={1} p="0.5rem" flexWrap="wrap">
-                    <Button variant="outline" colorPalette="blue" size="sm" onClick={() => openUrl(assetUrl)}>
+                    <Button variant="outline" size="sm" onClick={() => openUrl(assetUrl)}>
                       Open
                     </Button>
-                    <Button colorPalette="green" size="sm" onClick={() => downloadUrl(assetUrl)}>
+                    <Button size="sm" onClick={() => downloadUrl(assetUrl)}>
                       Download
                     </Button>
                   </Box>
@@ -275,13 +299,13 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           </Box>
         )}
         {generation.kind === 'image' && imageAssets.length === 0 && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.run)' }}>
-            No downloadable image asset is available for this backend Library record.
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state-run)' }}>
+            No downloadable image asset is available for this Library record.
           </p>
         )}
         {(generation.kind === 'tts' || generation.kind === 'music') && !audioAsset && !isCoverPreprocessGeneration(generation) && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.run)' }}>
-            This backend Library record has metadata only and no downloadable audio asset.
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state-run)' }}>
+            This Library record has metadata only and no downloadable audio asset.
           </p>
         )}
 
@@ -289,19 +313,17 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           {imageAssets[0]?.expiresAt && <TTLCounter expiresAt={imageAssets[0].expiresAt} label="URL TTL" />}
           {coverExpiresAt && <TTLCounter expiresAt={coverExpiresAt} label="Cover ID TTL" />}
           {audioAsset && (
-            <Button colorPalette="green" size="sm" onClick={() => downloadUrl(getDownloadUrl(generation, audioAsset))}>
+            <Button size="sm" onClick={() => downloadUrl(getDownloadUrl(generation, audioAsset))}>
               Download
             </Button>
           )}
           {coverGenerationHref && (
-            <a href={coverGenerationHref} style={{ border: '1px solid var(--chakra-colors-state-ok)', borderRadius: '0.375rem', color: 'var(--chakra-colors-state.ok)', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
-              Use in Cover Generation
+            <a href={coverGenerationHref} style={{ border: '1px solid var(--chakra-colors-state-ok)', borderRadius: '0.375rem', color: 'var(--chakra-colors-state-ok)', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
+              Use in cover generation
             </a>
           )}
           {(generation.kind === 'tts' || generation.kind === 'music') && !audioAsset && !isCoverPreprocessGeneration(generation) && (
-            <Button variant="outline" colorPalette="orange" size="sm" disabled>
-              Missing audio
-            </Button>
+            <Badge variant="warning">Audio not stored</Badge>
           )}
           <Button variant="outline" colorPalette="red" size="sm" onClick={() => onDelete(generation)}>
             Remove
@@ -335,7 +357,7 @@ export default function LibraryPage() {
       const data = await response.json() as { generations?: LibraryGenerationDTO[] };
       setGenerations(data.generations ?? []);
     } catch {
-      setError({ code: null, message: 'Failed to load backend Library records.' });
+      setError({ code: null, message: 'Failed to load Library records.' });
     }
   };
 
@@ -363,7 +385,7 @@ export default function LibraryPage() {
     const deleted = await deleteGeneration(pendingDeleteGeneration).catch(() => false);
 
     if (!deleted) {
-      setError({ code: null, message: 'Failed to remove backend Library record.' });
+      setError({ code: null, message: 'Failed to remove Library record.' });
       return;
     }
 
@@ -380,7 +402,7 @@ export default function LibraryPage() {
 
     setGenerations((prev) => prev.filter((generation) => !deletedIds.has(generation.id)));
     setIsClearDialogOpen(false);
-    setActionStatus(deletedIds.size === generations.length ? 'Backend Library records cleared.' : 'Some backend Library records could not be removed.');
+    setActionStatus(deletedIds.size === generations.length ? 'Library records cleared.' : 'Some Library records could not be removed.');
   };
 
   const filteredGenerations = filter === 'all' ? generations : generations.filter((generation) => generation.kind === filter);
@@ -390,7 +412,7 @@ export default function LibraryPage() {
       <ConsoleBand
         monogram="LB"
         title="Library"
-        description="Your backend Library records from SQLite metadata and server-side asset references."
+        description="Everything you have generated, with the asset references kept for it."
         readoutsLabel="Stored"
         readouts={[
           { label: 'Total', value: String(generations.length) },
@@ -405,7 +427,7 @@ export default function LibraryPage() {
             </Button>
             {generations.length > 0 && (
               <Button variant="console" colorPalette="red" onClick={() => setIsClearDialogOpen(true)}>
-                Clear All
+                Clear all
               </Button>
             )}
           </Box>
@@ -414,7 +436,7 @@ export default function LibraryPage() {
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
-        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
           {actionStatus}
         </Box>
       )}
@@ -425,7 +447,6 @@ export default function LibraryPage() {
             <Button
               key={option.value}
               variant={filter === option.value ? 'solid' : 'outline'}
-              colorPalette={filter === option.value ? 'green' : 'gray'}
               size="sm"
               onClick={() => setFilter(option.value)}
             >
@@ -446,9 +467,9 @@ export default function LibraryPage() {
         {generations.length === 0 && (
           <Sheet style={{ gridColumn: '1 / -1' }}>
             <SheetHeader>
-              <SheetTitle>No backend Library records yet.</SheetTitle>
+              <SheetTitle>No Library records yet.</SheetTitle>
               <SheetDescription>
-                Generate audio, music, images, or video to create SQLite Library records with backend asset references.
+                Generate audio, music, images, or video to create Library records you can reopen later.
               </SheetDescription>
             </SheetHeader>
           </Sheet>
@@ -467,16 +488,16 @@ export default function LibraryPage() {
         open={pendingDeleteGeneration !== null}
         onOpenChange={(open) => !open && setPendingDeleteGeneration(null)}
         title="Remove library record?"
-        description="This removes the selected backend Library record and any local server asset file attached to it. Provider-hosted MiniMax assets are not deleted."
+        description="This removes the selected Library record and any local server asset file attached to it. Provider-hosted MiniMax assets are not deleted."
         confirmLabel="Remove"
         onConfirm={handleConfirmDelete}
       />
       <ConfirmationDialog
         open={isClearDialogOpen}
         onOpenChange={setIsClearDialogOpen}
-        title="Clear all backend Library records?"
+        title="Clear all Library records?"
         description="This removes every SQLite Library record and attached local server asset file. This action cannot be undone."
-        confirmLabel="Clear All"
+        confirmLabel="Clear all"
         onConfirm={handleConfirmClearAll}
       />
     </Box>

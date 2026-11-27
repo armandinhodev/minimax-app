@@ -109,7 +109,7 @@ describe('ImagePage', () => {
     container = null;
   });
 
-  it('generates images with the MiniMax-H3-Image contract and relies on backend Library recording', async () => {
+  it('generates images with the MiniMax-H3-Image contract and relies on Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -149,7 +149,7 @@ describe('ImagePage', () => {
       clickButton(container!, 'image-area-2k');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -170,7 +170,7 @@ describe('ImagePage', () => {
       }),
     }));
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
-    expect(container!.textContent).toContain('Images generated and saved to backend Library');
+    expect(container!.textContent).toContain('Images generated and saved to Library');
   });
 
   it('never sends the legacy image-01 seed option', async () => {
@@ -194,7 +194,7 @@ describe('ImagePage', () => {
       changeTextarea(prompt, 'A premium studio product photo.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -229,7 +229,7 @@ describe('ImagePage', () => {
       changeInput(size, '2720x1536');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -253,7 +253,7 @@ describe('ImagePage', () => {
       optimizer.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -306,7 +306,7 @@ describe('ImagePage', () => {
       changeTextarea(prompt, 'A premium studio product photo.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -320,7 +320,7 @@ describe('ImagePage', () => {
       root!.render(<ImagePage />);
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -359,7 +359,7 @@ describe('ImagePage', () => {
     });
 
     const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
 
     act(() => {
       changeTextarea(prompt, 'A cinematic product banner.');
@@ -371,7 +371,7 @@ describe('ImagePage', () => {
 
     expect(container!.querySelector('img')?.getAttribute('src')).toBe('https://example.com/image-2.jpg');
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
-    expect(container!.textContent).toContain('Images generated and saved to backend Library');
+    expect(container!.textContent).toContain('Images generated and saved to Library');
     expect(container!.textContent).not.toContain('Failed to generate images');
   });
 });

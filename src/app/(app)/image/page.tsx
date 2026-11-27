@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import { Field } from '@/components/ui/spec';
+import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { ConsoleBand } from '@/components/ui/console-band';
 
 const PROMPT_MAX_LENGTH = 32_000;
@@ -21,16 +21,22 @@ const MODEL_OPTIONS = [
   { value: 'MiniMax-H3-Image-Highspeed', id: 'image-model-highspeed', label: 'MiniMax-H3-Image-Highspeed', hint: 'Faster, same limits' },
 ] as const;
 
-const ASPECT_RATIO_OPTIONS = [
+const ASPECT_RATIO_OPTIONS: ReadonlyArray<{
+  value: string;
+  label: string;
+  /** Extra line under the label, when the value alone does not say enough. */
+  size?: string;
+  hint: string;
+}> = [
   { value: 'auto', label: 'Auto', size: 'Chosen by MiniMax', hint: 'Prompt decides the frame' },
-  { value: '1:1', label: 'Square', size: '1:1', hint: 'Covers and avatars' },
-  { value: '16:9', label: 'Widescreen', size: '16:9', hint: 'Hero images' },
-  { value: '4:3', label: 'Classic', size: '4:3', hint: 'Editorial frames' },
-  { value: '3:2', label: 'Photo', size: '3:2', hint: 'Product shots' },
-  { value: '2:3', label: 'Portrait', size: '2:3', hint: 'Posters' },
-  { value: '3:4', label: 'Tall card', size: '3:4', hint: 'Social assets' },
-  { value: '9:16', label: 'Story', size: '9:16', hint: 'Mobile stories' },
-  { value: '21:9', label: 'Cinematic', size: '21:9', hint: 'Banners' },
+  { value: '1:1', label: 'Square', hint: 'Covers and avatars' },
+  { value: '16:9', label: 'Widescreen', hint: 'Hero images' },
+  { value: '4:3', label: 'Classic', hint: 'Editorial frames' },
+  { value: '3:2', label: 'Photo', hint: 'Product shots' },
+  { value: '2:3', label: 'Portrait', hint: 'Posters' },
+  { value: '3:4', label: 'Tall card', hint: 'Social assets' },
+  { value: '9:16', label: 'Story', hint: 'Mobile stories' },
+  { value: '21:9', label: 'Cinematic', hint: 'Banners' },
 ] as const;
 
 const AREA_OPTIONS = [
@@ -185,7 +191,7 @@ export default function ImagePage() {
 
       const data = await response.json() as ImageGenerationResult;
       setResult(data);
-      setActionStatus('Images generated and saved to backend Library. Provider URLs are not guaranteed to stay available, so download the final assets.');
+      setActionStatus('Images generated and saved to Library. Provider URLs are not guaranteed to stay available, so download the final assets.');
     } catch {
       setError({ code: null, message: 'Failed to generate images. Check your connection and try again.' });
     } finally {
@@ -195,12 +201,12 @@ export default function ImagePage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <ConsoleBand monogram="IM" title="Image Generation" description="Create polished visual assets with MiniMax-H3-Image. The app uses URL output for fast preview, download, and Library access." note="Provider URLs are not guaranteed to stay available. Download final images when you like a result." />
+      <ConsoleBand monogram="IM" title="Image Generation" description="Create polished visual assets with MiniMax-H3-Image. Every result comes back as a URL you can preview, download and find later in Library." note="Provider URLs are not guaranteed to stay available. Download final images when you like a result." />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.25fr)' }} gap={6} alignItems="start">
         <Sheet>
           <SheetHeader>
-            <SheetTitle>Creative Brief</SheetTitle>
+            <SheetTitle>Creative brief</SheetTitle>
             <SheetDescription>
               Be specific about subject, environment, lighting, composition, and style. Better inputs produce more controllable outputs.
             </SheetDescription>
@@ -209,7 +215,7 @@ export default function ImagePage() {
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
                 <Label htmlFor="image-prompt">Prompt</Label>
-                <Box as="span" color={remainingCharacters < 0 ? 'red.600' : 'gray.500'} fontSize="sm">
+                <Box as="span" color={remainingCharacters < 0 ? 'state.err' : 'content.subtle'} fontSize="sm">
                   {prompt.length}/{PROMPT_MAX_LENGTH}
                 </Box>
               </Box>
@@ -237,7 +243,6 @@ export default function ImagePage() {
                       key={option.value}
                       id={option.id}
                       variant={isSelected ? 'solid' : 'outline'}
-                      colorPalette={isSelected ? 'blue' : 'gray'}
                       aria-pressed={isSelected}
                       onClick={() => setModel(option.value)}
                       disabled={isLoading}
@@ -254,7 +259,7 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-              <Label>Aspect Ratio</Label>
+              <Label>Aspect ratio</Label>
               <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
                 {ASPECT_RATIO_OPTIONS.map((option) => {
                   const isSelected = option.value === aspectRatio;
@@ -263,7 +268,6 @@ export default function ImagePage() {
                       key={option.value}
                       id={`image-ratio-${option.value.replace(':', '-')}`}
                       variant={isSelected ? 'solid' : 'outline'}
-                      colorPalette={isSelected ? 'blue' : 'gray'}
                       aria-pressed={isSelected}
                       onClick={() => setAspectRatio(option.value)}
                       disabled={isLoading || usesCustomSize}
@@ -271,7 +275,10 @@ export default function ImagePage() {
                     >
                       <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label} ({option.value})</strong>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.size} · {option.hint}</span>
+                        {option.size && (
+                          <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.size}</span>
+                        )}
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
                     </Button>
                   );
@@ -285,7 +292,7 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-              <Label>Area Level</Label>
+              <Label>Area level</Label>
               <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
                 {AREA_OPTIONS.map((option) => {
                   const isSelected = option.value === area;
@@ -294,7 +301,6 @@ export default function ImagePage() {
                       key={option.value}
                       id={`image-area-${option.value.toLowerCase()}`}
                       variant={isSelected ? 'solid' : 'outline'}
-                      colorPalette={isSelected ? 'blue' : 'gray'}
                       aria-pressed={isSelected}
                       onClick={() => setArea(option.value)}
                       disabled={isLoading || usesCustomSize}
@@ -311,7 +317,7 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
-                            <Field label="Custom Size (optional)" htmlFor="image-size">
+                            <Field label="Custom size" htmlFor="image-size">
                 <Input
                                   id="image-size"
                                   value={customSize}
@@ -336,7 +342,7 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-              <Label>Output Format</Label>
+              <Label>Output format</Label>
               <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', sm: 'repeat(3, minmax(0, 1fr))' }}>
                 {OUTPUT_FORMAT_OPTIONS.map((option) => {
                   const isSelected = option.value === outputFormat;
@@ -345,7 +351,6 @@ export default function ImagePage() {
                       key={option.value}
                       id={`image-format-${option.value}`}
                       variant={isSelected ? 'solid' : 'outline'}
-                      colorPalette={isSelected ? 'blue' : 'gray'}
                       aria-pressed={isSelected}
                       onClick={() => setOutputFormat(option.value)}
                       disabled={isLoading}
@@ -362,7 +367,7 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: 'minmax(0, 1fr) minmax(0, 1fr)' }} gap={4}>
-                            <Field label="Output Compression" htmlFor="image-compression">
+                            <Field label="Output compression" htmlFor="image-compression">
                 <Input
                                   id="image-compression"
                                   type="number"
@@ -378,7 +383,7 @@ export default function ImagePage() {
 
             <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="surface.sheet">
               <Box>
-                <Label htmlFor="image-prompt-enhancement">Disable Prompt Enhancement</Label>
+                <Label htmlFor="image-prompt-enhancement">Disable prompt enhancement</Label>
                 <Box color="content.readout" fontSize="sm">
                   MiniMax rewrites your prompt by default. Turn this off to send the prompt unchanged; a fixed ratio or size is then required.
                 </Box>
@@ -393,13 +398,13 @@ export default function ImagePage() {
 
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
 
-            <Button onClick={handleGenerate} disabled={isLoading || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH} colorPalette="blue">
-              {isLoading ? 'Generating images...' : 'Generate Images'}
+            <Button onClick={handleGenerate} disabled={isLoading || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH}>
+              {isLoading ? 'Generating images...' : 'Generate images'}
             </Button>
           </SheetContent>
         </Sheet>
@@ -409,11 +414,18 @@ export default function ImagePage() {
             <SheetTitle>Results</SheetTitle>
             <SheetDescription>
               {result
-                ? `${result.metadata.successCount} generated · ${result.metadata.failedCount} failed · ${resultRatio.label} ${resultRatio.value}`
+                ? 'The images MiniMax returned, with the frame you asked for.'
                 : 'Generated images appear here as soon as MiniMax returns URL results.'}
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
+            {result && (
+              <SpecList>
+                <Spec label="Generated" value={String(result.metadata.successCount)} />
+                <Spec label="Failed" value={String(result.metadata.failedCount)} />
+                <Spec label="Aspect ratio" value={resultRatio.value} />
+              </SpecList>
+            )}
             {isLoading && (
               <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} with MiniMax-H3-Image...
@@ -422,7 +434,7 @@ export default function ImagePage() {
 
             {!isLoading && !result && (
               <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
-                Start with a clear prompt, choose the frame, then generate. Your results will be saved to backend Library automatically.
+                Start with a clear prompt, choose the frame, then generate. Your results are saved to Library automatically.
               </Box>
             )}
 
@@ -435,15 +447,20 @@ export default function ImagePage() {
                       alt={`Generated image ${item.index + 1}`}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: 'var(--chakra-colors-surface.field)' }}
+                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
                     />
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
-                      <Box color="content.readout" fontSize="sm">Image {item.index + 1}{item.size ? ` · ${item.size}` : ''}</Box>
+                      <Box display="grid" gap="0.125rem">
+                        <Box color="content.readout" fontSize="sm">Image {item.index + 1}</Box>
+                        {item.size && (
+                          <Box color="content.subtle" fontSize="xs">{item.size}</Box>
+                        )}
+                      </Box>
                       <Box display="flex" gap={2}>
-                        <Button variant="outline" colorPalette="blue" size="sm" onClick={() => window.open(item.url ?? '', '_blank')}>
+                        <Button variant="outline" size="sm" onClick={() => window.open(item.url ?? '', '_blank')}>
                           Open
                         </Button>
-                        <Button colorPalette="green" size="sm" onClick={() => downloadImageUrl(item.url ?? '', `minimax-image-${result.id}-${item.index + 1}.jpg`)}>
+                        <Button size="sm" onClick={() => downloadImageUrl(item.url ?? '', `minimax-image-${result.id}-${item.index + 1}.jpg`)}>
                           Download
                         </Button>
                       </Box>
@@ -454,7 +471,7 @@ export default function ImagePage() {
             )}
 
             {result && failedItems.length > 0 && (
-              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
+              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="state.err" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
                 {failedItems.map((item) => (
                   <span key={`failure-${item.index}`}>
                     Image {item.index + 1} failed{item.error?.code ? ` (${item.error.code})` : ''}: {item.error?.message}

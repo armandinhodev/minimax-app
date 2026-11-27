@@ -151,7 +151,7 @@ describe('MusicCoverPreprocessPage', () => {
       changeInput(audioUrl, 'https://example.com/reference.mp3');
     });
 
-    const button = Array.from(container!.querySelectorAll('button')).find((element) => element.textContent === 'Preprocess Cover Audio');
+    const button = Array.from(container!.querySelectorAll('button')).find((element) => element.textContent === 'Preprocess cover audio');
     await act(async () => {
       button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -166,10 +166,11 @@ describe('MusicCoverPreprocessPage', () => {
       }),
     }));
     expect(container!.textContent).toContain('cover-feature-1');
-    expect(container!.textContent).toContain('valid for 24 hours');
+    expect(container!.textContent).toContain('Valid for');
+    expect(container!.textContent).toContain('24 hours');
     const coverGenerationLink = container!.querySelector('a[href^="/music?"]') as HTMLAnchorElement;
     const coverGenerationUrl = new URL(coverGenerationLink.getAttribute('href') ?? '', 'http://localhost');
-    expect(coverGenerationLink.textContent).toBe('Use in Cover Generation');
+    expect(coverGenerationLink.textContent).toBe('Use in cover generation');
     expect(coverGenerationUrl.searchParams.get('coverPreprocessId')).toBe('library-cover-preprocess-1');
     expect(coverGenerationUrl.searchParams.has('coverFeatureId')).toBe(false);
     expect(coverGenerationUrl.searchParams.has('lyrics')).toBe(false);
@@ -198,7 +199,7 @@ describe('MusicCoverPreprocessPage', () => {
       selectFile(audioFile, new File(['abc'], 'reference.mp3', { type: 'audio/mpeg' }));
     });
 
-    const button = Array.from(container!.querySelectorAll('button')).find((element) => element.textContent === 'Preprocess Cover Audio');
+    const button = Array.from(container!.querySelectorAll('button')).find((element) => element.textContent === 'Preprocess cover audio');
     await act(async () => {
       button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -259,7 +260,7 @@ describe('MusicCoverPreprocessPage', () => {
     });
 
     expect(container!.textContent).toContain('Use either a reference audio URL or a local upload, not both.');
-    const button = Array.from(container!.querySelectorAll('button')).find((element) => element.textContent === 'Preprocess Cover Audio') as HTMLButtonElement;
+    const button = Array.from(container!.querySelectorAll('button')).find((element) => element.textContent === 'Preprocess cover audio') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     expect(authClientMocks.authFetch).not.toHaveBeenCalled();
   });

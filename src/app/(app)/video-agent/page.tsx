@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
-import { Field } from '@/components/ui/spec';
+import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { ConsoleBand } from '@/components/ui/console-band';
 
 interface Template {
@@ -187,7 +187,7 @@ export default function VideoAgentPage() {
             </Field>
 
             {selected?.requiresMedia && (
-                            <Field label="Image URL (required)" htmlFor="video-agent-media">
+                            <Field label="Image URL" htmlFor="video-agent-media">
                 <Input
                                   id="video-agent-media"
                                   value={mediaUrl}
@@ -204,7 +204,7 @@ export default function VideoAgentPage() {
             )}
 
             {selected?.requiresText && (
-                            <Field label="Text (required)" htmlFor="video-agent-text">
+                            <Field label="Text" htmlFor="video-agent-text">
                 <Textarea
                                   id="video-agent-text"
                                   value={textInput}
@@ -220,12 +220,12 @@ export default function VideoAgentPage() {
 
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {notice}
               </Box>
             )}
 
-            <Button onClick={handleCreate} disabled={!canCreate} colorPalette="purple">
+            <Button onClick={handleCreate} disabled={!canCreate}>
               {isCreating ? 'Creating task...' : 'Create video'}
             </Button>
           </SheetContent>
@@ -235,10 +235,16 @@ export default function VideoAgentPage() {
           <SheetHeader>
             <SheetTitle>Result</SheetTitle>
             <SheetDescription>
-              {task ? `Task ${task.taskId} · ${task.status}` : 'The generated clip appears here.'}
+              {task ? 'The clip MiniMax rendered from your template.' : 'The generated clip appears here.'}
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
+            {task && (
+              <SpecList>
+                <Spec label="Task" value={task.taskId} />
+                <Spec label="Status" value={task.status} />
+              </SpecList>
+            )}
             {!task && (
               <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 {selected

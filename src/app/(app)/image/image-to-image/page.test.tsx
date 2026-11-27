@@ -120,7 +120,7 @@ describe('ImageToImagePage', () => {
       changeTextarea(prompt, 'Keep the same person in a studio portrait.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -175,7 +175,7 @@ describe('ImageToImagePage', () => {
       clickButton(container!, 'image-edit-ratio-3-4');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -215,7 +215,7 @@ describe('ImageToImagePage', () => {
       changeTextarea(prompt, 'Keep the same person in a studio portrait.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -265,7 +265,7 @@ describe('ImageToImagePage', () => {
       changeTextarea(prompt, 'Replace the cat with the dog.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Images');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });

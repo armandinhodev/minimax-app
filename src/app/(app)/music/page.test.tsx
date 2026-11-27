@@ -115,7 +115,7 @@ describe('MusicPage', () => {
     container = null;
   });
 
-  it('generates vocal music and relies on backend Library recording', async () => {
+  it('generates vocal music and relies on Library recording', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -138,7 +138,7 @@ describe('MusicPage', () => {
       changeTextarea(lyrics, '[Verse]\nCity lights\n[Chorus]\nRise again');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Music');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate music');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -158,7 +158,7 @@ describe('MusicPage', () => {
     }));
     expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
-    expect(container!.textContent).toContain('Music generated and saved to backend Library');
+    expect(container!.textContent).toContain('Music generated and saved to Library');
     expect(container!.textContent).toContain('Audio preview mp3: 00010203');
   });
 
@@ -180,7 +180,7 @@ describe('MusicPage', () => {
       changeTextarea(prompt, 'Instrumental cinematic piano with soft strings.');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Music');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate music');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -221,7 +221,7 @@ describe('MusicPage', () => {
     expect(prompt.value).toBe('Acoustic folk cover with warm vocals.');
     expect(lyrics.value).toBe('[Verse]\nCity lights');
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Cover');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate cover');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -242,7 +242,7 @@ describe('MusicPage', () => {
     }));
   });
 
-  it('hydrates cover generation from coverPreprocessId via backend Library', async () => {
+  it('hydrates cover generation from coverPreprocessId via Library', async () => {
     const params = new URLSearchParams({
       coverPreprocessId: 'library-cover-preprocess-1',
       style: 'Acoustic folk cover with warm vocals.',
@@ -294,7 +294,7 @@ describe('MusicPage', () => {
     expect(prompt.value).toBe('Acoustic folk cover with warm vocals.');
     expect(lyrics.value).toBe('[Verse]\nCity lights');
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Cover');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate cover');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -333,7 +333,7 @@ describe('MusicPage', () => {
     });
 
     expect(container!.textContent).toContain('Add lyrics before generating vocal music.');
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Music') as HTMLButtonElement;
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate music') as HTMLButtonElement;
 
     await act(async () => {
       generateButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -358,13 +358,13 @@ describe('MusicPage', () => {
       changeTextarea(lyrics, '[Chorus]\nRise again');
     });
 
-    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate Music');
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate music');
     await act(async () => {
       generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(audioStorageMocks.storeAudioFromHex).not.toHaveBeenCalled();
-    expect(container!.textContent).toContain('Music generated and saved to backend Library');
+    expect(container!.textContent).toContain('Music generated and saved to Library');
     expect(container!.textContent).toContain('Audio preview mp3: 00010203');
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
   });

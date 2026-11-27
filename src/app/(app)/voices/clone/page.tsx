@@ -104,7 +104,7 @@ export default function CloneVoicePage() {
 
       <Sheet>
         <SheetHeader>
-          <SheetTitle>Voice Clone</SheetTitle>
+          <SheetTitle>Voice clone</SheetTitle>
           <SheetDescription>
             Upload a clean audio sample with clear speech. The clone will be ready shortly after generation.
           </SheetDescription>
@@ -121,21 +121,21 @@ export default function CloneVoicePage() {
                           onChange={(e) => setVoiceId(e.target.value)}
                           maxLength={256}
                         />
-                        <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>
                           A unique identifier for your voice (8–256 chars, starts with a letter).
                         </p>
           </Field>
 
           {error && <ErrorDisplay code={error.code} message={error.message} details={error.details} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}
 
           <Box display="flex" gap={2}>
-            <Button onClick={handleClone} disabled={isLoading || !uploadedFileId} colorPalette="green">
-              {isLoading ? 'Cloning...' : 'Clone Voice'}
+            <Button onClick={handleClone} disabled={isLoading || !uploadedFileId}>
+              {isLoading ? 'Cloning...' : 'Clone voice'}
             </Button>
           </Box>
         </SheetContent>
@@ -145,15 +145,15 @@ export default function CloneVoicePage() {
       {clonedVoice && (
         <Sheet>
           <SheetHeader>
-            <SheetTitle>Voice Cloned Successfully</SheetTitle>
+            <SheetTitle>Voice cloned successfully.</SheetTitle>
             <SheetDescription>
-              Your voice clone is ready. Use the voice ID <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{clonedVoice.voiceId}</code> in Text to Speech. Fresh clones may appear there before the MiniMax voice list refreshes.
+              Your voice clone is ready. Use the voice ID <code style={{ fontSize: '0.75rem', backgroundColor: 'var(--chakra-colors-surface-field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{clonedVoice.voiceId}</code> in Text to Speech. Fresh clones may appear there before the MiniMax voice list refreshes.
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             <Box display="flex" alignItems="center" gap={2}>
               <TTLCounter expiresAt={ttlExpiry} label="Voice TTL" />
-              <span style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content-readout)' }}>
                 Your cloned voice will expire after 7 days of inactivity.
               </span>
             </Box>

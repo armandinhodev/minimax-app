@@ -138,6 +138,24 @@ centered except media previews.
   produces a notice that says "Published".
 - Sentence case everywhere. No all caps. No filler.
 - Empty states are invitations: "Choose an audio file to start."
+- **A label names the field, nothing else.** No "(optional)", no "(required)":
+  a blocked button and the validation message already say what is missing.
+- **A value is a value, not a sentence.** Pairs are `Spec` rows — label left,
+  value right. Never "Format: MP3  Duration: 165s" and never a middle dot
+  joining them.
+- **The copy speaks about the user's world.** "Saved to Library", not "saved to
+  backend Library". No mention of SQLite, HTTP or of the app itself.
+
+## How the rules are kept
+
+`src/components/ui/copy.test.tsx` reads the source tree and fails when a rule
+is broken, the same way `theme.test.tsx` guards the color tokens. It checks
+that no field label carries an optionality marker, that labels, panel titles
+and button labels are sentence case, that no visible string joins values with
+a middle dot, that every color token exists in the theme, and that no raw
+Chakra palette color sneaks back in.
+
+A copy pass that is not enforced is a copy pass that comes back.
 
 ## What this replaces
 
@@ -163,3 +181,5 @@ If a change starts to look like the following, it is wrong for this app:
 - Meta strings joined with middle dots.
 - An arrow appended to a link or button label.
 - A fade-and-slide-up entrance on every section.
+- A label that says "(optional)" or "(required)".
+- A raw Chakra palette color (`red.400`) instead of a named token.

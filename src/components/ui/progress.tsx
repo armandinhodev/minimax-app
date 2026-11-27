@@ -13,7 +13,7 @@ function Progress({ value, ...props }: ProgressProps) {
       position="relative"
       height="0.25rem"
       borderRadius="full"
-      bg="gray.100"
+      bg="surface.field"
       overflow="hidden"
       {...props}
     >
@@ -23,7 +23,7 @@ function Progress({ value, ...props }: ProgressProps) {
         left="0"
         height="100%"
         width={value ? `${value}%` : "0%"}
-        bg="blue.500"
+        bg="interaction.accent"
         borderRadius="full"
         transition="width 0.3s ease"
       />

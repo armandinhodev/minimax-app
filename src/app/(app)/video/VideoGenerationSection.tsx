@@ -235,7 +235,7 @@ export function VideoGenerationSection() {
             </Box>
 
             <Box pt={4}>
-              <Button onClick={handleGenerate} disabled={isCreating} colorPalette="teal">
+              <Button onClick={handleGenerate} disabled={isCreating}>
                 {isCreating ? 'Creating task' : 'Generate video'}
               </Button>
             </Box>

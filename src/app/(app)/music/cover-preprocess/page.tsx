@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
-import { Field } from '@/components/ui/spec';
+import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { ConsoleBand } from '@/components/ui/console-band';
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
@@ -251,7 +251,7 @@ export default function MusicCoverPreprocessPage() {
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 0.95fr) minmax(0, 1.15fr)' }} gap={6} alignItems="start">
         <Sheet>
           <SheetHeader>
-            <SheetTitle>Reference Audio</SheetTitle>
+            <SheetTitle>Reference audio</SheetTitle>
             <SheetDescription>Provide exactly one source: a hosted audio URL or a local audio upload converted to base64 in the browser.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
@@ -279,37 +279,37 @@ export default function MusicCoverPreprocessPage() {
             )}
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="state.run" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
 
-            <Button onClick={handlePreprocess} disabled={!canPreprocess} colorPalette="purple">
-              {isLoading ? 'Preprocessing audio...' : isReadingFile ? 'Preparing upload...' : 'Preprocess Cover Audio'}
+            <Button onClick={handlePreprocess} disabled={!canPreprocess}>
+              {isLoading ? 'Preprocessing audio...' : isReadingFile ? 'Preparing upload...' : 'Preprocess cover audio'}
             </Button>
           </SheetContent>
         </Sheet>
 
         <Sheet minH="28rem">
           <SheetHeader>
-            <SheetTitle>Preprocess Result</SheetTitle>
-            <SheetDescription>{result ? `${Math.round(result.audioDurationSeconds)}s reference · valid for 24 hours` : 'Cover feature ID and MiniMax analysis appear here.'}</SheetDescription>
+            <SheetTitle>Preprocess result</SheetTitle>
+            <SheetDescription>{result ? 'The cover feature ID and the analysis MiniMax returned.' : 'Cover feature ID and MiniMax analysis appear here.'}</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {!result && !isLoading && (
               <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
-                Preprocess a reference track first. Full cover generation can use the returned cover feature ID in a follow-up workflow.
+                Preprocess a reference track first. Cover generation uses the returned cover feature ID in the next step.
               </Box>
             )}
             {isLoading && (
               <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
-                Uploading and preprocessing reference audio. This billable POST is not retried automatically.
+                Uploading and preprocessing reference audio. This request is billed, so it is not retried automatically.
               </Box>
             )}
             {result && (
@@ -321,11 +321,15 @@ export default function MusicCoverPreprocessPage() {
                       <Box fontWeight={700} style={{ wordBreak: 'break-all' }}>{result.coverFeatureId}</Box>
                     </Box>
                     <Box display="flex" gap={2} flexWrap="wrap">
-                      <Button variant="outline" colorPalette="blue" size="sm" onClick={handleCopyFeatureId}>Copy ID</Button>
-                      <a href={buildCoverGenerationHref(result)} style={{ color: 'var(--chakra-colors-interaction.accent)', fontWeight: 600, textDecoration: 'underline' }}>Use in Cover Generation</a>
+                      <Button variant="outline" size="sm" onClick={handleCopyFeatureId}>Copy ID</Button>
+                      <a href={buildCoverGenerationHref(result)} style={{ color: 'var(--chakra-colors-interaction-accent)', fontWeight: 600, textDecoration: 'underline' }}>Use in cover generation</a>
                     </Box>
                   </Box>
-                  <Box color="content.readout" fontSize="sm">Trace: {result.traceId ?? 'not returned'} · Expires after 24 hours</Box>
+                  <SpecList>
+                    <Spec label="Reference" value={`${Math.round(result.audioDurationSeconds)}s`} />
+                    <Spec label="Trace" value={result.traceId ?? 'not returned'} />
+                    <Spec label="Valid for" value="24 hours" />
+                  </SpecList>
                 </Box>
 
                                 <Field label="Formatted lyrics">

@@ -183,7 +183,7 @@ describe('LibraryPage backend source of truth', () => {
     await renderPage();
     expect(container!.textContent).toContain('An enhanced cinematic prompt');
     expect(container!.querySelector('video')).toBeNull();
-    expect(Array.from(container!.querySelectorAll('button')).some((button) => button.textContent === 'Download')).toBe(false);
+    expect(Array.from(container!.querySelectorAll('button')).some((button) => button.textContent === 'Download video')).toBe(false);
   });
 
   it('loads backend records only and ignores localStorage history', async () => {
@@ -194,7 +194,7 @@ describe('LibraryPage backend source of truth', () => {
 
     expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations?limit=50');
     expect(getItemSpy).not.toHaveBeenCalledWith('minimax_speech_history');
-    expect(container!.textContent).toContain('No backend Library records yet.');
+    expect(container!.textContent).toContain('No Library records yet.');
     expect(container!.textContent).not.toContain('Local-only item');
   });
 
@@ -207,7 +207,8 @@ describe('LibraryPage backend source of truth', () => {
 
     expect(container!.textContent).toContain('Hello from SQLite');
     expect(container!.textContent).toContain('Stored on server');
-    expect(container!.textContent).toContain('Voice: voice-a');
+    expect(container!.textContent).toContain('Voice');
+    expect(container!.textContent).toContain('voice-a');
 
     const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
     act(() => {
@@ -266,17 +267,19 @@ describe('LibraryPage backend source of truth', () => {
     await renderPage();
 
     expect(container!.textContent).toContain('Cover preprocess');
-    expect(container!.textContent).toContain('Source: Cover Preprocess');
-    expect(container!.textContent).toContain('Reference duration: 42s');
+    expect(container!.textContent).toContain('Source');
+    expect(container!.textContent).toContain('Cover Preprocess');
+    expect(container!.textContent).toContain('Reference duration');
+    expect(container!.textContent).toContain('42s');
     expect(container!.textContent).toContain('Reference audio bytes were not saved.');
     expect(container!.textContent).toContain('Cover ID TTL');
-    const action = Array.from(container!.querySelectorAll('a')).find((anchor) => anchor.textContent === 'Use in Cover Generation');
+    const action = Array.from(container!.querySelectorAll('a')).find((anchor) => anchor.textContent === 'Use in cover generation');
     const actionUrl = new URL(action?.getAttribute('href') ?? '', 'http://localhost');
     expect(actionUrl.pathname).toBe('/music');
     expect(actionUrl.searchParams.get('coverPreprocessId')).toBe('cover-preprocess-1');
     expect(actionUrl.searchParams.has('coverFeatureId')).toBe(false);
     expect(actionUrl.searchParams.has('lyrics')).toBe(false);
-    expect(container!.textContent).not.toContain('Missing audio');
+    expect(container!.textContent).not.toContain('Audio not stored');
   });
 
   it('explains expired cover preprocess records without offering cover generation action', async () => {
@@ -298,7 +301,7 @@ describe('LibraryPage backend source of truth', () => {
 
     expect(container!.textContent).toContain('Cover ID expired');
     expect(container!.textContent).toContain('This cover feature ID expired. Run Cover Preprocess again before using it for cover generation.');
-    expect(container!.textContent).not.toContain('Use in Cover Generation');
+    expect(container!.textContent).not.toContain('Use in cover generation');
   });
 
   it('deletes one backend generation only after confirmation', async () => {
@@ -320,7 +323,7 @@ describe('LibraryPage backend source of truth', () => {
     });
 
     expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/generation-1', { method: 'DELETE' });
-    expect(container!.textContent).toContain('No backend Library records yet.');
+    expect(container!.textContent).toContain('No Library records yet.');
   });
 
   it('clears backend records through the API', async () => {
@@ -328,18 +331,18 @@ describe('LibraryPage backend source of truth', () => {
 
     await renderPage();
 
-    const clearButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Clear All');
+    const clearButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Clear all');
     act(() => {
       clearButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    const confirmButton = Array.from(container!.querySelectorAll('[role="alertdialog"] button')).find((button) => button.textContent === 'Clear All');
+    const confirmButton = Array.from(container!.querySelectorAll('[role="alertdialog"] button')).find((button) => button.textContent === 'Clear all');
     await act(async () => {
       confirmButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/generation-1', { method: 'DELETE' });
     expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/library/generations/generation-2', { method: 'DELETE' });
-    expect(container!.textContent).toContain('No backend Library records yet.');
+    expect(container!.textContent).toContain('No Library records yet.');
   });
 });

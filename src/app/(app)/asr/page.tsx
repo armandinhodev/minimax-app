@@ -307,20 +307,19 @@ export default function AsrPage() {
             {fileError && !error && <ErrorDisplay message={fileError} />}
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {notice}
               </Box>
             )}
 
             <Box display="flex" gap={3} flexWrap="wrap">
-              <Button onClick={handleTranscribe} disabled={!canTranscribe} colorPalette="orange">
+              <Button onClick={handleTranscribe} disabled={!canTranscribe}>
                 {isTranscribing ? 'Transcribing...' : 'Transcribe'}
               </Button>
               <Button
                 onClick={handleStream}
                 disabled={!canTranscribe}
                 variant="outline"
-                colorPalette="orange"
               >
                 Stream transcript
               </Button>

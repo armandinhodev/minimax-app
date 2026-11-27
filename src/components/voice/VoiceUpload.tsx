@@ -282,25 +282,25 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
 
         {!file ? (
           <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
-            <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content.readout)' }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-content-readout)' }}>
               Drag and drop an audio file, or{' '}
               <button
                 type="button"
-                style={{ color: 'var(--chakra-colors-state.ok)', textDecorationLine: 'underline', textUnderlineOffset: '4px', cursor: 'pointer', fontWeight: 500 }}
+                style={{ color: 'var(--chakra-colors-state-ok)', textDecorationLine: 'underline', textUnderlineOffset: '4px', cursor: 'pointer', fontWeight: 500 }}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={disabled || isValidatingDuration}
               >
                 browse
               </button>
             </p>
-            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>
               MP3, M4A, WAV — {VOICE_UPLOAD_DURATION_LIMITS.minSeconds}s to {VOICE_UPLOAD_DURATION_LIMITS.maxSeconds / 60}min — up to {MAX_UPLOAD_FILE_SIZE_MB} MB
             </p>
           </Box>
         ) : (
           <Box display="grid" gap={2} alignItems="center">
             <p style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
-            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>
               {(file.size / 1024 / 1024).toFixed(2)} MB
               {duration !== null && ` — ${formatDuration(duration)}`}
             </p>
@@ -308,14 +308,14 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
         )}
 
         {isValidatingDuration && (
-          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)', marginTop: '0.5rem' }}>Validating duration...</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)', marginTop: '0.5rem' }}>Validating duration...</p>
         )}
       </Box>
 
       {/* Waveform preview */}
       {waveformData.length > 0 && (
         <Box display="grid" gap={1} gridTemplateColumns="minmax(0, 1fr)">
-          <Label style={{ fontSize: '0.75rem' }}>Waveform Preview</Label>
+          <Label style={{ fontSize: '0.75rem' }}>Waveform preview</Label>
           <Box display="flex" alignItems="flex-end" gap="1px" h={48}>
             {waveformData.map((amplitude, i) => (
               <Box
@@ -336,9 +336,9 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
       {/* Error */}
       {error && (
         <Box>
-          <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-state.err)' }}>{error.message}</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--chakra-colors-state-err)' }}>{error.message}</p>
           {(error.upstreamStatus !== undefined || error.upstreamMessage) && (
-            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.err)', marginTop: '0.25rem', opacity: 0.85 }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state-err)', marginTop: '0.25rem', opacity: 0.85 }}>
               {error.upstreamStatus !== undefined && (
                 <>Upstream HTTP {error.upstreamStatus}. </>
               )}
@@ -357,7 +357,6 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
         <Box display="flex" gap={2}>
           <Button
             variant="outline"
-            colorPalette="blue"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isUploading || isValidatingDuration}
@@ -366,7 +365,6 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
           </Button>
           <Button
             size="sm"
-            colorPalette="green"
             onClick={() => uploadFile(file)}
             disabled={disabled || isUploading || isValidatingDuration || !!uploadedFileId}
           >
@@ -376,8 +374,8 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
       )}
 
       {uploadedFileId && (
-        <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
-          Uploaded — file_id: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{uploadedFileId}</code>
+        <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content-readout)' }}>
+          Uploaded — file_id: <code style={{ backgroundColor: 'var(--chakra-colors-surface-field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{uploadedFileId}</code>
         </p>
       )}
     </Box>

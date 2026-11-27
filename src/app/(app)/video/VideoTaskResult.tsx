@@ -3,6 +3,7 @@
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
+import { Spec, SpecList } from '@/components/ui/spec';
 
 import { isSafeHttpUrl, type VideoTaskDTO } from '@/application/dto/minimax/video/VideoDTO';
 
@@ -37,12 +38,13 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
       {task && (
         <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
           <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
-            <Box color="content.ink" fontSize="sm">
-              {task.id} · {task.status}
-              {task.resolution ? ` · ${task.resolution}` : ''}
-              {task.duration !== undefined ? ` · ${task.duration}s` : ''}
-              {task.ratio ? ` · ${task.ratio}` : ''}
-            </Box>
+            <SpecList>
+              <Spec label="Task" value={task.id} />
+              <Spec label="Status" value={task.status} />
+              {task.resolution && <Spec label="Resolution" value={task.resolution} />}
+              {task.duration !== undefined && <Spec label="Duration" value={`${task.duration}s`} />}
+              {task.ratio && <Spec label="Aspect ratio" value={task.ratio} />}
+            </SpecList>
             {onCancel && (task.status === 'queued' || task.status === 'running') && (
               <Button variant="outline" colorPalette="red" size="sm" onClick={() => onCancel(task)}>
                 Cancel task
@@ -70,7 +72,7 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
                 src={outputUrl}
                 controls
                 preload="metadata"
-                style={{ width: '100%', display: 'block', backgroundColor: 'var(--chakra-colors-surface.field)' }}
+                style={{ width: '100%', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
               />
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
                 <Box color="content.readout" fontSize="xs">
@@ -78,7 +80,6 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
                 </Box>
                 <Button
                   variant="outline"
-                  colorPalette="green"
                   size="sm"
                   onClick={() => window.open(outputUrl, '_blank', 'noopener,noreferrer')}
                 >

@@ -85,7 +85,7 @@ describe('CloneVoicePage', () => {
       root!.render(<CloneVoicePage />);
     });
 
-    const cloneButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Clone Voice');
+    const cloneButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Clone voice');
     const uploadButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Complete Upload');
 
     expect(cloneButton).toBeDefined();

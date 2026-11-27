@@ -48,7 +48,7 @@ function TabsList({ children, className }: { children?: React.ReactNode; classNa
       width="fit-content"
       padding="3px"
       borderRadius="0.5rem"
-      background="gray.100"
+      background="surface.field"
       gap="0.25rem"
       className={className}
     >

@@ -7,7 +7,7 @@ function Skeleton({ ...props }: BoxProps) {
   return (
     <Box
       borderRadius="md"
-      bg="gray.200"
+      bg="surface.rule"
       animation="pulse"
       css={{
         "@keyframes pulse": {

@@ -52,7 +52,7 @@ export function AppSidebar({ markCurrent = true, onNavigate, variant = "desktop"
           <span className={styles.accountTitle}>Authenticated session</span>
         </div>
         <Button variant="outline" size="sm" onClick={handleLogout} width="100%">
-          Sign Out
+          Sign out
         </Button>
       </div>
     </aside>

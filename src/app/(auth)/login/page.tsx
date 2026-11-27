@@ -131,7 +131,7 @@ export default function LoginPage() {
           )}
 
           <Button type="submit" disabled={isLoading} justifySelf="start" mt={2}>
-            {isLoading ? 'Validating...' : 'Sign In'}
+            {isLoading ? 'Validating...' : 'Sign in'}
           </Button>
         </form>
       </Box>
