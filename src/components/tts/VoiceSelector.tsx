@@ -8,11 +8,11 @@
 import { memo, useEffect, useId, useMemo, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Select, type SelectOption } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { getLanguageInfo } from '@/lib/language-flags';
 import { getHistoryItems } from '@/lib/history';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
+import { Field } from '@/components/ui/spec';
 
 const USER_VOICE_TTL_MS = 168 * 60 * 60 * 1000;
 
@@ -148,31 +148,30 @@ export const VoiceSelector = memo(function VoiceSelector({
   const selectedVoice = filteredVoices.find((v) => v.voiceId === value);
 
   return (
-    <Box display="grid" gap={2}>
-      <Label htmlFor={selectId}>{label}</Label>
+        <Field label={label} htmlFor={selectId}>
       <Select
-        id={selectId}
-        value={value}
-        onValueChange={(v) => v && onChange(v)}
-        disabled={disabled || isLoading}
-        options={voiceOptions}
-        placeholder={isLoading ? 'Loading voices...' : 'Select a voice'}
-        groupBy={getVoiceOptionGroup}
-        groupOrder={getVoiceGroupOrder}
-        searchable
-      />
-      {error && <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.err)' }}>{error}</p>}
-      {selectedVoice && (
-        <Box display="grid" gap={1} fontSize="0.75rem" color="content.readout">
-          <p>
-            Type: {getVoiceTypeLabel(selectedVoice.type)}
-            {selectedVoice.ttlExpiry ? `, ${formatExpiry(selectedVoice.ttlExpiry)}` : ''}
-          </p>
-          <p>
-            Voice ID: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{selectedVoice.voiceId}</code>
-          </p>
-        </Box>
-      )}
-    </Box>
+              id={selectId}
+              value={value}
+              onValueChange={(v) => v && onChange(v)}
+              disabled={disabled || isLoading}
+              options={voiceOptions}
+              placeholder={isLoading ? 'Loading voices...' : 'Select a voice'}
+              groupBy={getVoiceOptionGroup}
+              groupOrder={getVoiceGroupOrder}
+              searchable
+            />
+            {error && <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-state.err)' }}>{error}</p>}
+            {selectedVoice && (
+              <Box display="grid" gap={1} fontSize="0.75rem" color="content.readout">
+                <p>
+                  Type: {getVoiceTypeLabel(selectedVoice.type)}
+                  {selectedVoice.ttlExpiry ? `, ${formatExpiry(selectedVoice.ttlExpiry)}` : ''}
+                </p>
+                <p>
+                  Voice ID: <code style={{ backgroundColor: 'var(--chakra-colors-surface.field)', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{selectedVoice.voiceId}</code>
+                </p>
+              </Box>
+            )}
+    </Field>
   );
 });

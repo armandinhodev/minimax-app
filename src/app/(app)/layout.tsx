@@ -21,7 +21,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppKeyGate>
-      <Box minH="100vh" backgroundColor="#f8fafc">
+      <Box minH="100vh" backgroundColor="var(--chakra-colors-surface-field)">
         <Box display={{ base: 'block', md: 'none' }}>
           <MobileNavHeader isOpen={isMobileMenuOpen} onOpen={() => setIsMobileMenuOpen(true)} />
         </Box>

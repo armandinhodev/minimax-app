@@ -11,7 +11,6 @@ import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
@@ -20,6 +19,7 @@ import { VoiceUpload } from '@/components/voice/VoiceUpload';
 import { saveHistoryItem } from '@/lib/history';
 import type { VoiceDTO } from '@/application/dto/minimax/speech/VoiceDTO';
 import { MAX_UPLOAD_FILE_SIZE_MB, VOICE_UPLOAD_DURATION_LIMITS } from '@/lib/upload-policy';
+import { Field } from '@/components/ui/spec';
 
 // TTL for cloned voices: 168 hours (7 days) from MiniMax
 const CLONE_TTL_MS = 168 * 60 * 60 * 1000;
@@ -113,23 +113,22 @@ export default function CloneVoicePage() {
           <VoiceUpload onFileSelected={handleFileSelected} onUploadComplete={handleUploadComplete} />
 
           {/* Voice ID */}
-          <Box display="grid" gap={2}>
-            <Label htmlFor="voice-id">Voice ID</Label>
+                    <Field label="Voice ID" htmlFor="voice-id">
             <Input
-              id="voice-id"
-              placeholder="e.g. my-clone-voice-1"
-              value={voiceId}
-              onChange={(e) => setVoiceId(e.target.value)}
-              maxLength={256}
-            />
-            <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
-              A unique identifier for your voice (8–256 chars, starts with a letter).
-            </p>
-          </Box>
+                          id="voice-id"
+                          placeholder="e.g. my-clone-voice-1"
+                          value={voiceId}
+                          onChange={(e) => setVoiceId(e.target.value)}
+                          maxLength={256}
+                        />
+                        <p style={{ fontSize: '0.75rem', color: 'var(--chakra-colors-content.readout)' }}>
+                          A unique identifier for your voice (8–256 chars, starts with a letter).
+                        </p>
+          </Field>
 
           {error && <ErrorDisplay code={error.code} message={error.message} details={error.details} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}

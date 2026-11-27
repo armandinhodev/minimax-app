@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
+import { Field } from '@/components/ui/spec';
 
 const PROMPT_MAX_LENGTH = 2000;
 const COVER_PROMPT_MIN_LENGTH = 10;
@@ -263,12 +264,12 @@ export default function MusicPage() {
             Create full MiniMax music tracks from lyrics and style direction, or complete cover generation with a preprocessed cover feature ID.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Output is MP3 at 44.1 kHz and 256 kbps. Generated audio is stored by the backend when bytes are available.
         </Box>
       </Box>
 
-      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
+      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
@@ -284,12 +285,12 @@ export default function MusicPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {isCoverMode && (
-              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
+              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
                 Cover generation requires a cover feature ID from Cover Preprocess. The ID expires 24 hours after preprocessing.
               </Box>
             )}
 
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="white">
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="surface.sheet">
               <Box>
                 <Label htmlFor="instrumental-mode">Instrumental mode</Label>
                 <Box color="content.readout" fontSize="sm">{isCoverMode ? 'Disabled for MiniMax cover models.' : 'Use prompt-only generation when you do not need vocals.'}</Box>
@@ -298,17 +299,16 @@ export default function MusicPage() {
             </Box>
 
             {isCoverMode && (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="cover-feature-id">Cover feature ID</Label>
+                            <Field label="Cover feature ID" htmlFor="cover-feature-id">
                 <Input
-                  id="cover-feature-id"
-                  value={coverFeatureId}
-                  onChange={(event) => setCoverFeatureId(event.currentTarget.value)}
-                  disabled={isLoading}
-                  placeholder="cover_feature_id from Cover Preprocess"
-                />
-                <Box color="content.readout" fontSize="sm">Use the ID within 24 hours of preprocessing the reference audio.</Box>
-              </Box>
+                                  id="cover-feature-id"
+                                  value={coverFeatureId}
+                                  onChange={(event) => setCoverFeatureId(event.currentTarget.value)}
+                                  disabled={isLoading}
+                                  placeholder="cover_feature_id from Cover Preprocess"
+                                />
+                                <Box color="content.readout" fontSize="sm">Use the ID within 24 hours of preprocessing the reference audio.</Box>
+              </Field>
             )}
 
             <Box display="grid" gap={2}>
@@ -354,26 +354,25 @@ export default function MusicPage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
-              <Box display="grid" gap={2}>
-                <Label>Model</Label>
+                            <Field label="Model">
                 <Select value={model} onValueChange={handleModelChange} options={MODEL_OPTIONS} disabled={isLoading} />
-              </Box>
+              </Field>
               <Box display="grid" gap={2}>
                 <Label>Audio settings</Label>
-                <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" px="0.75rem" py="0.5rem" color="content.ink" fontSize="sm">
+                <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" px="0.75rem" py="0.5rem" color="content.ink" fontSize="sm">
                   MP3 · 44.1 kHz · 256 kbps
                 </Box>
               </Box>
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -395,20 +394,20 @@ export default function MusicPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Composing your track with MiniMax Music. Keep this tab open until generation completes.
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 {isCoverMode ? 'Start from a valid cover feature ID and target cover style. Your generated cover will be saved to backend Library automatically when bytes are available.' : 'Start with a focused brief and complete lyrics. Your generated track will be saved to backend Library automatically when bytes are available.'}
               </Box>
             )}
 
             {result && (
               <Box display="grid" gap={4}>
-                <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" display="grid" gap={3}>
+                <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" display="grid" gap={3}>
                   <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                     <Box>
                       <Box fontWeight={700}>Generated track</Box>
@@ -422,15 +421,15 @@ export default function MusicPage() {
                 </Box>
 
                 <Box display="grid" gap={2} gridTemplateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}>
-                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" p="0.75rem">
+                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" p="0.75rem">
                     <Box color="content.subtle" fontSize="xs">Mode</Box>
                     <Box fontWeight={700}>{isCoverMode ? 'Cover' : instrumental ? 'Instrumental' : 'Vocal'}</Box>
                   </Box>
-                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" p="0.75rem">
+                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" p="0.75rem">
                     <Box color="content.subtle" fontSize="xs">Model</Box>
                     <Box fontWeight={700}>{model}</Box>
                   </Box>
-                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="white" p="0.75rem">
+                  <Box border="1px solid" borderColor="surface.rule" borderRadius="lg" bg="surface.sheet" p="0.75rem">
                     <Box color="content.subtle" fontSize="xs">Bitrate</Box>
                     <Box fontWeight={700}>{Math.round((result.metadata.bitrate ?? DEFAULT_BITRATE) / 1000)} kbps</Box>
                   </Box>

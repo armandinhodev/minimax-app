@@ -133,7 +133,7 @@ export function VideoGenerationSection() {
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={0}>
-            <Field label="Model">
+            <Field label="Model" htmlFor="video-generation-model">
               <Select
                 id="video-generation-model"
                 value={model}
@@ -154,7 +154,7 @@ export function VideoGenerationSection() {
               />
             </Field>
 
-            <Field label="Resolution">
+            <Field label="Resolution" htmlFor="video-generation-resolution">
               <Select
                 id="video-generation-resolution"
                 value={resolution}
@@ -164,7 +164,7 @@ export function VideoGenerationSection() {
               />
             </Field>
 
-            <Field label="Duration (seconds)">
+            <Field label="Duration (seconds)" htmlFor="video-generation-duration">
               <Input
                 id="video-generation-duration"
                 type="number"
@@ -176,7 +176,7 @@ export function VideoGenerationSection() {
               />
             </Field>
 
-            <Field label="Aspect ratio">
+            <Field label="Aspect ratio" htmlFor="video-generation-ratio">
               <Select
                 id="video-generation-ratio"
                 value={composition.ratio}
@@ -187,7 +187,7 @@ export function VideoGenerationSection() {
             </Field>
 
             {supportsPromptExpansionMode(model) && (
-              <Field label="Prompt expansion">
+              <Field label="Prompt expansion" htmlFor="video-generation-prompt-expansion">
                 <Select
                   id="video-generation-prompt-expansion"
                   value={promptExpansionMode}

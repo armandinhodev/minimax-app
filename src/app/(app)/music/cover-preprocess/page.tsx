@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
 const MIN_AUDIO_DURATION_SECONDS = 6;
@@ -251,7 +252,7 @@ export default function MusicCoverPreprocessPage() {
             Prepare reference audio for MiniMax Music Cover and receive a 24-hour cover feature ID.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Reference audio should be 6 seconds to 6 minutes, no larger than 50 MB, and in a common format like MP3, WAV, or FLAC.
         </Box>
       </Box>
@@ -263,39 +264,37 @@ export default function MusicCoverPreprocessPage() {
             <SheetDescription>Provide exactly one source: a hosted audio URL or a local audio upload converted to base64 in the browser.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="cover-audio-url">Audio URL</Label>
+                        <Field label="Audio URL" htmlFor="cover-audio-url">
               <Input id="cover-audio-url" value={audioUrl} disabled={isLoading || isReadingFile} placeholder="https://example.com/reference.wav" onChange={(event) => setAudioUrl(event.currentTarget.value)} />
-              <Box color="content.readout" fontSize="sm">Use a public HTTP or HTTPS URL when your reference audio is already hosted.</Box>
-            </Box>
+                            <Box color="content.readout" fontSize="sm">Use a public HTTP or HTTPS URL when your reference audio is already hosted.</Box>
+            </Field>
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="cover-audio-file">Local audio upload</Label>
+                        <Field label="Local audio upload" htmlFor="cover-audio-file">
               <Input
-                id="cover-audio-file"
-                type="file"
-                accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/flac,audio/mp4,audio/m4a,audio/aac,audio/ogg,.mp3,.wav,.flac,.m4a,.aac,.ogg"
-                disabled={isLoading || isReadingFile}
-                onChange={handleAudioFileChange}
-              />
-              <Box color="content.readout" fontSize="sm">The app sends the base64 payload to the server for this request only. It is not saved to Library or localStorage.</Box>
-            </Box>
+                              id="cover-audio-file"
+                              type="file"
+                              accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/flac,audio/mp4,audio/m4a,audio/aac,audio/ogg,.mp3,.wav,.flac,.m4a,.aac,.ogg"
+                              disabled={isLoading || isReadingFile}
+                              onChange={handleAudioFileChange}
+                            />
+                            <Box color="content.readout" fontSize="sm">The app sends the base64 payload to the server for this request only. It is not saved to Library or localStorage.</Box>
+            </Field>
 
             {selectedFile && (
-              <Box border="1px solid" borderColor="interaction.soft" borderRadius="lg" bg="white" p="0.75rem" display="flex" justifyContent="space-between" gap={2} flexWrap="wrap" color="content.ink" fontSize="sm">
+              <Box border="1px solid" borderColor="interaction.soft" borderRadius="lg" bg="surface.sheet" p="0.75rem" display="flex" justifyContent="space-between" gap={2} flexWrap="wrap" color="content.ink" fontSize="sm">
                 <span>{selectedFile.name}</span>
                 <span>{formatBytes(selectedFile.size)}</span>
               </Box>
             )}
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -313,18 +312,18 @@ export default function MusicCoverPreprocessPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {!result && !isLoading && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Preprocess a reference track first. Full cover generation can use the returned cover feature ID in a follow-up workflow.
               </Box>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Uploading and preprocessing reference audio. This billable POST is not retried automatically.
               </Box>
             )}
             {result && (
               <Box display="grid" gap={4}>
-                <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" display="grid" gap={3}>
+                <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" display="grid" gap={3}>
                   <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
                     <Box>
                       <Box color="content.subtle" fontSize="xs">Cover feature ID</Box>
@@ -338,14 +337,13 @@ export default function MusicCoverPreprocessPage() {
                   <Box color="content.readout" fontSize="sm">Trace: {result.traceId ?? 'not returned'} · Expires after 24 hours</Box>
                 </Box>
 
-                <Box display="grid" gap={2}>
-                  <Label>Formatted lyrics</Label>
+                                <Field label="Formatted lyrics">
                   <Textarea value={result.formattedLyrics} readOnly minH="10rem" />
-                </Box>
+                </Field>
 
                 <Box display="grid" gap={2}>
                   <Label>Structure result</Label>
-                  <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
+                  <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" color="content.ink" overflowX="auto">
                     {result.structureResult || 'No structure result returned'}
                   </Box>
                 </Box>

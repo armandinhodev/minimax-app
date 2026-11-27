@@ -13,12 +13,12 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 interface Template {
   id: string;
@@ -170,7 +170,7 @@ export default function VideoAgentPage() {
             for, and follow the task until the clip is ready.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Template tasks are billable and run asynchronously. The download link is valid for 9 hours.
         </Box>
       </Box>
@@ -186,54 +186,51 @@ export default function VideoAgentPage() {
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="video-agent-template">Template</Label>
+                        <Field label="Template" htmlFor="video-agent-template">
               <Select
-                id="video-agent-template"
-                value={templateId}
-                options={templateOptions}
-                disabled={isCreating}
-                onValueChange={setTemplateId}
-              />
-            </Box>
+                              id="video-agent-template"
+                              value={templateId}
+                              options={templateOptions}
+                              disabled={isCreating}
+                              onValueChange={setTemplateId}
+                            />
+            </Field>
 
             {selected?.requiresMedia && (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-agent-media">Image URL (required)</Label>
+                            <Field label="Image URL (required)" htmlFor="video-agent-media">
                 <Input
-                  id="video-agent-media"
-                  value={mediaUrl}
-                  disabled={isCreating}
-                  required
-                  aria-required="true"
-                  placeholder="https://example.com/photo.jpg"
-                  onChange={(event) => setMediaUrl(event.currentTarget.value)}
-                />
-                <Box color="content.subtle" fontSize="0.78rem">
-                  JPEG, PNG or WebP. Under 20MB, shorter side over 300px, ratio between 2:5 and 5:2.
-                </Box>
-              </Box>
+                                  id="video-agent-media"
+                                  value={mediaUrl}
+                                  disabled={isCreating}
+                                  required
+                                  aria-required="true"
+                                  placeholder="https://example.com/photo.jpg"
+                                  onChange={(event) => setMediaUrl(event.currentTarget.value)}
+                                />
+                                <Box color="content.subtle" fontSize="0.78rem">
+                                  JPEG, PNG or WebP. Under 20MB, shorter side over 300px, ratio between 2:5 and 5:2.
+                                </Box>
+              </Field>
             )}
 
             {selected?.requiresText && (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="video-agent-text">Text (required)</Label>
+                            <Field label="Text (required)" htmlFor="video-agent-text">
                 <Textarea
-                  id="video-agent-text"
-                  value={textInput}
-                  disabled={isCreating}
-                  required
-                  aria-required="true"
-                  minH="6rem"
-                  placeholder="Describe the scene you want to play."
-                  onChange={(event) => setTextInput(event.currentTarget.value)}
-                />
-              </Box>
+                                  id="video-agent-text"
+                                  value={textInput}
+                                  disabled={isCreating}
+                                  required
+                                  aria-required="true"
+                                  minH="6rem"
+                                  placeholder="Describe the scene you want to play."
+                                  onChange={(event) => setTextInput(event.currentTarget.value)}
+                                />
+              </Field>
             )}
 
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {notice}
               </Box>
             )}
@@ -253,7 +250,7 @@ export default function VideoAgentPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {!task && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 {selected
                   ? `Ready to render "${selected.name}".`
                   : 'Pick a template to start.'}
@@ -261,7 +258,7 @@ export default function VideoAgentPage() {
             )}
 
             {task && task.status !== 'succeeded' && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 {task.status === 'failed' ? 'The task failed.' : 'MiniMax is rendering the video.'}
               </Box>
             )}

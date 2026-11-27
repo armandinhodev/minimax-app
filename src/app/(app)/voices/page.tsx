@@ -148,7 +148,7 @@ export default function VoicesPage() {
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
-        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
           {actionStatus}
         </Box>
       )}
@@ -185,7 +185,7 @@ export default function VoicesPage() {
 
         <TabsContent value="user">
           <Box mt={4}>
-            <Box mb={4} border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
+            <Box mb={4} border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
               My Voices contains cloned and designed voices you created. Fresh voices may appear here after refresh, and they are available in Text to Speech from local history while MiniMax updates its voice list.
             </Box>
             <Box mb={4} display="flex" alignItems="center" justifyContent="space-between">
@@ -199,13 +199,13 @@ export default function VoicesPage() {
               <Box display="flex" gap={2}>
                 <Link
                   href="/voices/clone"
-                  style={{ display: 'inline-flex', height: '1.75rem', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', borderRadius: '0.375rem', border: '1px solid #86efac', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem', color: 'var(--chakra-colors-state.ok)', fontWeight: 500 }}
+                  style={{ display: 'inline-flex', height: '1.75rem', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', borderRadius: '0.375rem', border: '1px solid var(--chakra-colors-state-ok)', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem', color: 'var(--chakra-colors-state.ok)', fontWeight: 500 }}
                 >
                   Clone a Voice
                 </Link>
                 <Link
                   href="/voices/design"
-                  style={{ display: 'inline-flex', height: '1.75rem', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', borderRadius: '0.375rem', border: '1px solid #5eead4', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem', color: 'var(--chakra-colors-interaction.accent)', fontWeight: 500 }}
+                  style={{ display: 'inline-flex', height: '1.75rem', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', borderRadius: '0.375rem', border: '1px solid var(--chakra-colors-interaction-accent)', backgroundColor: 'var(--chakra-colors-surface-sheet)', padding: '0 0.75rem', fontSize: '0.875rem', color: 'var(--chakra-colors-interaction.accent)', fontWeight: 500 }}
                 >
                   Design a Voice
                 </Link>

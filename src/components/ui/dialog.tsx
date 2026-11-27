@@ -87,7 +87,7 @@ function DialogFooter({ children, className }: { children?: React.ReactNode; cla
         gap: "0.5rem",
         marginTop: "1rem",
         paddingTop: "1rem",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid var(--chakra-colors-surface-rule)",
       }}
       className={className}
     >
@@ -101,7 +101,7 @@ function DialogTitle({ children, className }: { children?: React.ReactNode; clas
 }
 
 function DialogDescription({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <div style={{ fontSize: "0.875rem", color: "#6b7280" }} className={className}>{children}</div>;
+  return <div style={{ fontSize: "0.875rem", color: "var(--chakra-colors-content-readout)" }} className={className}>{children}</div>;
 }
 
 function DialogClose(props: React.HTMLAttributes<HTMLButtonElement>) {

@@ -12,7 +12,6 @@ import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 
 import {
@@ -25,6 +24,7 @@ import {
 
 import { VideoMessageBanner, VideoStudioHeader } from './video-shared';
 import { VideoRequestError, cancelVideoTask, listVideoTasks } from './video-api';
+import { Field } from '@/components/ui/spec';
 
 export function VideoTasksSection() {
   const [tasks, setTasks] = useState<VideoTaskDTO[]>([]);
@@ -96,32 +96,30 @@ export function VideoTasksSection() {
         </SheetHeader>
         <SheetContent display="grid" gap={3}>
           <Box display="grid" gap={3} gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="video-task-filter-status">Status</Label>
+                        <Field label="Status" htmlFor="video-task-filter-status">
               <Select
-                id="video-task-filter-status"
-                value={statusFilter}
-                placeholder="Any status"
-                options={[
-                  { value: '', label: 'Any status' },
-                  ...VIDEO_TASK_STATUSES.map((status) => ({ value: status, label: status })),
-                ]}
-                onValueChange={setStatusFilter}
-              />
-            </Box>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="video-task-filter-type">Task type</Label>
+                              id="video-task-filter-status"
+                              value={statusFilter}
+                              placeholder="Any status"
+                              options={[
+                                { value: '', label: 'Any status' },
+                                ...VIDEO_TASK_STATUSES.map((status) => ({ value: status, label: status })),
+                              ]}
+                              onValueChange={setStatusFilter}
+                            />
+            </Field>
+                        <Field label="Task type" htmlFor="video-task-filter-type">
               <Select
-                id="video-task-filter-type"
-                value={taskTypeFilter}
-                placeholder="Any type"
-                options={[
-                  { value: '', label: 'Any type' },
-                  ...VIDEO_TASK_TYPES.map((type) => ({ value: type, label: type })),
-                ]}
-                onValueChange={setTaskTypeFilter}
-              />
-            </Box>
+                              id="video-task-filter-type"
+                              value={taskTypeFilter}
+                              placeholder="Any type"
+                              options={[
+                                { value: '', label: 'Any type' },
+                                ...VIDEO_TASK_TYPES.map((type) => ({ value: type, label: type })),
+                              ]}
+                              onValueChange={setTaskTypeFilter}
+                            />
+            </Field>
           </Box>
 
           <Button variant="outline" colorPalette="blue" onClick={() => { void refreshTasks(); }} disabled={isRefreshing}>

@@ -132,7 +132,7 @@ export function VideoMessageBanner({ error, notice, nonce, children }: VideoMess
           borderLeft="3px solid"
           borderLeftColor="green.400"
           borderRadius="md"
-          bg="white"
+          bg="surface.sheet"
           p="0.75rem"
           color="state.ok"
           fontSize="sm"

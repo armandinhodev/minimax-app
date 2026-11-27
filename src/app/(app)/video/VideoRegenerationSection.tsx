@@ -113,7 +113,7 @@ export function VideoRegenerationSection() {
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={0}>
-            <Field label="Source">
+            <Field label="Source" htmlFor="video-regeneration-mode">
               <Select
                 id="video-regeneration-mode"
                 value={regenerationMode}
@@ -127,7 +127,7 @@ export function VideoRegenerationSection() {
             </Field>
 
             {regenerationMode === 'task' ? (
-              <Field label="Source task id">
+              <Field label="Source task id" htmlFor="video-regeneration-source-task-id">
                 <Box display="grid" gap={1}>
                   <Input
                     id="video-regeneration-source-task-id"
@@ -143,7 +143,7 @@ export function VideoRegenerationSection() {
               </Field>
             ) : (
               <>
-                <Field label="768P base video URL">
+                <Field label="768P base video URL" htmlFor="video-regeneration-base-video">
                   <Box display="grid" gap={1}>
                     <Input
                       id="video-regeneration-base-video"

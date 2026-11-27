@@ -57,14 +57,14 @@ export function VideoTaskResult({ task, isPolling, onCancel }: VideoTaskResultPr
           )}
 
           {task.status === 'succeeded' && task.content?.prompt && (
-            <Box border="1px solid" borderColor="state.okSoft" borderRadius="md" p="0.75rem" bg="white">
+            <Box border="1px solid" borderColor="state.okSoft" borderRadius="md" p="0.75rem" bg="surface.sheet">
               <Box fontWeight="medium" fontSize="sm">Enhanced prompt</Box>
               <Box color="content.ink" fontSize="sm" whiteSpace="pre-wrap">{task.content.prompt}</Box>
             </Box>
           )}
 
           {outputUrl && (
-            <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="white">
+            <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="surface.sheet">
               <video
                 data-testid="video-output"
                 src={outputUrl}

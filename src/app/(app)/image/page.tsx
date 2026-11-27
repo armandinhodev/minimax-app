@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 const PROMPT_MAX_LENGTH = 32_000;
 const MAX_IMAGE_COUNT = 10;
@@ -200,7 +201,7 @@ export default function ImagePage() {
             Create polished visual assets with MiniMax-H3-Image. The app uses URL output for fast preview, download, and Library access.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="21rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="21rem">
           Provider URLs are not guaranteed to stay available. Download final images when you like a result.
         </Box>
       </Box>
@@ -251,7 +252,7 @@ export default function ImagePage() {
                       disabled={isLoading}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -277,7 +278,7 @@ export default function ImagePage() {
                       disabled={isLoading || usesCustomSize}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label} ({option.value})</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.size} · {option.hint}</span>
                       </span>
@@ -308,7 +309,7 @@ export default function ImagePage() {
                       disabled={isLoading || usesCustomSize}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -319,30 +320,28 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="image-size">Custom Size (optional)</Label>
+                            <Field label="Custom Size (optional)" htmlFor="image-size">
                 <Input
-                  id="image-size"
-                  value={customSize}
-                  disabled={isLoading}
-                  placeholder="2720x1536"
-                  onChange={(event) => setCustomSize(event.currentTarget.value)}
-                />
-                <Box color="content.readout" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="image-count">Images</Label>
+                                  id="image-size"
+                                  value={customSize}
+                                  disabled={isLoading}
+                                  placeholder="2720x1536"
+                                  onChange={(event) => setCustomSize(event.currentTarget.value)}
+                                />
+                                <Box color="content.readout" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
+              </Field>
+                            <Field label="Images" htmlFor="image-count">
                 <Input
-                  id="image-count"
-                  type="number"
-                  min={1}
-                  max={MAX_IMAGE_COUNT}
-                  value={imageCount}
-                  disabled={isLoading}
-                  onChange={(event) => setImageCount(Number(event.currentTarget.value))}
-                />
-                <Box color="content.readout" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
-              </Box>
+                                  id="image-count"
+                                  type="number"
+                                  min={1}
+                                  max={MAX_IMAGE_COUNT}
+                                  value={imageCount}
+                                  disabled={isLoading}
+                                  onChange={(event) => setImageCount(Number(event.currentTarget.value))}
+                                />
+                                <Box color="content.readout" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
+              </Field>
             </Box>
 
             <Box display="grid" gap={2}>
@@ -361,7 +360,7 @@ export default function ImagePage() {
                       disabled={isLoading}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -372,22 +371,21 @@ export default function ImagePage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="image-compression">Output Compression</Label>
+                            <Field label="Output Compression" htmlFor="image-compression">
                 <Input
-                  id="image-compression"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={outputCompression}
-                  disabled={isLoading || outputFormat === 'png'}
-                  onChange={(event) => setOutputCompression(Number(event.currentTarget.value))}
-                />
-                <Box color="content.readout" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
-              </Box>
+                                  id="image-compression"
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  value={outputCompression}
+                                  disabled={isLoading || outputFormat === 'png'}
+                                  onChange={(event) => setOutputCompression(Number(event.currentTarget.value))}
+                                />
+                                <Box color="content.readout" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
+              </Field>
             </Box>
 
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="white">
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap={3} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.75rem" bg="surface.sheet">
               <Box>
                 <Label htmlFor="image-prompt-enhancement">Disable Prompt Enhancement</Label>
                 <Box color="content.readout" fontSize="sm">
@@ -404,7 +402,7 @@ export default function ImagePage() {
 
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -426,13 +424,13 @@ export default function ImagePage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} with MiniMax-H3-Image...
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Start with a clear prompt, choose the frame, then generate. Your results will be saved to backend Library automatically.
               </Box>
             )}
@@ -440,7 +438,7 @@ export default function ImagePage() {
             {result && successfulItems.length > 0 && (
               <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
                 {successfulItems.map((item) => (
-                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="white" boxShadow="sm">
+                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="surface.sheet" boxShadow="sm">
                     <img
                       src={item.url ?? ''}
                       alt={`Generated image ${item.index + 1}`}
@@ -465,7 +463,7 @@ export default function ImagePage() {
             )}
 
             {result && failedItems.length > 0 && (
-              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="white" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
+              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
                 {failedItems.map((item) => (
                   <span key={`failure-${item.index}`}>
                     Image {item.index + 1} failed{item.error?.code ? ` (${item.error.code})` : ''}: {item.error?.message}

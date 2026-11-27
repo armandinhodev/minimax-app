@@ -8,14 +8,13 @@
  */
 
 import { useState } from 'react';
-import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { setAppAccessKey } from '@/components/shared/AppKeyGate';
 import { validateAppAccessKey } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 export default function LoginPage() {
   const [key, setKey] = useState('');
@@ -61,19 +60,18 @@ export default function LoginPage() {
         </SheetHeader>
         <SheetContent>
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="access-key">Access Key</Label>
+                        <Field label="Access Key" htmlFor="access-key">
               <Input
-                id="access-key"
-                type="password"
-                placeholder="Enter your app access key"
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                autoComplete="off"
-                autoFocus
-                disabled={isLoading}
-              />
-            </Box>
+                              id="access-key"
+                              type="password"
+                              placeholder="Enter your app access key"
+                              value={key}
+                              onChange={(e) => setKey(e.target.value)}
+                              autoComplete="off"
+                              autoFocus
+                              disabled={isLoading}
+                            />
+            </Field>
 
             {error && (
               <Alert variant="destructive">

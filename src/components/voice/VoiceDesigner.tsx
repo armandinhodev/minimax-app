@@ -180,7 +180,7 @@ export function VoiceDesigner({
 
           {error && <ErrorDisplay code={error.code} message={error.message} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}

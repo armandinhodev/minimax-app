@@ -18,7 +18,7 @@ function DropdownMenuContent({ children, className }: { children?: React.ReactNo
         marginTop: "0.25rem",
         background: "white",
         borderRadius: "0.5rem",
-        border: "1px solid #e5e7eb",
+        border: "1px solid var(--chakra-colors-surface-rule)",
         boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
         padding: "0.25rem",
         minWidth: "8rem",
@@ -60,14 +60,14 @@ function DropdownMenuItem({ children, onClick, className }: { children?: React.R
 
 function DropdownMenuLabel({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
-    <div style={{ paddingLeft: "0.375rem", paddingRight: "0.375rem", paddingTop: "0.25rem", paddingBottom: "0.25rem", fontSize: "0.75rem", fontWeight: 500, color: "#6b7280" }} className={className}>
+    <div style={{ paddingLeft: "0.375rem", paddingRight: "0.375rem", paddingTop: "0.25rem", paddingBottom: "0.25rem", fontSize: "0.75rem", fontWeight: 500, color: "var(--chakra-colors-content-readout)" }} className={className}>
       {children}
     </div>
   );
 }
 
 function DropdownMenuSeparator({ className }: { className?: string }) {
-  return <hr style={{ height: "1px", background: "#e5e7eb", margin: "0.25rem 0" }} className={className} />;
+  return <hr style={{ height: "1px", background: "var(--chakra-colors-surface-rule)", margin: "0.25rem 0" }} className={className} />;
 }
 
 function DropdownMenuGroup({ children, className }: { children?: React.ReactNode; className?: string }) {
@@ -104,7 +104,7 @@ function DropdownMenuSubContent(props: React.HTMLAttributes<HTMLDivElement>) {
         marginLeft: "0.25rem",
         background: "white",
         borderRadius: "0.5rem",
-        border: "1px solid #e5e7eb",
+        border: "1px solid var(--chakra-colors-surface-rule)",
         boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
         padding: "0.25rem",
         minWidth: "8rem",
@@ -116,7 +116,7 @@ function DropdownMenuSubContent(props: React.HTMLAttributes<HTMLDivElement>) {
 }
 
 function DropdownMenuShortcut({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#6b7280" }} className={className}>{children}</span>;
+  return <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--chakra-colors-content-readout)" }} className={className}>{children}</span>;
 }
 
 const DropdownMenuPortal = "div";

@@ -11,6 +11,7 @@ import { Select, type SelectOption } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch, parseApiError } from '@/lib/auth-client';
 import { MUSIC_AVAILABILITY_NOTICE } from '@/application/dto/minimax/music/MusicDTO';
+import { Field } from '@/components/ui/spec';
 
 const PROMPT_MAX_LENGTH = 2000;
 const LYRICS_MAX_LENGTH = 3500;
@@ -114,12 +115,12 @@ export default function LyricsGenerationPage() {
             Draft complete MiniMax-ready song lyrics or edit an existing lyric sheet before generating music.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="purple.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Generated lyrics can be sent directly into Music Generation. Prompts are capped at 2,000 characters and lyrics at 3,500.
         </Box>
       </Box>
 
-      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
+      <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
         {MUSIC_AVAILABILITY_NOTICE}
       </Box>
 
@@ -131,14 +132,12 @@ export default function LyricsGenerationPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             <Box display="grid" gridTemplateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
-              <Box display="grid" gap={2}>
-                <Label>Mode</Label>
+                            <Field label="Mode" htmlFor="lyrics-title">
                 <Select value={mode} onValueChange={setMode} options={MODE_OPTIONS} disabled={isLoading} />
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="lyrics-title">Title (optional)</Label>
+              </Field>
+                            <Field label="Title (optional)" htmlFor="lyrics-title">
                 <Input id="lyrics-title" value={title} disabled={isLoading} placeholder="Neon Afterglow" onChange={(event) => setTitle(event.currentTarget.value)} />
-              </Box>
+              </Field>
             </Box>
 
             <Box display="grid" gap={2}>
@@ -174,13 +173,13 @@ export default function LyricsGenerationPage() {
             </Box>
 
             {validationMessage && (
-              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="state.run" fontSize="sm">
+              <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.run" fontSize="sm">
                 {validationMessage}
               </Box>
             )}
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -198,12 +197,12 @@ export default function LyricsGenerationPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {!result && !isLoading && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Write a focused brief, then generate lyrics ready for MiniMax Music Generation.
               </Box>
             )}
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Writing lyrics with MiniMax Music. This is a billable POST, so the app will not retry automatically.
               </Box>
             )}
@@ -215,12 +214,12 @@ export default function LyricsGenerationPage() {
                   </Box>
                   <Box display="flex" gap={2} flexWrap="wrap">
                     <Button variant="outline" colorPalette="blue" size="sm" onClick={handleCopyLyrics}>Copy Lyrics</Button>
-                    <Box asChild borderRadius="md" bg="#16a34a" color="white" px="0.75rem" py="0.4rem" fontSize="sm" fontWeight={600} textDecoration="none">
+                    <Box asChild borderRadius="md" bg="var(--chakra-colors-state-ok)" color="white" px="0.75rem" py="0.4rem" fontSize="sm" fontWeight={600} textDecoration="none">
                       <a href={buildMusicGenerationHref(result, prompt)}>Use in Music Generation</a>
                     </Box>
                   </Box>
                 </Box>
-                <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
+                <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" color="content.ink" overflowX="auto">
                   {result.lyrics}
                 </Box>
               </Box>

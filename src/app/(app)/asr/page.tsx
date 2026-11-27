@@ -14,11 +14,11 @@ import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 import {
   ASR_AUDIO_EXTENSIONS,
@@ -250,7 +250,7 @@ export default function AsrPage() {
             ready-to-use subtitles.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="state.runSoft" borderLeft="3px solid" borderLeftColor="orange.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Audio is billed by its duration. Clips up to 500 seconds and 50MB are accepted.
         </Box>
       </Box>
@@ -262,66 +262,62 @@ export default function AsrPage() {
             <SheetDescription>Pick a recording to transcribe. It is sent to MiniMax ASR through this app.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="asr-file">Audio file</Label>
+                        <Field label="Audio file" htmlFor="asr-file">
               <Input
-                id="asr-file"
-                type="file"
-                accept={ACCEPTED_EXTENSIONS}
-                ref={fileInputRef}
-                onChange={(event) => {
-                  setFile(event.currentTarget.files?.[0] ?? null);
-                  setError(null);
-                  setNotice(null);
-                  setTranscript(null);
-                  setSubtitles(null);
-                }}
-              />
-            </Box>
+                              id="asr-file"
+                              type="file"
+                              accept={ACCEPTED_EXTENSIONS}
+                              ref={fileInputRef}
+                              onChange={(event) => {
+                                setFile(event.currentTarget.files?.[0] ?? null);
+                                setError(null);
+                                setNotice(null);
+                                setTranscript(null);
+                                setSubtitles(null);
+                              }}
+                            />
+            </Field>
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="asr-format">Output format</Label>
+                        <Field label="Output format" htmlFor="asr-format">
               <Select
-                id="asr-format"
-                value={responseFormat}
-                options={FORMAT_OPTIONS}
-                disabled={isTranscribing}
-                onValueChange={(value) => {
-                  setResponseFormat(value);
-                  setTranscript(null);
-                  setSubtitles(null);
-                }}
-              />
-            </Box>
+                              id="asr-format"
+                              value={responseFormat}
+                              options={FORMAT_OPTIONS}
+                              disabled={isTranscribing}
+                              onValueChange={(value) => {
+                                setResponseFormat(value);
+                                setTranscript(null);
+                                setSubtitles(null);
+                              }}
+                            />
+            </Field>
 
             {isDiarizationFormat && (
-              <Box display="grid" gap={2}>
-                <Label htmlFor="asr-timestamp-level">Timestamp granularity</Label>
+                            <Field label="Timestamp granularity" htmlFor="asr-timestamp-level">
                 <Select
-                  id="asr-timestamp-level"
-                  value={timestampLevel}
-                  options={TIMESTAMP_OPTIONS}
-                  disabled={isTranscribing}
-                  onValueChange={setTimestampLevel}
-                />
-              </Box>
+                                  id="asr-timestamp-level"
+                                  value={timestampLevel}
+                                  options={TIMESTAMP_OPTIONS}
+                                  disabled={isTranscribing}
+                                  onValueChange={setTimestampLevel}
+                                />
+              </Field>
             )}
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="asr-language">Spoken language</Label>
+                        <Field label="Spoken language" htmlFor="asr-language">
               <Select
-                id="asr-language"
-                value={language}
-                options={LANGUAGE_OPTIONS}
-                disabled={isTranscribing}
-                onValueChange={setLanguage}
-              />
-            </Box>
+                              id="asr-language"
+                              value={language}
+                              options={LANGUAGE_OPTIONS}
+                              disabled={isTranscribing}
+                              onValueChange={setLanguage}
+                            />
+            </Field>
 
             {fileError && !error && <ErrorDisplay message={fileError} />}
             {error && <ErrorDisplay message={error} />}
             {notice && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {notice}
               </Box>
             )}
@@ -353,13 +349,13 @@ export default function AsrPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {streamedText.length > 0 && (
-              <Box border="1px solid" borderColor="interaction.soft" borderRadius="xl" bg="white" p="1rem" color="content.ink" whiteSpace="pre-wrap">
+              <Box border="1px solid" borderColor="interaction.soft" borderRadius="xl" bg="surface.sheet" p="1rem" color="content.ink" whiteSpace="pre-wrap">
                 {streamedText}
               </Box>
             )}
 
             {!transcript && !subtitles && streamedText.length === 0 && !isTranscribing && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 {file
                   ? fileError
                     ? `The selected file cannot be transcribed: ${fileError}`
@@ -369,13 +365,13 @@ export default function AsrPage() {
             )}
 
             {isTranscribing && !transcript && !subtitles && streamedText.length === 0 && (
-              <Box border="1px dashed" borderColor="state.runSoft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="state.runSoft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 MiniMax is transcribing. This request is billed by audio duration.
               </Box>
             )}
 
             {subtitles !== null && (
-              <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
+              <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" color="content.ink" overflowX="auto">
                 {subtitles}
               </Box>
             )}
@@ -413,7 +409,7 @@ export default function AsrPage() {
                     ))}
                   </Box>
                 ) : (
-                  <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="1rem" color="content.ink" overflowX="auto">
+                  <Box as="pre" whiteSpace="pre-wrap" border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="1rem" color="content.ink" overflowX="auto">
                     {transcript.text}
                   </Box>
                 )}

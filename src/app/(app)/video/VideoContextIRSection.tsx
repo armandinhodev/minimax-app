@@ -123,7 +123,7 @@ export function VideoContextIRSection() {
               />
             </Box>
 
-            <Field label="Target duration (seconds)">
+            <Field label="Target duration (seconds)" htmlFor="video-context-ir-duration">
               <Input
                 id="video-context-ir-duration"
                 type="number"
@@ -135,7 +135,7 @@ export function VideoContextIRSection() {
               />
             </Field>
 
-            <Field label="Aspect ratio">
+            <Field label="Aspect ratio" htmlFor="video-context-ir-ratio">
               <Select
                 id="video-context-ir-ratio"
                 value={composition.ratio}

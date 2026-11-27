@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { authFetch, parseApiError } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 const PROMPT_MAX_LENGTH = 32_000;
 const MAX_IMAGE_COUNT = 10;
@@ -281,7 +282,7 @@ export default function ImageToImagePage() {
             Transform 1 to 16 reference images with MiniMax-H3-Image while keeping uploads and API keys server-safe.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           Image edits always apply prompt enhancement. Reference images are forwarded to MiniMax, never fetched by this server.
         </Box>
       </Box>
@@ -295,23 +296,22 @@ export default function ImageToImagePage() {
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="reference-images">Reference Images</Label>
+                        <Field label="Reference Images" htmlFor="reference-images">
               <Input
-                id="reference-images"
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                disabled={isLoading || isReadingFile}
-                onChange={handleReferenceImagesChange}
-              />
-              <Box color="content.readout" fontSize="sm">
-                Attach between 1 and {MAX_REFERENCE_IMAGES} images. The upload order is the picture number used in your prompt.
-              </Box>
-            </Box>
+                              id="reference-images"
+                              type="file"
+                              multiple
+                              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                              disabled={isLoading || isReadingFile}
+                              onChange={handleReferenceImagesChange}
+                            />
+                            <Box color="content.readout" fontSize="sm">
+                              Attach between 1 and {MAX_REFERENCE_IMAGES} images. The upload order is the picture number used in your prompt.
+                            </Box>
+            </Field>
 
             {referenceImages.length > 0 && (
-              <Box border="1px solid" borderColor="interaction.soft" borderRadius="xl" overflow="hidden" bg="white">
+              <Box border="1px solid" borderColor="interaction.soft" borderRadius="xl" overflow="hidden" bg="surface.sheet">
                 <Box display="grid" gap={2} p="0.75rem">
                   {referenceImages.map((reference, index) => (
                     <Box key={`${reference.name}-${index}`} display="flex" alignItems="center" justifyContent="space-between" gap={2} color="content.readout" fontSize="sm">
@@ -357,7 +357,7 @@ export default function ImageToImagePage() {
                       disabled={isLoading}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -383,7 +383,7 @@ export default function ImageToImagePage() {
                       disabled={isLoading || usesCustomSize}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label} ({option.value})</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -409,7 +409,7 @@ export default function ImageToImagePage() {
                       disabled={isLoading || usesCustomSize}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -420,30 +420,28 @@ export default function ImageToImagePage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={4}>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="image-edit-size">Custom Size (optional)</Label>
+                            <Field label="Custom Size (optional)" htmlFor="image-edit-size">
                 <Input
-                  id="image-edit-size"
-                  value={customSize}
-                  disabled={isLoading}
-                  placeholder="2720x1536"
-                  onChange={(event) => setCustomSize(event.currentTarget.value)}
-                />
-                <Box color="content.readout" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
-              </Box>
-              <Box display="grid" gap={2}>
-                <Label htmlFor="image-edit-count">Images</Label>
+                                  id="image-edit-size"
+                                  value={customSize}
+                                  disabled={isLoading}
+                                  placeholder="2720x1536"
+                                  onChange={(event) => setCustomSize(event.currentTarget.value)}
+                                />
+                                <Box color="content.readout" fontSize="xs">Width x height. Between 655,360 and 20,000,000 pixels, ratio 1:3 to 3:1.</Box>
+              </Field>
+                            <Field label="Images" htmlFor="image-edit-count">
                 <Input
-                  id="image-edit-count"
-                  type="number"
-                  min={1}
-                  max={MAX_IMAGE_COUNT}
-                  value={imageCount}
-                  disabled={isLoading}
-                  onChange={(event) => setImageCount(Number(event.currentTarget.value))}
-                />
-                <Box color="content.readout" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
-              </Box>
+                                  id="image-edit-count"
+                                  type="number"
+                                  min={1}
+                                  max={MAX_IMAGE_COUNT}
+                                  value={imageCount}
+                                  disabled={isLoading}
+                                  onChange={(event) => setImageCount(Number(event.currentTarget.value))}
+                                />
+                                <Box color="content.readout" fontSize="xs">Generate 1 to {MAX_IMAGE_COUNT} variations.</Box>
+              </Field>
             </Box>
 
             <Box display="grid" gap={2}>
@@ -462,7 +460,7 @@ export default function ImageToImagePage() {
                       disabled={isLoading}
                       style={{ height: 'auto', justifyContent: 'flex-start', padding: '0.75rem' }}
                     >
-                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem' }}>
+                      <span style={{ display: 'grid', textAlign: 'left', gap: '0.125rem', whiteSpace: 'normal', minWidth: 0 }}>
                         <strong>{option.label}</strong>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{option.hint}</span>
                       </span>
@@ -472,23 +470,22 @@ export default function ImageToImagePage() {
               </Box>
             </Box>
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="image-edit-compression">Output Compression</Label>
+                        <Field label="Output Compression" htmlFor="image-edit-compression">
               <Input
-                id="image-edit-compression"
-                type="number"
-                min={0}
-                max={100}
-                value={outputCompression}
-                disabled={isLoading || outputFormat === 'png'}
-                onChange={(event) => setOutputCompression(Number(event.currentTarget.value))}
-              />
-              <Box color="content.readout" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
-            </Box>
+                              id="image-edit-compression"
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={outputCompression}
+                              disabled={isLoading || outputFormat === 'png'}
+                              onChange={(event) => setOutputCompression(Number(event.currentTarget.value))}
+                            />
+                            <Box color="content.readout" fontSize="xs">0 to 100. Applies to JPEG and WEBP only.</Box>
+            </Field>
 
             {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
             {actionStatus && !error && (
-              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+              <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
                 {actionStatus}
               </Box>
             )}
@@ -510,13 +507,13 @@ export default function ImageToImagePage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {isLoading && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Creating {imageCount} {imageCount === 1 ? 'image' : 'images'} from your reference images...
               </Box>
             )}
 
             {!isLoading && !result && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Attach your reference images, describe the desired direction, then generate. Results are saved to backend Library automatically.
               </Box>
             )}
@@ -524,7 +521,7 @@ export default function ImageToImagePage() {
             {result && successfulItems.length > 0 && (
               <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
                 {successfulItems.map((item) => (
-                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="white" boxShadow="sm">
+                  <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="state.okSoft" borderRadius="xl" overflow="hidden" bg="surface.sheet" boxShadow="sm">
                     <img
                       src={item.url ?? ''}
                       alt={`Generated image ${item.index + 1}`}
@@ -549,7 +546,7 @@ export default function ImageToImagePage() {
             )}
 
             {result && failedItems.length > 0 && (
-              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="white" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
+              <Box border="1px solid" borderColor="state.errSoft" borderLeft="3px solid" borderLeftColor="red.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.err" fontSize="sm" display="grid" gap="0.25rem">
                 {failedItems.map((item) => (
                   <span key={`failure-${item.index}`}>
                     Image {item.index + 1} failed{item.error?.code ? ` (${item.error.code})` : ''}: {item.error?.message}

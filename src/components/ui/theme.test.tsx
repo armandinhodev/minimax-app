@@ -29,7 +29,7 @@ describe('application color system', () => {
   it('keeps the bench palette described in docs/design.md', () => {
     expect(system.token('colors.bench.console')).toBe('#14181D');
     expect(system.token('colors.bench.seam')).toBe('#2B323B');
-    expect(system.token('colors.bench.sheet')).toBe('#FFFFFF');
+    expect(system.token('colors.bench.sheet')).toBe('var(--chakra-colors-surface-sheet)');
     expect(system.token('colors.bench.field')).toBe('#EEF0F2');
     expect(system.token('colors.bench.rule')).toBe('#D7DCE1');
     expect(system.token('colors.bench.ink')).toBe('#0F1216');

@@ -18,6 +18,7 @@ import { VoiceSelector } from '@/components/tts/VoiceSelector';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { StreamingPlayer } from '@/components/tts/StreamingPlayer';
 import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
+import { Field } from '@/components/ui/spec';
 
 const MODEL_OPTIONS: SelectOption[] = [
   { value: 'speech-2.8-hd', label: 'speech-2.8-hd' },
@@ -122,7 +123,7 @@ export default function TTSPage() {
           </SheetDescription>
         </SheetHeader>
         <SheetContent display="grid" gap={4}>
-          <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
+          <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
             Best for finished clips, exports, and anything you want to keep in backend Library.
           </Box>
           {/* Text Input — Phase 6 component */}
@@ -144,27 +145,25 @@ export default function TTSPage() {
 
           {/* Model & Format */}
           <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label>Model</Label>
+                        <Field label="Model">
               <Select
-                value={model}
-                onValueChange={handleModelChange}
-                options={MODEL_OPTIONS}
-              />
-            </Box>
-            <Box display="grid" gap={2}>
-              <Label>Format</Label>
+                              value={model}
+                              onValueChange={handleModelChange}
+                              options={MODEL_OPTIONS}
+                            />
+            </Field>
+                        <Field label="Format">
               <Select
-                value={format}
-                onValueChange={handleFormatChange}
-                options={FORMAT_OPTIONS}
-              />
-            </Box>
+                              value={format}
+                              onValueChange={handleFormatChange}
+                              options={FORMAT_OPTIONS}
+                            />
+            </Field>
           </Box>
 
           {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
           {actionStatus && !error && (
-            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+            <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
               {actionStatus}
             </Box>
           )}
@@ -203,7 +202,7 @@ export default function TTSPage() {
           </SheetDescription>
         </SheetHeader>
         <SheetContent display="grid" gap={4}>
-          <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
+          <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
             Best for fast previews and live playback. Use Generate Audio when you need a downloadable Library item.
           </Box>
           <Box display="flex" alignItems="center" gap={2}>
@@ -236,7 +235,7 @@ export default function TTSPage() {
                   {useWebSocketTransport ? 'WebSocket' : 'HTTP SSE'}
                 </Button>
               </Box>
-              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm">
+              <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="teal.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
                 {useWebSocketTransport
                   ? 'The server holds a WebSocket to MiniMax and relays the audio as it arrives. The API key never reaches the browser.'
                   : 'The server relays the MiniMax HTTP stream as Server-Sent Events.'}

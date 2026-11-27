@@ -36,7 +36,7 @@ function Switch({ checked, onChange, className, disabled, id, ariaLabel }: {
           width: "2rem",
           height: "1.15rem",
           borderRadius: "9999px",
-          background: checked ? "#3b82f6" : "#d1d5db",
+          background: checked ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-surface-rule)",
           position: "relative",
           transition: "background-color 0.2s",
           cursor: disabled ? "not-allowed" : "pointer",

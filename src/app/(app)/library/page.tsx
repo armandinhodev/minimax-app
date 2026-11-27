@@ -293,7 +293,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
             </Button>
           )}
           {coverGenerationHref && (
-            <a href={coverGenerationHref} style={{ border: '1px solid #16a34a', borderRadius: '0.375rem', color: 'var(--chakra-colors-state.ok)', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
+            <a href={coverGenerationHref} style={{ border: '1px solid var(--chakra-colors-state-ok)', borderRadius: '0.375rem', color: 'var(--chakra-colors-state.ok)', fontSize: '0.875rem', fontWeight: 600, padding: '0.375rem 0.75rem', textDecoration: 'none' }}>
               Use in Cover Generation
             </a>
           )}
@@ -407,7 +407,7 @@ export default function LibraryPage() {
 
       {error && <ErrorDisplay code={error.code} message={error.message} />}
       {actionStatus && !error && (
-        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="white" p="0.75rem" color="state.ok" fontSize="sm">
+        <Box border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="green.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="state.ok" fontSize="sm">
           {actionStatus}
         </Box>
       )}

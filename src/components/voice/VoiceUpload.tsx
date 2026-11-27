@@ -261,7 +261,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
       {/* Drop zone */}
       <Box
         border="2px dashed"
-        borderColor={isDragging ? '#16a34a' : '#86efac'}
+        borderColor={isDragging ? 'var(--chakra-colors-state-ok)' : 'var(--chakra-colors-state-ok)'}
         borderRadius="lg"
         p={6}
         textAlign="center"

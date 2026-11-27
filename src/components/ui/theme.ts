@@ -19,7 +19,7 @@ const config = defineConfig({
         bench: {
           console: { value: '#14181D' },
           seam: { value: '#2B323B' },
-          sheet: { value: '#FFFFFF' },
+          sheet: { value: 'var(--chakra-colors-surface-sheet)' },
           field: { value: '#EEF0F2' },
           rule: { value: '#D7DCE1' },
           ink: { value: '#0F1216' },

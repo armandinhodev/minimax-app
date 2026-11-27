@@ -16,12 +16,12 @@ import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
+import { Field } from '@/components/ui/spec';
 
 const MODEL_OPTIONS: SelectOption[] = [
   { value: 'MiniMax-M3.1-Flash', label: 'MiniMax-M3.1-Flash' },
@@ -205,7 +205,7 @@ export default function TextPage() {
             or any of the OpenAI, Anthropic and Responses compatible surfaces.
           </Box>
         </Box>
-        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="white" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
+        <Box border="1px solid" borderColor="interaction.soft" borderLeft="3px solid" borderLeftColor="blue.400" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm" maxW="24rem">
           MiniMax-M3.1-Flash and MiniMax-M3 are reasoning models: streaming is recommended.
         </Box>
       </Box>
@@ -217,53 +217,49 @@ export default function TextPage() {
             <SheetDescription>Pick the model and the upstream surface, then send a message.</SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
-            <Box display="grid" gap={2}>
-              <Label htmlFor="text-model">Model</Label>
+                        <Field label="Model" htmlFor="text-model">
               <Select
-                id="text-model"
-                value={model}
-                options={MODEL_OPTIONS}
-                disabled={isSending}
-                onValueChange={setModel}
-              />
-            </Box>
+                              id="text-model"
+                              value={model}
+                              options={MODEL_OPTIONS}
+                              disabled={isSending}
+                              onValueChange={setModel}
+                            />
+            </Field>
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="text-surface">Surface</Label>
+                        <Field label="Surface" htmlFor="text-surface">
               <Select
-                id="text-surface"
-                value={surface}
-                options={SURFACE_OPTIONS}
-                disabled={isSending}
-                onValueChange={setSurface}
-              />
-            </Box>
+                              id="text-surface"
+                              value={surface}
+                              options={SURFACE_OPTIONS}
+                              disabled={isSending}
+                              onValueChange={setSurface}
+                            />
+            </Field>
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="text-system">System prompt (optional)</Label>
+                        <Field label="System prompt (optional)" htmlFor="text-system">
               <Textarea
-                id="text-system"
-                value={system}
-                disabled={isSending}
-                minH="5rem"
-                placeholder="You are a concise assistant."
-                onChange={(event) => setSystem(event.currentTarget.value)}
-              />
-            </Box>
+                              id="text-system"
+                              value={system}
+                              disabled={isSending}
+                              minH="5rem"
+                              placeholder="You are a concise assistant."
+                              onChange={(event) => setSystem(event.currentTarget.value)}
+                            />
+            </Field>
 
-            <Box display="grid" gap={2}>
-              <Label htmlFor="text-input">Message</Label>
+                        <Field label="Message" htmlFor="text-input">
               <Textarea
-                id="text-input"
-                value={input}
-                disabled={isSending}
-                required
-                aria-required="true"
-                minH="8rem"
-                placeholder="Ask something, or describe an image to reason about."
-                onChange={(event) => setInput(event.currentTarget.value)}
-              />
-            </Box>
+                              id="text-input"
+                              value={input}
+                              disabled={isSending}
+                              required
+                              aria-required="true"
+                              minH="8rem"
+                              placeholder="Ask something, or describe an image to reason about."
+                              onChange={(event) => setInput(event.currentTarget.value)}
+                            />
+            </Field>
 
             {error && <ErrorDisplay message={error} />}
 
@@ -284,7 +280,7 @@ export default function TextPage() {
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
             {messages.length === 0 && !reply && !isSending && (
-              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="surface.rule" borderRadius="xl" p="2rem" textAlign="center" color="content.readout" bg="surface.field">
                 Send a message to start.
               </Box>
             )}
@@ -295,7 +291,7 @@ export default function TextPage() {
                 border="1px solid"
                 borderColor={message.role === 'user' ? 'gray.200' : 'blue.100'}
                 borderRadius="xl"
-                bg="white"
+                bg="surface.sheet"
                 p="0.75rem"
               >
                 <Box color="content.subtle" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
@@ -308,7 +304,7 @@ export default function TextPage() {
             ))}
 
             {reply && (
-              <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="white" p="0.75rem">
+              <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="0.75rem">
                 <Box color="content.subtle" fontSize="0.75rem" fontWeight={700} textTransform="uppercase" letterSpacing="0.05em">
                   assistant
                 </Box>
@@ -361,7 +357,7 @@ export default function TextPage() {
             )}
 
             {isSending && !reply && (
-              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="1.5rem" textAlign="center" color="content.readout" bg="white">
+              <Box border="1px dashed" borderColor="interaction.soft" borderRadius="xl" p="1.5rem" textAlign="center" color="content.readout" bg="surface.field">
                 MiniMax is thinking.
               </Box>
             )}

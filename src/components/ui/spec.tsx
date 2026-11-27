@@ -78,6 +78,8 @@ const rowLayout = {
 interface FieldProps extends BoxProps {
   /** What the field is, in the user's words. */
   label: string;
+  /** Id of the control, so the label is programmatically associated with it. */
+  htmlFor?: string;
   children: React.ReactNode;
 }
 
@@ -88,12 +90,21 @@ interface FieldProps extends BoxProps {
  * the right, so a form reads as a parameter sheet instead of a stack of
  * rounded inputs.
  */
-export function Field({ label, children, ...props }: FieldProps) {
+export function Field({ label, htmlFor, children, ...props }: FieldProps) {
   return (
     <Box {...rowLayout} {...props}>
-      <Box fontSize="label" lineHeight="label" fontWeight="500" color="content.readout">
+      {/* Un <label> real: la asociacion con el control no depende del primitivo. */}
+      <label
+        htmlFor={htmlFor}
+        style={{
+          fontSize: 'var(--chakra-font-sizes-label)',
+          lineHeight: 'var(--chakra-line-heights-label)',
+          fontWeight: 500,
+          color: 'var(--chakra-colors-content-readout)',
+        }}
+      >
         {label}
-      </Box>
+      </label>
       <Box minW={0}>{children}</Box>
     </Box>
   );
