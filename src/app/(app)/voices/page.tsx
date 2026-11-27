@@ -2,7 +2,7 @@
 
 /**
  * Voice gallery page.
- * Tabs: System Voices | My Voices.
+ * Tabs: System voices | My voices.
  * VoiceCard grid with search/filter.
  */
 
@@ -84,7 +84,7 @@ export default function VoicesPage() {
 
       // Remove from user voices list
       setUserVoices((prev) => prev.filter((v) => v.voiceId !== voiceId));
-      setActionStatus('Voice deleted from My Voices.');
+      setActionStatus('Voice deleted from My voices.');
       setPendingDeleteVoice(null);
     } catch {
       setError({ code: null, message: 'Failed to delete voice.' });
@@ -155,8 +155,8 @@ export default function VoicesPage() {
 
       <Tabs defaultValue="system">
         <TabsList>
-          <TabsTrigger value="system">System Voices</TabsTrigger>
-          <TabsTrigger value="user">My Voices ({userVoices.length})</TabsTrigger>
+          <TabsTrigger value="system">System voices</TabsTrigger>
+          <TabsTrigger value="user">My voices ({userVoices.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="system">
@@ -186,7 +186,7 @@ export default function VoicesPage() {
         <TabsContent value="user">
           <Box mt={4}>
             <Box mb={4} border="1px solid" borderColor="state.okSoft" borderLeft="3px solid" borderLeftColor="state.ok" borderRadius="md" bg="surface.sheet" p="0.75rem" color="content.ink" fontSize="sm">
-              My Voices contains cloned and designed voices you created. Fresh voices may appear here after refresh, and they are available in Text to Speech from local history while MiniMax updates its voice list.
+              My voices contains cloned and designed voices you created. Fresh voices may appear here after refresh, and they are available in Text to Speech from local history while MiniMax updates its voice list.
             </Box>
             <Box mb={4} display="flex" alignItems="center" justifyContent="space-between">
               <Box maxW="20rem">
@@ -213,7 +213,7 @@ export default function VoicesPage() {
             </Box>
             {userVoices.length > 0 && (
               <Box display="flex" gap={2} flexWrap="wrap" mb={4}>
-                <Badge variant="success">My Voices</Badge>
+                <Badge variant="success">My voices</Badge>
                 <Badge variant="purple">Cloned</Badge>
                 <Badge variant="info">Designed</Badge>
               </Box>

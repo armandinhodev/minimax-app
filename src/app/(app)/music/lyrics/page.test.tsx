@@ -133,6 +133,12 @@ describe('LyricsGenerationPage', () => {
       }),
     }));
     expect(container!.textContent).toContain('[Chorus]');
+    // Each style tag is its own badge, not a list joined together.
+    expect(container!.textContent).not.toContain('synth-pop ·');
+    const badges = Array.from(container!.querySelectorAll('span')).filter((span) =>
+      ['synth-pop', 'uplifting'].includes(span.textContent?.trim() ?? ''),
+    );
+    expect(badges).toHaveLength(2);
     expect(container!.querySelector('a')?.getAttribute('href')).toContain('/music?lyrics=');
     expect(container!.querySelector('a')?.getAttribute('href')).toContain('prompt=Hopeful+synth-pop.');
   });

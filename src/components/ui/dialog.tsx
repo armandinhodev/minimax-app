@@ -44,7 +44,7 @@ function DialogContent({ onClose, children, className }: {
   return (
     <div
       style={{
-        background: "white",
+        background: "var(--chakra-colors-surface-sheet)",
         borderRadius: "0.75rem",
         padding: "1rem",
         boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",

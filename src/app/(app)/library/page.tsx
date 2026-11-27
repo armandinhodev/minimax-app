@@ -314,7 +314,7 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
           {coverExpiresAt && <TTLCounter expiresAt={coverExpiresAt} label="Cover ID TTL" />}
           {audioAsset && (
             <Button size="sm" onClick={() => downloadUrl(getDownloadUrl(generation, audioAsset))}>
-              Download
+              Download audio
             </Button>
           )}
           {coverGenerationHref && (

@@ -70,7 +70,9 @@ const rowLayout = {
   // La de control se topa: un valor de "2K" no debe ocupar 600px.
   gridTemplateColumns: { base: "1fr", md: "10rem minmax(0, 20rem)" },
   gap: { base: 1, md: 4 },
-  alignItems: "center",
+  // Arriba, no centrado: con un control alto (un input y su ayuda) la
+  // etiqueta queda flotando en el medio en vez de alinearse con el control.
+  alignItems: "start",
   py: "0.375rem",
   borderBottom: "1px solid",
   borderColor: "surface.rule",
@@ -81,6 +83,14 @@ interface FieldProps extends BoxProps {
   label: string;
   /** Id of the control, so the label is programmatically associated with it. */
   htmlFor?: string;
+  /**
+   * Marks the field as required, visibly.
+   *
+   * The label stays clean: it names the field and nothing else. A field the
+   * user must fill carries an asterisk, and the control carries `required`
+   * and `aria-required` for the assistive layer.
+   */
+  required?: boolean;
   children: React.ReactNode;
 }
 
@@ -91,7 +101,7 @@ interface FieldProps extends BoxProps {
  * the right, so a form reads as a parameter sheet instead of a stack of
  * rounded inputs.
  */
-export function Field({ label, htmlFor, children, ...props }: FieldProps) {
+export function Field({ label, htmlFor, required = false, children, ...props }: FieldProps) {
   return (
     <Box {...rowLayout} {...props}>
       {/* Un <label> real: la asociacion con el control no depende del primitivo. */}
@@ -102,9 +112,17 @@ export function Field({ label, htmlFor, children, ...props }: FieldProps) {
           lineHeight: 'var(--chakra-line-heights-label)',
           fontWeight: 500,
           color: 'var(--chakra-colors-content-readout)',
+          // Compensa el alto del control (2.25rem) para que la etiqueta
+          // quede opticamente centrada contra el, no pegada al borde.
+          paddingTop: '0.3125rem',
         }}
       >
         {label}
+        {required && (
+          <span aria-hidden="true" style={{ color: 'var(--chakra-colors-content-subtle)' }}>
+            {' *'}
+          </span>
+        )}
       </label>
       <Box minW={0}>{children}</Box>
     </Box>

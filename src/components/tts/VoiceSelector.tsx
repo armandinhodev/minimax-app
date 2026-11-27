@@ -16,8 +16,8 @@ import { Field } from '@/components/ui/spec';
 
 const USER_VOICE_TTL_MS = 168 * 60 * 60 * 1000;
 
-const getVoiceOptionGroup = (option: SelectOption) => option.flag?.displayName ?? 'My Voices';
-const getVoiceGroupOrder = (key: string) => (key === 'My Voices' ? -1 : 0);
+const getVoiceOptionGroup = (option: SelectOption) => option.flag?.displayName ?? 'My voices';
+const getVoiceGroupOrder = (key: string) => (key === 'My voices' ? -1 : 0);
 
 function getVoiceTypeLabel(type: VoiceDTO['type']): string {
   if (type === 'clone') return 'Cloned voice';

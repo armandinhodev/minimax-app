@@ -75,7 +75,7 @@ function TabsTrigger({ children, className, value }: { children?: React.ReactNod
         fontWeight: 500,
         borderRadius: "0.375rem",
         color: isActive ? "var(--chakra-colors-interaction-accent)" : "var(--chakra-colors-content-readout)",
-        background: isActive ? "white" : "transparent",
+        background: isActive ? "var(--chakra-colors-surface-sheet)" : "transparent",
         border: "none",
         cursor: "pointer",
         boxShadow: isActive ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)" : "none",

@@ -266,7 +266,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
         p={6}
         textAlign="center"
         transition="border-color 0.2s"
-        bg={isDragging ? 'green.50' : 'white'}
+        bg={isDragging ? 'var(--chakra-colors-interaction-soft)' : 'var(--chakra-colors-surface-sheet)'}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -361,7 +361,7 @@ export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isUploading || isValidatingDuration}
           >
-            Change File
+            Change file
           </Button>
           <Button
             size="sm"

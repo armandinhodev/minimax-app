@@ -14,6 +14,18 @@ import {
   queryCalls,
 } from './video-test-helpers';
 
+
+/**
+ * The value of a Spec row, bound to its label.
+ */
+function specValue(root: HTMLElement, label: string): string | null {
+  const row = Array.from(root.querySelectorAll('div')).find((element) => {
+    const children = Array.from(element.children);
+    return children.length === 2 && children[0].textContent?.trim() === label;
+  });
+  return row?.children[1]?.textContent?.trim() ?? null;
+}
+
 const authClientMocks = vi.hoisted(() => ({
   authFetch: vi.fn(),
   parseApiError: vi.fn(async () => ({ code: 500, message: 'Request failed' })),
@@ -145,6 +157,10 @@ describe('Video Studio sections', () => {
     const video = container!.querySelector('video') as HTMLVideoElement | null;
     expect(video).not.toBeNull();
     expect(video!.getAttribute('src')).toBe('https://cdn.example.com/h3-output.mp4');
+
+    // The task readout keeps every value, each bound to its label.
+    expect(specValue(container!, 'Task')).toBe('424010985738629');
+    expect(specValue(container!, 'Status')).toBe('succeeded');
   });
 
   it('offers only concrete ratios for text-to-video and switches to adaptive for image-to-video', async () => {

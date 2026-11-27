@@ -178,4 +178,19 @@ describe('VideoAgentPage', () => {
     expect(media.getAttribute('required')).not.toBeNull();
     expect(media.getAttribute('aria-required')).toBe('true');
   });
+
+  it('marks the required fields visibly, so the obligation is not only for the screen reader', async () => {
+    await act(async () => {
+      root!.render(<VideoAgentPage />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // The label names the field and marks it; the legend explains the mark.
+    const label = container!.querySelector('label[for="video-agent-media"]');
+    expect(label?.textContent).toContain('Image URL');
+    expect(label?.textContent).toContain('*');
+    expect(container!.textContent).toContain('Fields marked * are required.');
+  });
 });

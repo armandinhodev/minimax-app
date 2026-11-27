@@ -140,22 +140,31 @@ centered except media previews.
 - Empty states are invitations: "Choose an audio file to start."
 - **A label names the field, nothing else.** No "(optional)", no "(required)":
   a blocked button and the validation message already say what is missing.
+- **Obligation is marked, not named.** A field the user must fill carries an
+  asterisk after its label, the sheet says once what the asterisk means, and
+  the control carries `required` and `aria-required` for the assistive layer.
+  The label itself stays clean.
 - **A value is a value, not a sentence.** Pairs are `Spec` rows — label left,
   value right. Never "Format: MP3  Duration: 165s" and never a middle dot
   joining them.
 - **The copy speaks about the user's world.** "Saved to Library", not "saved to
-  backend Library". No mention of SQLite, HTTP or of the app itself.
+  backend Library". The rule names the storage layer and the wire protocol
+  (backend, SQLite, HTTP) and nothing else: saying "the server" is allowed,
+  because the user needs to know where their key stays.
 - **A proper noun is not title case.** "Generate with Whisper" is one
   capitalised word, not two: the rule catches a capitalised word that is not
   the first one, and tolerates acronyms (`URL`, `MP3`), camelCase (`MiniMax`)
   and hyphenated names (`H3-Image`).
+- **The rail lists feature names.** "Clone Voice" keeps its title case there,
+  while the button that clones a voice says "Clone voice": a menu names
+  things, a button names an action.
 
 ## How the rules are kept
 
 `src/components/ui/copy.test.tsx` reads the source tree and fails when a rule
 is broken, the same way `theme.test.tsx` guards the color tokens. It checks
-that no field label carries an optionality marker, that labels, panel titles
-and button labels are sentence case, that no visible string joins values with
+that no field label carries an optionality marker, that labels, panel titles,
+button and tab labels are sentence case, that no visible string joins values with
 a middle dot, that the copy the user reads never names the implementation,
 that every color token exists in the theme, that every CSS variable it
 references exists, and that no raw Chakra palette color sneaks back in.
@@ -164,7 +173,14 @@ The scan resolves the repository root from the test file, not from the
 working directory, and the first case asserts that it found the source tree:
 a scan that finds nothing protects nothing, and that must fail loudly.
 
-A copy pass that is not enforced is a copy pass that comes back.
+A line may opt out with `// copy-test:allow` when a rule is wrong for it.
+The opt out is a comment, so a review sees it.
+
+The rules cover what the user reads: panel titles, descriptions, buttons and
+tabs, labels, alerts, badges, paragraphs, field labels, placeholders,
+`aria-label` and toasts. They also cover the tokens: every color token must resolve in the
+theme's color space, every CSS variable must exist, and no raw Chakra
+palette color may come back.
 
 ## What this replaces
 

@@ -176,6 +176,12 @@ export default function VideoAgentPage() {
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
+            {(selected?.requiresMedia || selected?.requiresText) && (
+              <Box color="content.subtle" fontSize="label" lineHeight="label">
+                Fields marked * are required.
+              </Box>
+            )}
+
                         <Field label="Template" htmlFor="video-agent-template">
               <Select
                               id="video-agent-template"
@@ -187,7 +193,7 @@ export default function VideoAgentPage() {
             </Field>
 
             {selected?.requiresMedia && (
-                            <Field label="Image URL" htmlFor="video-agent-media">
+                            <Field label="Image URL" required htmlFor="video-agent-media">
                 <Input
                                   id="video-agent-media"
                                   value={mediaUrl}
@@ -204,7 +210,7 @@ export default function VideoAgentPage() {
             )}
 
             {selected?.requiresText && (
-                            <Field label="Text" htmlFor="video-agent-text">
+                            <Field label="Text" required htmlFor="video-agent-text">
                 <Textarea
                                   id="video-agent-text"
                                   value={textInput}

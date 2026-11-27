@@ -11,6 +11,9 @@
  * the scan cannot silently find nothing. A scan that finds nothing is a
  * test that protects nothing, and the first test here says so out loud.
  *
+ * A line may opt out with `// copy-test:allow` when the rule is wrong for
+ * that line. The opt out is a comment, so it survives a review.
+ *
  * See docs/design.md.
  */
 
@@ -25,6 +28,12 @@ const ROOT = path.resolve(__dirname, '..', '..', '..');
 
 const SCAN_DIRS = ['src/app', 'src/components'];
 
+/**
+ * The rail lists feature names, not sentences: "Clone Voice" keeps its
+ * title case there and the button that clones a voice says "Clone voice".
+ */
+const SENTENCE_CASE_EXEMPT = ['src/components/navigation/nav-config.ts'];
+
 /** Elements whose content the user reads. */
 const VISIBLE_TAGS = [
   'SheetTitle',
@@ -35,14 +44,86 @@ const VISIBLE_TAGS = [
   'AlertTitle',
   'AlertDescription',
   'Badge',
+  'DialogTitle',
+  // A tab names a control, like a button. It is not the rail, so it does not
+  // get the rail's title-case exemption.
+  'TabsTrigger',
+  'Text',
+  'Heading',
   'p',
 ];
+
+/**
+ * Names of the domain that are proper nouns, not title case.
+ *
+ * A candidate that contains one of these is exempt: "Web Audio API" and
+ * "Cover Preprocess" are names, not sentences.
+ */
+const PROPER_NOUNS = [
+  'MiniMax',
+  'Hailuo',
+  'Library',
+  'Cover Preprocess',
+  'Web Audio',
+  'H3',
+  'M3',
+  'TTS',
+  'ASR',
+  'MP3',
+  'WAV',
+  'AAC',
+  'FLAC',
+  'MIDI',
+  'URL',
+  'URI',
+  'API',
+  'SSE',
+  'HTTP',
+  'ID',
+  'TTL',
+  'SQL',
+  'JSON',
+  'CSV',
+  'PNG',
+  'JPEG',
+  'WebP',
+  'HEIC',
+  'HEIF',
+  'SVG',
+  'BPM',
+  'FPS',
+  'HDR',
+  'DPI',
+  'GPU',
+  'CPU',
+  'UI',
+  'OAuth',
+  'JWT',
+  'XML',
+  'YAML',
+  'EXIF',
+  'VOD',
+  'LLM',
+];
+
+function containsProperNoun(text: string): boolean {
+  return PROPER_NOUNS.some((noun) => new RegExp(`\\b${noun}\\b`).test(text));
+}
 
 function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) sourceFiles(full, out);
     else if (/\.tsx?$/.test(entry.name) && !entry.name.includes('.test.')) out.push(full);
+  }
+  return out;
+}
+
+function allFiles(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) allFiles(full, out);
+    else if (!entry.name.includes('.test.')) out.push(full);
   }
   return out;
 }
@@ -56,32 +137,66 @@ const FILES = SCAN_DIRS.flatMap((dir) => {
   content: readFileSync(file, 'utf8'),
 }));
 
-/** A candidate that is a sentence, not a title, is not title case. */
-function isSentence(text: string): boolean {
-  return /[.!?]/.test(text);
+/** The whole source tree, for the rules that are not about copy. */
+const TREE = existsSync(path.join(ROOT, 'src'))
+  ? allFiles(path.join(ROOT, 'src')).map((file) => ({
+      file: file.replace(/\\/g, '/').replace(`${ROOT.replace(/\\/g, '/')}/`, ''),
+      content: readFileSync(file, 'utf8'),
+    }))
+  : [];
+
+/**
+ * Comments carry no copy.
+ *
+ * A block comment keeps its newlines, so the line numbers still line up with
+ * the original file: an opt-out comment is matched against them.
+ */
+function stripComments(content: string): string {
+  return content
+    .replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
+    .split('\n')
+    .map((line) => (line.trim().startsWith('//') ? '' : line))
+    .join('\n');
 }
 
-/** An acronym, a camelCase name or a hyphenated name is a proper noun. */
+/** A line that opts out of a rule. */
+function isExempt(content: string, index: number): boolean {
+  const lines = content.split('\n');
+  const current = lines[index] ?? '';
+  const previous = lines[index - 1] ?? '';
+  return current.includes('copy-test:allow') || previous.includes('copy-test:allow');
+}
+
+/** An acronym, a camelCase name, a hyphenated name or a domain name. */
 function isProperNoun(word: string): boolean {
+  const clean = word.replace(/[.,;:!?]+$/, '');
+  if (PROPER_NOUNS.includes(clean)) return true;
   return (
-    /[a-z][A-Z]/.test(word) || // MiniMax
-    /^[A-Z0-9]+$/.test(word) || // URL, MP3
-    /-$/.test(word) // H3-
+    /[a-z][A-Z]/.test(clean) || // MiniMax
+    /^[A-Z0-9]+$/.test(clean) || // URL, MP3
+    /-$/.test(clean) // H3-
   );
 }
 
-function isTitleCase(text: string): boolean {
+/**
+ * Sentence case: two capitalised words in a row, unless one of them is a
+ * name of the domain.
+ */
+function isTitleCase(text: string, allowSentence: boolean): boolean {
   const trimmed = text.trim();
   if (trimmed.length < 2) return false;
-  if (isSentence(trimmed)) return false;
+  if (allowSentence && /[.!?]/.test(trimmed)) return false;
   if (trimmed === trimmed.toUpperCase()) return false;
+  if (containsProperNoun(trimmed)) return false;
 
-  const words = trimmed.split(/\s+/);
+  const words = trimmed.split(/\s+/).map((word) => word.replace(/[.,;:!?]+$/, ''));
+
   for (let index = 1; index < words.length; index += 1) {
-    const word = words[index].replace(/[.,;:!?]+$/, '');
+    const word = words[index];
+    const previous = words[index - 1];
     if (!/^[A-Z][a-z]/.test(word)) continue;
-    if (isProperNoun(word)) continue;
-    if (isProperNoun(words[index - 1])) continue;
+    if (!/^[A-Z][a-z]/.test(previous)) continue;
+    if (isProperNoun(word) || isProperNoun(previous)) continue;
     return true;
   }
 
@@ -95,9 +210,11 @@ function innerOf(content: string, tag: string): string[] {
   let match: RegExpExecArray | null;
 
   while ((match = open.exec(content)) !== null) {
-    // The end of the opening tag: a '>' inside an attribute value does not end it.
+    // The end of the opening tag: a '>' inside an attribute value or an
+    // arrow function does not end it.
     let openEnd = -1;
     let quote: string | null = null;
+    let braceDepth = 0;
     for (let i = match.index; i < content.length; i += 1) {
       const char = content[i];
       if (quote !== null) {
@@ -108,7 +225,15 @@ function innerOf(content: string, tag: string): string[] {
         quote = char;
         continue;
       }
-      if (char === '>') {
+      if (char === '{') {
+        braceDepth += 1;
+        continue;
+      }
+      if (char === '}') {
+        braceDepth -= 1;
+        continue;
+      }
+      if (char === '>' && braceDepth === 0) {
         openEnd = i;
         break;
       }
@@ -160,20 +285,36 @@ function candidates(inner: string): string[] {
   return found;
 }
 
-/** Every string the user can read. */
-function visibleStrings(): Array<{ file: string; text: string }> {
-  const found: Array<{ file: string; text: string }> = [];
+/** Every string the user can read, with the line it lives on. */
+function visibleStrings(): Array<{ file: string; text: string; line: number }> {
+  const found: Array<{ file: string; text: string; line: number }> = [];
 
   for (const { file, content } of FILES) {
+    const lineOf = (index: number) => content.slice(0, index).split('\n').length;
+
     for (const tag of VISIBLE_TAGS) {
       for (const inner of innerOf(content, tag)) {
         for (const candidate of candidates(inner)) {
-          found.push({ file, text: candidate });
+          found.push({ file, text: candidate, line: 0 });
         }
       }
     }
+
+    // Attributes that carry copy the user reads.
+    const attributes = /(?:label|placeholder|aria-label|title)="([^"]+)"/g;
+    for (const match of content.matchAll(attributes)) {
+      found.push({ file, text: match[1], line: lineOf(match.index) });
+    }
+
+    // Toasts: where the state messages live.
+    for (const match of content.matchAll(/toast\s*\(([\s\S]{0,400}?)\)/g)) {
+      for (const candidate of candidates(match[1])) {
+        found.push({ file, text: candidate, line: lineOf(match.index) });
+      }
+    }
+
     for (const match of content.matchAll(/<Field[^>]*label="([^"]*)"/g)) {
-      found.push({ file, text: match[1] });
+      found.push({ file, text: match[1], line: lineOf(match.index) });
     }
   }
 
@@ -186,19 +327,26 @@ describe('copy rules', () => {
       expect(existsSync(path.join(ROOT, dir)), `${dir} does not exist under ${ROOT}`).toBe(true);
     }
     expect(FILES.length).toBeGreaterThan(40);
+    // A sentinel: a file that must be there for the scan to mean anything.
+    expect(FILES.some((file) => file.file.endsWith('src/app/(app)/library/page.tsx'))).toBe(true);
   });
 
   it('never marks a field label as optional or required', () => {
     const marker = /\((optional|required|opt|req)\)|\*/i;
+    const bare = /\b(optional|required)\b/i;
     const offenders: string[] = [];
 
     for (const { file, content } of FILES) {
       for (const match of content.matchAll(/<Field[^>]*label="([^"]*)"/g)) {
-        if (marker.test(match[1])) offenders.push(`${file}: "${match[1]}"`);
+        if (marker.test(match[1]) || bare.test(match[1])) {
+          offenders.push(`${file}: "${match[1]}"`);
+        }
       }
       for (const inner of innerOf(content, 'Label')) {
         for (const candidate of candidates(inner)) {
-          if (marker.test(candidate)) offenders.push(`${file}: <Label> "${candidate}"`);
+          if (marker.test(candidate) || bare.test(candidate)) {
+            offenders.push(`${file}: <Label> "${candidate}"`);
+          }
         }
       }
     }
@@ -210,15 +358,23 @@ describe('copy rules', () => {
     const offenders: string[] = [];
 
     for (const { file, content } of FILES) {
-      for (const tag of ['SheetTitle', 'Button', 'SheetDescription', 'Label']) {
+      if (SENTENCE_CASE_EXEMPT.includes(file)) continue;
+
+      for (const tag of VISIBLE_TAGS) {
+        // A description, a title or a paragraph can be a sentence: it ends
+        // with a period. A button label never is.
+        const allowSentence = tag !== 'Button';
         for (const inner of innerOf(content, tag)) {
           for (const candidate of candidates(inner)) {
-            if (isTitleCase(candidate)) offenders.push(`${file}: <${tag}> "${candidate}"`);
+            if (isTitleCase(candidate, allowSentence)) {
+              offenders.push(`${file}: <${tag}> "${candidate}"`);
+            }
           }
         }
       }
+
       for (const match of content.matchAll(/<Field[^>]*label="([^"]*)"/g)) {
-        if (isTitleCase(match[1])) offenders.push(`${file}: "${match[1]}"`);
+        if (isTitleCase(match[1], false)) offenders.push(`${file}: "${match[1]}"`);
       }
     }
 
@@ -229,9 +385,13 @@ describe('copy rules', () => {
     const offenders: string[] = [];
 
     for (const { file, content } of FILES) {
-      content.split('\n').forEach((line, index) => {
-        if (/[·•‧]/.test(line)) offenders.push(`${file}:${index + 1}: ${line.trim()}`);
-      });
+      stripComments(content)
+        .split('\n')
+        .forEach((line, index) => {
+          if (!/[·•‧]/.test(line)) return;
+          if (isExempt(content, index)) return;
+          offenders.push(`${file}:${index + 1}: ${line.trim()}`);
+        });
     }
 
     expect(offenders).toEqual([]);
@@ -241,8 +401,29 @@ describe('copy rules', () => {
     const jargon = /\b(backend|SQLite|HTTP|REST API)\b/;
     const offenders: string[] = [];
 
-    for (const { file, text } of visibleStrings()) {
-      if (jargon.test(text)) offenders.push(`${file}: "${text}"`);
+    for (const { file, text, line } of visibleStrings()) {
+      if (!jargon.test(text)) continue;
+      if (line > 0 && isExempt(FILES.find((f) => f.file === file)?.content ?? '', line)) continue;
+      offenders.push(`${file}: "${text}"`);
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('never labels a value inside a sentence', () => {
+    // "Format: MP3" and "Duration: 165s" are a value wearing a sentence.
+    // A long text with a period is a sentence, not a label.
+    const meta = /^[A-Z][a-z]+:\s+\S/;
+    const offenders: string[] = [];
+
+    for (const { file, text, line } of visibleStrings()) {
+      if (text.length > 40) continue;
+      if (/[.!?]/.test(text)) continue;
+      if (text.includes('://')) continue;
+      if (/[`${}]/.test(text)) continue;
+      if (!meta.test(text)) continue;
+      if (line > 0 && isExempt(FILES.find((f) => f.file === file)?.content ?? '', line)) continue;
+      offenders.push(`${file}: "${text}"`);
     }
 
     expect(offenders).toEqual([]);
@@ -251,18 +432,14 @@ describe('copy rules', () => {
 
 describe('token rules', () => {
   it('only uses color tokens the theme defines', () => {
-    const known = system.tokens.cssVarMap.get('base');
     const offenders: string[] = [];
 
     for (const { file, content } of FILES) {
-      const pattern = /(?:color|bg|backgroundColor|borderColor|fill)="([a-zA-Z]+\.[a-zA-Z]+)"/g;
+      const pattern = /(?:color|bg|backgroundColor|borderColor|fill|borderTopColor|borderLeftColor|borderBottomColor|borderRightColor|outlineColor|caretColor|textDecorationColor)="([a-zA-Z]+\.[a-zA-Z]+)"/g;
       for (const match of content.matchAll(pattern)) {
-        // Chakra dashes the token path: state.okSoft -> state-ok-soft.
-        const variable = `--chakra-colors-${match[1]
-          .split('.')
-          .map((part) => part.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase())
-          .join('-')}`;
-        if (!known?.has(variable)) offenders.push(`${file}: "${match[1]}"`);
+        // The token must resolve in the color space, not only exist as a name.
+        const value = system.token(`colors.${match[1]}`);
+        if (value === undefined || value === null) offenders.push(`${file}: "${match[1]}"`);
       }
     }
 
@@ -273,10 +450,20 @@ describe('token rules', () => {
     const known = system.tokens.cssVarMap.get('base');
     const offenders: string[] = [];
 
-    for (const { file, content } of FILES) {
+    // A stylesheet may declare its own variables; those exist by definition.
+    const declared = new Set<string>();
+    for (const { content } of TREE) {
+      if (!content.includes('--')) continue;
+      for (const match of content.matchAll(/^\s*(--[a-zA-Z0-9-]+)\s*:/gm)) {
+        declared.add(match[1]);
+      }
+    }
+
+    for (const { file, content } of TREE) {
       for (const match of content.matchAll(/var\((--[a-zA-Z0-9-]+)\)/g)) {
-        // The font variables come from next/font, the rest from the theme.
-        if (match[1].startsWith('--font-')) continue;
+        // The two font variables come from next/font, the rest from the theme.
+        if (match[1] === '--font-archivo' || match[1] === '--font-plex-mono') continue;
+        if (declared.has(match[1])) continue;
         if (!known?.has(match[1])) offenders.push(`${file}: ${match[1]}`);
       }
     }
@@ -285,13 +472,17 @@ describe('token rules', () => {
   });
 
   it('never reaches for the raw palette instead of a semantic token', () => {
-    const raw = /"(red|blue|green|yellow|orange|purple|pink|cyan|teal|gray|grey|black|white|whiteAlpha|blackAlpha)\.\d{2,3}"/g;
+    // "transparent" is a CSS keyword, not a colour of the palette.
+    const raw = /["']((?:red|blue|green|yellow|orange|purple|pink|cyan|teal|gray|grey|black|white|whiteAlpha|blackAlpha)\.\d{2,3}|white|black)["']/;
     const offenders: string[] = [];
 
     for (const { file, content } of FILES) {
-      for (const match of content.matchAll(raw)) {
-        offenders.push(`${file}: ${match[0]}`);
-      }
+      const lines = stripComments(content).split('\n');
+      lines.forEach((line, index) => {
+        if (!raw.test(line)) return;
+        if (isExempt(content, index)) return;
+        offenders.push(`${file}:${index + 1}: ${line.trim()}`);
+      });
     }
 
     expect(offenders).toEqual([]);

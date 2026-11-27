@@ -104,6 +104,8 @@ describe('AppLayout navigation', () => {
     expect(getSectionToggle('speech').getAttribute('aria-expanded')).toBe('true');
     expect(links).toEqual(expect.arrayContaining([
       expect.objectContaining({ href: '/tts', text: expect.stringContaining('Text to Speech') }),
+      // The rail lists feature names, so they keep their title case. The
+      // button that clones a voice is an action and says "Clone voice".
       expect.objectContaining({ href: '/voices/clone', text: expect.stringContaining('Clone Voice') }),
     ]));
     expect(links).not.toEqual(expect.arrayContaining([

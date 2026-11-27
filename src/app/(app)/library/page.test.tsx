@@ -4,6 +4,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LibraryGenerationDTO } from '@/application/dto/library/LibraryDTO';
 import LibraryPage from './page';
 
+
+/**
+ * The value of a Spec row, bound to its label.
+ *
+ * Asserting the label and the value separately would pass even if the row
+ * was gone: "Voice" appears in plenty of places. This looks the row up.
+ */
+function specValue(root: HTMLElement, label: string): string | null {
+  const row = Array.from(root.querySelectorAll('div')).find((element) => {
+    const children = Array.from(element.children);
+    return children.length === 2 && children[0].textContent?.trim() === label;
+  });
+  return row?.children[1]?.textContent?.trim() ?? null;
+}
+
 const authClientMocks = vi.hoisted(() => ({
   authFetch: vi.fn(),
   parseApiError: vi.fn(async (response: Response) => ({ code: response.status, message: `HTTP ${response.status}` })),
@@ -207,10 +222,9 @@ describe('LibraryPage backend source of truth', () => {
 
     expect(container!.textContent).toContain('Hello from SQLite');
     expect(container!.textContent).toContain('Stored on server');
-    expect(container!.textContent).toContain('Voice');
-    expect(container!.textContent).toContain('voice-a');
+    expect(specValue(container!, 'Voice')).toBe('voice-a');
 
-    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download');
+    const downloadButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Download audio');
     act(() => {
       downloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -267,10 +281,8 @@ describe('LibraryPage backend source of truth', () => {
     await renderPage();
 
     expect(container!.textContent).toContain('Cover preprocess');
-    expect(container!.textContent).toContain('Source');
-    expect(container!.textContent).toContain('Cover Preprocess');
-    expect(container!.textContent).toContain('Reference duration');
-    expect(container!.textContent).toContain('42s');
+    expect(specValue(container!, 'Source')).toBe('Cover Preprocess');
+    expect(specValue(container!, 'Reference duration')).toBe('42s');
     expect(container!.textContent).toContain('Reference audio bytes were not saved.');
     expect(container!.textContent).toContain('Cover ID TTL');
     const action = Array.from(container!.querySelectorAll('a')).find((anchor) => anchor.textContent === 'Use in cover generation');
@@ -280,6 +292,27 @@ describe('LibraryPage backend source of truth', () => {
     expect(actionUrl.searchParams.has('coverFeatureId')).toBe(false);
     expect(actionUrl.searchParams.has('lyrics')).toBe(false);
     expect(container!.textContent).not.toContain('Audio not stored');
+  });
+
+  it('marks an item whose audio was never stored, and offers no download for it', async () => {
+    generations = [createGeneration({
+      id: 'generation-without-audio',
+      kind: 'tts',
+      source: 'text-to-speech',
+      prompt: 'A clip that never landed',
+      metadata: {},
+      assets: [],
+    })];
+
+    await renderPage();
+
+    // The state is a badge, not a disabled button that looks like an action.
+    expect(container!.textContent).toContain('Audio not stored');
+    const badge = Array.from(container!.querySelectorAll('span')).find((span) => span.textContent === 'Audio not stored');
+    expect(badge).toBeDefined();
+    expect(
+      Array.from(container!.querySelectorAll('button')).some((button) => button.textContent === 'Download audio'),
+    ).toBe(false);
   });
 
   it('explains expired cover preprocess records without offering cover generation action', async () => {
