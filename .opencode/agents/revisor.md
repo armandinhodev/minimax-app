@@ -1,7 +1,7 @@
 ---
 description: Revisa el diff final, los criterios de aceptación y la evidencia de pruebas.
 mode: subagent
-model: minimax/MiniMax-M3.1-Flash
+model: nan/deepseek-v4-flash
 permissions:
   - { "action": "*", "resource": "*", "effect": "deny" }
 ---
