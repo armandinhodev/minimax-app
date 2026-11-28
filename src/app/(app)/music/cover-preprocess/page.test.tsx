@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 import MusicCoverPreprocessPage from './page';
 
 const authClientMocks = vi.hoisted(() => ({
@@ -126,6 +127,20 @@ describe('MusicCoverPreprocessPage', () => {
     container?.remove();
     root = null;
     container = null;
+  });
+
+  it('keeps Reset disabled while a request is in flight', () => {
+    useScreenStore.getState().setValue('cover-preprocess:isLoading', true);
+
+    act(() => {
+      root!.render(<MusicCoverPreprocessPage />);
+    });
+
+    const reset = Array.from(container!.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Reset',
+    ) as HTMLButtonElement | undefined;
+
+    expect(reset?.disabled).toBe(true);
   });
 
   it('preprocesses a reference audio URL', async () => {

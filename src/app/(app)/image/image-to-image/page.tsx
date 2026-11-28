@@ -1,6 +1,7 @@
 'use client';
 
-import { type ChangeEvent, useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Plate } from '@/components/ui/plate';
@@ -13,19 +14,12 @@ import { authFetch, parseApiError } from '@/lib/auth-client';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
 import { AreaHeader } from '@/components/ui/area-header';
 import { Chip } from '@/components/ui/chip';
+import { MediaReferenceField } from '@/components/media/MediaReferenceField';
+import { splitMediaReferences } from '@/lib/media-references';
 
 const PROMPT_MAX_LENGTH = 32_000;
 const MAX_IMAGE_COUNT = 10;
 const MAX_REFERENCE_IMAGES = 16;
-const MAX_REFERENCE_BYTES = 64 * 1024 * 1024;
-const ALLOWED_REFERENCE_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-]);
 
 const MODEL_OPTIONS = [
   { value: 'MiniMax-H3-Image', id: 'image-edit-model-standard', label: 'MiniMax-H3-Image', hint: 'Balanced quality' },
@@ -61,12 +55,6 @@ type AspectRatio = (typeof ASPECT_RATIO_OPTIONS)[number]['value'];
 type Area = (typeof AREA_OPTIONS)[number]['value'];
 type OutputFormat = (typeof OUTPUT_FORMAT_OPTIONS)[number]['value'];
 
-interface ReferenceImage {
-  name: string;
-  size: number;
-  dataUrl: string;
-}
-
 interface ImageResultItem {
   index: number;
   url: string | null;
@@ -100,29 +88,6 @@ function toDisplayItems(result: ImageGenerationResult): ImageResultItem[] {
   }));
 }
 
-function formatBytes(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
-
-function validateReferenceFile(file: File): string | null {
-  if (!ALLOWED_REFERENCE_MIME_TYPES.has(file.type)) {
-    return 'Reference images must be JPG, JPEG, PNG, WEBP, HEIC or HEIF files.';
-  }
-  if (file.size >= MAX_REFERENCE_BYTES) {
-    return `Reference images must be smaller than 64MB. Selected file is ${formatBytes(file.size)}.`;
-  }
-  return null;
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Failed to read reference image'));
-    reader.readAsDataURL(file);
-  });
-}
-
 function downloadImageUrl(url: string, filename: string): void {
   const link = document.createElement('a');
   link.href = url;
@@ -135,21 +100,21 @@ function downloadImageUrl(url: string, filename: string): void {
 }
 
 export default function ImageToImagePage() {
-  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
-  const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState<Model>('MiniMax-H3-Image');
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
-  const [area, setArea] = useState<Area>('4K');
-  const [customSize, setCustomSize] = useState('');
-  const [imageCount, setImageCount] = useState(1);
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>('jpeg');
-  const [outputCompression, setOutputCompression] = useState(95);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isReadingFile, setIsReadingFile] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [result, setResult] = useState<ImageGenerationResult | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [references, setReferences] = useScreenState('image-edit:references', '');
+  const [prompt, setPrompt] = useScreenState('image-edit:prompt', '');
+  const [model, setModel] = useScreenState<Model>('image-edit:model', 'MiniMax-H3-Image');
+  const [aspectRatio, setAspectRatio] = useScreenState<AspectRatio>('image-edit:aspectRatio', 'auto');
+  const [area, setArea] = useScreenState<Area>('image-edit:area', '4K');
+  const [customSize, setCustomSize] = useScreenState('image-edit:customSize', '');
+  const [imageCount, setImageCount] = useScreenState('image-edit:imageCount', 1);
+  const [outputFormat, setOutputFormat] = useScreenState<OutputFormat>('image-edit:outputFormat', 'jpeg');
+  const [outputCompression, setOutputCompression] = useScreenState('image-edit:outputCompression', 95);
+  const [isLoading, setIsLoading] = useScreenState('image-edit:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('image-edit:error', null);
+  const [result, setResult] = useScreenState<ImageGenerationResult | null>('image-edit:result', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('image-edit:actionStatus', null);
 
+  const referenceList = splitMediaReferences(references);
   const remainingCharacters = PROMPT_MAX_LENGTH - prompt.length;
   const trimmedSize = customSize.trim();
   const usesCustomSize = trimmedSize.length > 0;
@@ -158,55 +123,15 @@ export default function ImageToImagePage() {
   const successfulItems = displayItems.filter((item) => item.url !== null);
   const failedItems = displayItems.filter((item) => item.error !== null);
 
-  const handleReferenceImagesChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.currentTarget.files ?? []);
-    setResult(null);
-    setActionStatus(null);
-
-    if (files.length === 0) {
-      setReferenceImages([]);
-      return;
-    }
-
-    if (files.length > MAX_REFERENCE_IMAGES) {
-      setReferenceImages([]);
-      setError({ code: null, message: `You can attach at most ${MAX_REFERENCE_IMAGES} reference images.` });
-      event.currentTarget.value = '';
-      return;
-    }
-
-    for (const file of files) {
-      const validationError = validateReferenceFile(file);
-      if (validationError) {
-        setReferenceImages([]);
-        setError({ code: null, message: validationError });
-        event.currentTarget.value = '';
-        return;
-      }
-    }
-
-    setIsReadingFile(true);
-    setError(null);
-    try {
-      const loaded = await Promise.all(files.map(async (file) => ({
-        name: file.name,
-        size: file.size,
-        dataUrl: await readFileAsDataUrl(file),
-      })));
-      setReferenceImages(loaded);
-    } catch {
-      setReferenceImages([]);
-      setError({ code: null, message: 'Could not read the reference images. Choose other files and try again.' });
-    } finally {
-      setIsReadingFile(false);
-    }
-  };
-
   const handleGenerate = async () => {
     const trimmedPrompt = prompt.trim();
 
-    if (referenceImages.length === 0) {
+    if (referenceList.length === 0) {
       setError({ code: null, message: 'Attach at least one reference image before generating.' });
+      return;
+    }
+    if (referenceList.length > MAX_REFERENCE_IMAGES) {
+      setError({ code: null, message: `You can attach at most ${MAX_REFERENCE_IMAGES} reference images.` });
       return;
     }
     if (!trimmedPrompt) {
@@ -251,7 +176,7 @@ export default function ImageToImagePage() {
       body.area = area;
     }
 
-    body.images = referenceImages.map((reference) => ({ imageUrl: reference.dataUrl }));
+    body.images = referenceList.map((reference) => ({ imageUrl: reference }));
 
     try {
       const response = await authFetch('/api/minimax/image', {
@@ -278,43 +203,36 @@ export default function ImageToImagePage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Image to image" description="Transform reference images into a new frame." />
+      <AreaHeader
+        title="Image to image"
+        description="Transform reference images into a new frame."
+        actions={<ScreenResetButton namespace="image-edit" disabled={isLoading} />}
+      />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
           <SheetHeader icon="image">
             <SheetTitle>References and direction</SheetTitle>
             <SheetDescription>
-              Attach JPG, PNG, WEBP, HEIC or HEIF images under 64MB each, then describe the transformation, style, composition, and mood.
+              Add reference images by URL, paste or upload, then describe the transformation, style, composition, and mood.
             </SheetDescription>
           </SheetHeader>
           <SheetContent display="grid" gap={4}>
                         <Field label="Reference images" htmlFor="reference-images">
-              <Input
-                              id="reference-images"
-                              type="file"
-                              multiple
-                              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                              disabled={isLoading || isReadingFile}
-                              onChange={handleReferenceImagesChange}
-                            />
-                            <Box color="content.readout" fontSize="sm">
-                              Attach between 1 and {MAX_REFERENCE_IMAGES} images. The upload order is the picture number used in your prompt.
-                            </Box>
+              <MediaReferenceField
+                id="reference-images"
+                purpose="image_generation_input"
+                label="reference image"
+                value={references}
+                onChange={setReferences}
+                multiple
+                maxItems={MAX_REFERENCE_IMAGES}
+                disabled={isLoading}
+                placeholder="https://cdn.example.com/reference.png"
+                hint={`Attach between 1 and ${MAX_REFERENCE_IMAGES} images. The order is the picture number used in your prompt.`}
+                onMediaError={(message) => setError({ code: null, message })}
+              />
             </Field>
-
-            {referenceImages.length > 0 && (
-              <Box border="1px solid" borderColor="interaction.soft" borderRadius="xl" overflow="hidden" bg="surface.sheet">
-                <Box display="grid" gap={2} p="0.75rem">
-                  {referenceImages.map((reference, index) => (
-                    <Box key={`${reference.name}-${index}`} display="flex" alignItems="center" justifyContent="space-between" gap={2} color="content.readout" fontSize="sm">
-                      <span>{index + 1}. {reference.name}</span>
-                      <span>{formatBytes(reference.size)}</span>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            )}
 
             <Box display="grid" gap={2} gridTemplateColumns="minmax(0, 1fr)">
               <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
@@ -456,13 +374,13 @@ export default function ImageToImagePage() {
               </Box>
             )}
 
-            <Button onClick={handleGenerate} disabled={isLoading || isReadingFile || referenceImages.length === 0 || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH}>
-              {isLoading ? 'Generating images...' : isReadingFile ? 'Preparing references...' : 'Generate images'}
+            <Button onClick={handleGenerate} disabled={isLoading || referenceList.length === 0 || prompt.trim().length === 0 || prompt.length > PROMPT_MAX_LENGTH}>
+              {isLoading ? 'Generating images...' : 'Generate images'}
             </Button>
           </SheetContent>
         </Sheet>
 
-        <Plate minH="28rem" position="sticky" top="4.5rem" title="Results" description="Latest image batch.">
+        <Plate minH="28rem" position={successfulItems.length ? 'static' : 'sticky'} top="4.5rem" title="Results" description="Latest image batch.">
             {result && (
               <SpecList>
                 <Spec label="Generated" value={String(result.metadata.successCount)} />
@@ -486,7 +404,7 @@ export default function ImageToImagePage() {
             )}
 
             {result && successfulItems.length > 0 && (
-              <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
+              <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
                 {successfulItems.map((item) => (
                   <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="surface.rule" borderRadius="lg" overflow="hidden" bg="surface.plate">
                     <img
@@ -494,7 +412,7 @@ export default function ImageToImagePage() {
                       alt={`Generated image ${item.index + 1}`}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
+                      style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
                     />
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
                       <Box display="grid" gap="0.125rem">

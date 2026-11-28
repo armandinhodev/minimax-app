@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 
 import AsrPage from './page';
 
@@ -105,6 +106,20 @@ describe('AsrPage', () => {
     container?.remove();
     root = null;
     container = null;
+  });
+
+  it('keeps Reset disabled while a request is in flight', () => {
+    useScreenStore.getState().setValue('asr:isTranscribing', true);
+
+    act(() => {
+      root!.render(<AsrPage />);
+    });
+
+    const reset = Array.from(container!.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Reset',
+    ) as HTMLButtonElement | undefined;
+
+    expect(reset?.disabled).toBe(true);
   });
 
   it('keeps the transcribe actions disabled until a valid file is chosen', async () => {

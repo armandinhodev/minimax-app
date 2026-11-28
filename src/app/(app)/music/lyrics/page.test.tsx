@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 import LyricsGenerationPage from './page';
 
 const authClientMocks = vi.hoisted(() => ({
@@ -93,6 +94,20 @@ describe('LyricsGenerationPage', () => {
     container?.remove();
     root = null;
     container = null;
+  });
+
+  it('keeps Reset disabled while a request is in flight', () => {
+    useScreenStore.getState().setValue('lyrics:isLoading', true);
+
+    act(() => {
+      root!.render(<LyricsGenerationPage />);
+    });
+
+    const reset = Array.from(container!.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Reset',
+    ) as HTMLButtonElement | undefined;
+
+    expect(reset?.disabled).toBe(true);
   });
 
   it('generates lyrics and links them into Music Generation', async () => {

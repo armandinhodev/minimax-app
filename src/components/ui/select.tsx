@@ -189,6 +189,7 @@ function BaseSelect({
         >
           <ChakraSelect.ValueText
             placeholder={placeholder}
+            color={selectedOption ? 'content.ink' : 'content.placeholder'}
             overflow="hidden"
             textOverflow="ellipsis"
             whiteSpace="nowrap"
@@ -328,6 +329,7 @@ function SearchableSelect({
           borderRadius="md"
           height="2.25rem"
           fontSize="body"
+          _placeholder={{ color: 'content.placeholder' }}
         />
         <Combobox.IndicatorGroup>
           <Combobox.Trigger />

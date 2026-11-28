@@ -1,5 +1,9 @@
 'use client';
 
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
+import { useScreenState } from '@/components/shared/screen-state';
+
 /**
  * ASR Studio — transcription with MiniMax Speech-to-Text.
  *
@@ -8,7 +12,6 @@
  * and the server relays it to POST /v1/speech_to_text.
  */
 
-import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
@@ -92,16 +95,16 @@ function formatTimestamp(seconds: number): string {
 }
 
 export default function AsrPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [responseFormat, setResponseFormat] = useState('json');
-  const [timestampLevel, setTimestampLevel] = useState('default');
-  const [language, setLanguage] = useState('auto');
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<TranscriptResult | null>(null);
-  const [subtitles, setSubtitles] = useState<string | null>(null);
-  const [streamedText, setStreamedText] = useState('');
+  const [file, setFile] = useScreenState<File | null>('asr:file', null);
+  const [responseFormat, setResponseFormat] = useScreenState('asr:responseFormat', 'json');
+  const [timestampLevel, setTimestampLevel] = useScreenState('asr:timestampLevel', 'default');
+  const [language, setLanguage] = useScreenState('asr:language', 'auto');
+  const [isTranscribing, setIsTranscribing] = useScreenState('asr:isTranscribing', false);
+  const [error, setError] = useScreenState<string | null>('asr:error', null);
+  const [notice, setNotice] = useScreenState<string | null>('asr:notice', null);
+  const [transcript, setTranscript] = useScreenState<TranscriptResult | null>('asr:transcript', null);
+  const [subtitles, setSubtitles] = useScreenState<string | null>('asr:subtitles', null);
+  const [streamedText, setStreamedText] = useScreenState('asr:streamedText', '');
 
   const isDiarizationFormat = DIARIZATION_FORMATS.includes(responseFormat);
   /**
@@ -242,7 +245,11 @@ export default function AsrPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Transcription" description="Turn a recording into text or timed subtitles with speech to text (STT)." />
+      <AreaHeader
+        title="Transcription"
+        description="Turn a recording into text or timed subtitles with speech to text (STT)."
+        actions={<ScreenResetButton namespace="asr" disabled={isTranscribing} />}
+      />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>

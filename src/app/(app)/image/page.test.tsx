@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 import ImagePage from './page';
 
 const authClientMocks = vi.hoisted(() => ({
@@ -16,9 +17,8 @@ vi.mock('@/lib/auth-client', () => authClientMocks);
 vi.mock('@/lib/history', () => historyMocks);
 
 vi.mock('@chakra-ui/react', () => ({
-  Box: ({ children, as: Component = 'div', ...props }: { children?: ReactNode; as?: keyof JSX.IntrinsicElements } & Record<string, unknown>) => {
-    void props;
-    return <Component>{children}</Component>;
+  Box: ({ children, as: Component = 'div', gridTemplateColumns, position }: { children?: ReactNode; as?: keyof JSX.IntrinsicElements; gridTemplateColumns?: unknown; position?: React.CSSProperties['position'] }) => {
+    return <Component style={{ gridTemplateColumns: typeof gridTemplateColumns === 'string' ? gridTemplateColumns : undefined, position }}>{children}</Component>;
   },
 }));
 
@@ -138,6 +138,7 @@ describe('ImagePage', () => {
     act(() => {
       root!.render(<ImagePage />);
     });
+    expect(container!.querySelector('[style*="position: sticky"]')?.textContent).toContain('No result yet');
 
     const prompt = container!.querySelector('#image-prompt') as HTMLTextAreaElement;
     const count = container!.querySelector('#image-count') as HTMLInputElement;
@@ -171,6 +172,13 @@ describe('ImagePage', () => {
     }));
     expect(historyMocks.saveHistoryItem).not.toHaveBeenCalled();
     expect(container!.textContent).toContain('Images generated and saved to Library');
+    const image = container!.querySelector<HTMLImageElement>('img[alt="Generated image 1"]');
+    expect(image?.parentElement?.parentElement?.style.gridTemplateColumns).toBe('minmax(0, 1fr)');
+    expect(image?.style.width).toBe('100%');
+    expect(image?.style.height).toBe('auto');
+    expect(image?.style.aspectRatio).toBe('');
+    expect(image?.style.objectFit).toBe('');
+    expect(image?.closest('[style*="position: static"]')).toBeTruthy();
   });
 
   it('never sends the legacy image-01 seed option', async () => {
@@ -315,8 +323,18 @@ describe('ImagePage', () => {
     expect(container!.querySelector('img')?.getAttribute('src')).toBe('https://example.com/image-1.jpg');
   });
 
-  it('blocks empty prompts before calling the API', async () => {
+  it('keeps Reset disabled while a generation is in flight', () => {
+    useScreenStore.getState().setValue('image:isLoading', true);
+
     act(() => {
+      root!.render(<ImagePage />);
+    });
+
+    const reset = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Reset') as HTMLButtonElement | undefined;
+    expect(reset?.disabled).toBe(true);
+  });
+
+  it('blocks empty prompts before calling the API', async () => {    act(() => {
       root!.render(<ImagePage />);
     });
 

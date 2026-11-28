@@ -104,13 +104,3 @@ export function detectVideoScenario(media: VideoMediaValues): VideoScenario {
 
   return 'text-to-video';
 }
-
-/**
- * Splits a comma separated list of media references.
- */
-export function splitMediaReferences(value: string): string[] {
-  return value
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
-}

@@ -9,6 +9,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { useScreenStore } from '@/components/shared/screen-store';
+
 const APP_KEY_STORAGE = 'app_access_key';
 
 interface AppKeyGateProps {
@@ -47,7 +49,11 @@ export function setAppAccessKey(key: string): void {
 
 /**
  * Clear the app access key from sessionStorage (logout).
+ *
+ * The screen store lives above the routes for the whole tab, so ending the
+ * session also drops the compositions it was holding for the next user.
  */
 export function clearAppAccessKey(): void {
   sessionStorage.removeItem(APP_KEY_STORAGE);
+  useScreenStore.getState().resetAll();
 }

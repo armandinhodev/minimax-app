@@ -1,5 +1,7 @@
 'use client';
 
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
 /**
  * Video Generation — the MiniMax H3 creation workflow
  * (POST /v2/video_generation), with the task it creates.
@@ -7,7 +9,7 @@
  * Its own route: /video/generation
  */
 
-import { useState } from 'react';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
@@ -45,19 +47,19 @@ import {
 const PROMPT_MAX_LENGTH = 7000;
 
 export function VideoGenerationSection() {
-  const [model, setModel] = useState<VideoModel>('MiniMax-H3');
-  const [resolution, setResolution] = useState<VideoResolution>('2K');
-  const [duration, setDuration] = useState(5);
-  const [prompt, setPrompt] = useState('');
-  const [promptExpansionMode, setPromptExpansionMode] = useState<VideoPromptExpansionMode>('disabled');
+  const [model, setModel] = useScreenState<VideoModel>('video-generation:model', 'MiniMax-H3');
+  const [resolution, setResolution] = useScreenState<VideoResolution>('video-generation:resolution', '2K');
+  const [duration, setDuration] = useScreenState('video-generation:duration', 5);
+  const [prompt, setPrompt] = useScreenState('video-generation:prompt', '');
+  const [promptExpansionMode, setPromptExpansionMode] = useScreenState<VideoPromptExpansionMode>('video-generation:promptExpansionMode', 'disabled');
 
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [errorNonce, setErrorNonce] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useScreenState('video-generation:isCreating', false);
+  const [error, setError] = useScreenState<string | null>('video-generation:error', null);
+  const [errorNonce, setErrorNonce] = useScreenState('video-generation:errorNonce', 0);
+  const [notice, setNotice] = useScreenState<string | null>('video-generation:notice', null);
 
-  const composition = useVideoComposition(model);
-  const polling = useVideoTaskPolling();
+  const composition = useVideoComposition('video-generation', model);
+  const polling = useVideoTaskPolling('video-generation');
 
   const durationRange = videoDurationRange(model);
   const resolutionOptions = videoResolutionOptions(model);
@@ -116,6 +118,7 @@ export function VideoGenerationSection() {
       <VideoStudioHeader
         title="Video generation"
         description="Compose a shot and follow the render through delivery."
+        actions={<ScreenResetButton namespace="video-generation" disabled={isCreating || polling.isPolling} onReset={() => {polling.clearTask()}} />}
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -226,6 +229,7 @@ export function VideoGenerationSection() {
                 values={composition.media}
                 disabled={isCreating}
                 onChange={composition.updateMedia}
+                onMediaError={reportError}
               />
             </Box>
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
 /**
  * H3-Context-IR — enriches a prompt with multimodal context
  * (POST /v2/h3_context_ir). It never creates a video.
@@ -7,7 +9,7 @@
  * Its own route: /video/context-ir
  */
 
-import { useState } from 'react';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
@@ -31,16 +33,16 @@ import { VideoRequestError, createVideoTask } from './video-api';
 const PROMPT_MAX_LENGTH = 7000;
 
 export function VideoContextIRSection() {
-  const [contextPrompt, setContextPrompt] = useState('');
-  const [contextDuration, setContextDuration] = useState(5);
+  const [contextPrompt, setContextPrompt] = useScreenState('video-context-ir:contextPrompt', '');
+  const [contextDuration, setContextDuration] = useScreenState('video-context-ir:contextDuration', 5);
 
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [errorNonce, setErrorNonce] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useScreenState('video-context-ir:isCreating', false);
+  const [error, setError] = useScreenState<string | null>('video-context-ir:error', null);
+  const [errorNonce, setErrorNonce] = useScreenState('video-context-ir:errorNonce', 0);
+  const [notice, setNotice] = useScreenState<string | null>('video-context-ir:notice', null);
 
-  const composition = useVideoComposition('MiniMax-H3');
-  const polling = useVideoTaskPolling();
+  const composition = useVideoComposition('video-context-ir', 'MiniMax-H3');
+  const polling = useVideoTaskPolling('video-context-ir');
 
   const reportError = (message: string) => {
     setError(message);
@@ -87,6 +89,7 @@ export function VideoContextIRSection() {
       <VideoStudioHeader
         title="Context-IR"
         description="Enrich a prompt with the data context MiniMax reads."
+        actions={<ScreenResetButton namespace="video-context-ir" disabled={isCreating || polling.isPolling} onReset={() => {polling.clearTask()}} />}
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -152,6 +155,7 @@ export function VideoContextIRSection() {
                 values={composition.media}
                 disabled={isCreating}
                 onChange={composition.updateMedia}
+                onMediaError={reportError}
               />
             </Box>
 

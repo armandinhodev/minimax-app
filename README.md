@@ -113,6 +113,7 @@ especialista o a otra IA, el insumo listo es
 - [Imagen](docs/minimax-image-api.md)
 - [Video](docs/minimax-video-api.md)
 - [Video Agent](docs/minimax-video-agent-api.md)
+- [Video Agent: conteos exactos por plantilla](docs/minimax-video-agent-templates.md)
 - [Texto](docs/minimax-text-api.md)
 - [Observabilidad](docs/minimax-observability.md)
 
@@ -129,8 +130,31 @@ El flujo de trabajo del repo (metodología, cobertura y revisión) está en
 
 ## Límites conocidos
 
+- El estado de cada pantalla (formularios, resultados y el hilo de chat) se
+  conserva mientras dure la pestaña; recargar la página o cerrar sesión lo
+  descarta. Cada pantalla ofrece un reset para empezar de cero.
+- Las imágenes de referencia se suben a MiniMax con un tope de 20 MB, por debajo
+  de los 30 MB que acepta el proveedor para una imagen.
+- En Image-to-Image y Video podés elegir **Paste image** en un
+  campo de imagen y pegar una captura o imagen copiada con **Ctrl+V** o **⌘V**.
+  Se sube una imagen por vez a MiniMax y el campo usa su referencia interna.
+  Para pegar un enlace, elegí **URL**. Todas las imágenes pegadas o subidas
+  muestran una miniatura del original guardado temporalmente en la pestaña.
+  No hay selector de la biblioteca de MiniMax: una imagen ya subida no se puede
+  previsualizar, así que la app no ofrece elegirla.
+- En Video Agent, elegí **URL** para un enlace público o **Paste image** /
+  **Upload** para usar el original. El archivo se previsualiza en la pestaña y
+  se envía únicamente al elegir **Create video**. Cada plantilla pide una
+  cantidad exacta de imágenes: **3D character product presentation** necesita
+  tres, el resto de las plantillas con imagen pide una. Los conteos confirmados
+  están en
+  [`docs/minimax-video-agent-templates.md`](docs/minimax-video-agent-templates.md).
 - La galería de voces no está virtualizada: con cientos de voces es una página
   muy larga.
+- En Library, una tarea de video en proceso o sin video disponible ofrece
+  **Check status** para reconsultar a MiniMax por su `task_id` y actualizar el
+  registro, sin regenerar. Video Agent no tiene listado: solo se puede consultar
+  por ID.
 - Las URLs de resultado de MiniMax son temporales; descargá lo que quieras
   conservar.
 - Las pruebas no llaman a MiniMax: los clientes se testean con dobles. Una

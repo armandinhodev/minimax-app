@@ -6,6 +6,8 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
+
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,19 +40,19 @@ function getRetryHint(retryable?: boolean, retryAfterSeconds?: number | null): s
 }
 
 export function VoiceUpload({ onFileSelected, onUploadComplete, disabled = false }: VoiceUploadProps) {
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useScreenState<File | null>('voice-upload:file', null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [error, setError] = useState<{
+  const [isUploading, setIsUploading] = useScreenState('voice-upload:isUploading', false);
+  const [uploadProgress, setUploadProgress] = useScreenState<number>('voice-upload:uploadProgress', 0);
+  const [error, setError] = useScreenState<{
     message: string;
     upstreamStatus?: number;
     upstreamMessage?: string;
-  } | null>(null);
-  const [duration, setDuration] = useState<number | null>(null);
-  const [waveformData, setWaveformData] = useState<number[]>([]);
-  const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
-  const [isValidatingDuration, setIsValidatingDuration] = useState(false);
+  } | null>('voice-upload:error', null);
+  const [duration, setDuration] = useScreenState<number | null>('voice-upload:duration', null);
+  const [waveformData, setWaveformData] = useScreenState<number[]>('voice-upload:waveformData', []);
+  const [uploadedFileId, setUploadedFileId] = useScreenState<string | null>('voice-upload:uploadedFileId', null);
+  const [isValidatingDuration, setIsValidatingDuration] = useScreenState('voice-upload:isValidatingDuration', false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

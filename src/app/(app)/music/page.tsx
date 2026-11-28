@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
@@ -35,8 +37,20 @@ function isCoverModel(value: string): boolean {
   return value === 'music-cover';
 }
 
-function getInitialSearchParams(): URLSearchParams {
+function readSearchParams(): URLSearchParams {
   return typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search);
+}
+
+/** The query params the Library, Lyrics and Cover Preprocess pages link with. */
+const MUSIC_LINK_PARAMS = ['coverPreprocessId', 'coverFeatureId', 'prompt', 'style', 'lyrics', 'model'] as const;
+
+function isMusicLink(params: URLSearchParams): boolean {
+  return MUSIC_LINK_PARAMS.some((name) => params.has(name));
+}
+
+/** Stable signature: only the music params, in a fixed order (ignores `utm`). */
+function musicLinkSignature(params: URLSearchParams): string {
+  return MUSIC_LINK_PARAMS.map((name) => `${name}=${params.get(name) ?? ''}`).join('&');
 }
 
 function getInitialModel(searchParams: URLSearchParams): string {
@@ -88,18 +102,26 @@ function downloadMusicHex(hex: string, format: string, id: string): void {
 }
 
 export default function MusicPage() {
-  const [initialSearchParams] = useState(getInitialSearchParams);
-  const [coverPreprocessId] = useState(() => initialSearchParams.get('coverPreprocessId')?.trim() ?? '');
-  const [prompt, setPrompt] = useState(() => initialSearchParams.get('prompt') ?? initialSearchParams.get('style') ?? '');
-  const [lyrics, setLyrics] = useState(() => initialSearchParams.get('lyrics') ?? '');
-  const [coverFeatureId, setCoverFeatureId] = useState(() => initialSearchParams.get('coverFeatureId') ?? '');
-  const [instrumental, setInstrumental] = useState(false);
-  const [model, setModel] = useState(() => getInitialModel(initialSearchParams));
-  const [isLoading, setIsLoading] = useState(false);
+  // The link already applied to this form, so coming back does not undo an edit.
+  const [appliedLink, setAppliedLink] = useScreenState('music:appliedLink', () => musicLinkSignature(readSearchParams()));
+  const [coverPreprocessId, setCoverPreprocessId] = useScreenState('music:coverPreprocessId', () => readSearchParams().get('coverPreprocessId')?.trim() ?? '');
+  const [prompt, setPrompt] = useScreenState('music:prompt', () => {
+    const params = readSearchParams();
+    return params.get('prompt') ?? params.get('style') ?? '';
+  });
+  const [lyrics, setLyrics] = useScreenState('music:lyrics', () => readSearchParams().get('lyrics') ?? '');
+  const [coverFeatureId, setCoverFeatureId] = useScreenState('music:coverFeatureId', () => readSearchParams().get('coverFeatureId') ?? '');
+  const [instrumental, setInstrumental] = useScreenState('music:instrumental', false);
+  const [model, setModel] = useScreenState('music:model', () => getInitialModel(readSearchParams()));
+  const [isLoading, setIsLoading] = useScreenState('music:isLoading', false);
   const [isHydratingCoverPreprocess, setIsHydratingCoverPreprocess] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [result, setResult] = useState<MusicGenerationResult | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  // Reset clears the persisted form, so the cover record must hydrate again.
+  const [hydrationEpoch, setHydrationEpoch] = useState(0);
+  // Marks the record already loaded, so coming back does not undo the edits.
+  const [hydratedCoverPreprocessId, setHydratedCoverPreprocessId] = useScreenState('music:hydratedCoverPreprocessId', '');
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('music:error', null);
+  const [result, setResult] = useScreenState<MusicGenerationResult | null>('music:result', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('music:actionStatus', null);
 
   const trimmedPrompt = prompt.trim();
   const trimmedLyrics = lyrics.trim();
@@ -129,8 +151,31 @@ export default function MusicPage() {
   })();
   const canGenerate = !isLoading && validationMessage === null;
 
+  // A Library or Lyrics link arrives with query params. The form now outlives
+  // the page, so a new link has to re-apply its values on mount — otherwise the
+  // previous edit would silently win over what the user just clicked. Only the
+  // params a music link carries are applied; an unrelated query leaves the form
+  // alone.
+  useEffect(() => {
+    const params = readSearchParams();
+    if (!isMusicLink(params)) return;
+
+    const signature = musicLinkSignature(params);
+    if (signature === appliedLink) return;
+
+    if (params.has('coverPreprocessId')) setCoverPreprocessId(params.get('coverPreprocessId')?.trim() ?? '');
+    const nextPrompt = params.has('prompt') ? params.get('prompt') : params.get('style');
+    if (nextPrompt !== null) setPrompt(nextPrompt);
+    if (params.has('lyrics')) setLyrics(params.get('lyrics') ?? '');
+    if (params.has('coverFeatureId')) setCoverFeatureId(params.get('coverFeatureId') ?? '');
+    setModel(getInitialModel(params));
+    setAppliedLink(signature);
+    // Runs once per mount on purpose: the URL is read when the user arrives.
+  }, []);
+
   useEffect(() => {
     if (!coverPreprocessId) return;
+    if (hydratedCoverPreprocessId === coverPreprocessId) return;
 
     let isCancelled = false;
 
@@ -187,6 +232,7 @@ export default function MusicPage() {
           setCoverFeatureId(coverFeatureIdFromMetadata);
           setLyrics(formattedLyrics);
           setActionStatus('Loaded Cover Preprocess record from Library. Add a target cover style to continue.');
+          setHydratedCoverPreprocessId(coverPreprocessId);
         }
       } catch {
         if (!isCancelled) {
@@ -202,7 +248,7 @@ export default function MusicPage() {
     return () => {
       isCancelled = true;
     };
-  }, [coverPreprocessId]);
+  }, [coverPreprocessId, hydrationEpoch]);
 
   const handleModelChange = (nextModel: string) => {
     setModel(nextModel);
@@ -258,7 +304,17 @@ export default function MusicPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Music generation" description="Compose an original track or reinterpret a source recording." />
+      <AreaHeader
+        title="Music generation"
+        description="Compose an original track or reinterpret a source recording."
+        actions={
+          <ScreenResetButton
+            namespace="music"
+            disabled={isLoading || isHydratingCoverPreprocess}
+            onReset={() => setHydrationEpoch((epoch) => epoch + 1)}
+          />
+        }
+      />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>

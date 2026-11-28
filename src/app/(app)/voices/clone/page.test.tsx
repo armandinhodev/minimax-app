@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 import CloneVoicePage from './page';
 
 vi.mock('next/link', () => ({
@@ -73,6 +74,24 @@ describe('CloneVoicePage', () => {
     container?.remove();
     root = null;
     container = null;
+  });
+
+  it('keeps Reset disabled while a request is in flight', () => {
+    (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    useScreenStore.getState().setValue('voice-upload:isUploading', true);
+
+    act(() => {
+      root!.render(<CloneVoicePage />);
+    });
+
+    const reset = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Reset',
+    ) as HTMLButtonElement | undefined;
+
+    expect(reset?.disabled).toBe(true);
   });
 
   it('enables cloning after upload completion is reported by VoiceUpload', () => {

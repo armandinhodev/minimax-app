@@ -55,6 +55,7 @@ const GENERATION_SOURCES: ReadonlySet<string> = new Set<LibraryGenerationSource>
   'video-generation',
   'video-context-ir',
   'video-regeneration',
+  'video-agent',
 ]);
 
 function parseGenerationSource(source: string | null): LibraryGenerationSource | null {

@@ -1,5 +1,7 @@
 'use client';
 
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
 /**
  * Voice design workflow page.
  * Enter a prompt and preview text, generate a preview voice, accept or regenerate.
@@ -9,14 +11,19 @@
 import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 import { VoiceDesigner } from '@/components/voice/VoiceDesigner';
+import { useScreenState } from '@/components/shared/screen-state';
 import { AreaHeader } from '@/components/ui/area-header';
 
 export default function DesignVoicePage() {
+  // Owned by VoiceDesigner; read here only to keep Reset off while a preview runs.
+  const [isDesigning] = useScreenState('voice-design:isLoading', false);
+
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" maxW="36rem">
       <AreaHeader
         title="Design voice"
         description="Describe the voice, preview it and save it."
+        actions={<ScreenResetButton namespace="voice-design" disabled={isDesigning} />}
       />
 
       {/* Voice Designer — Phase 6 component */}

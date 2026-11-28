@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
+
+import { useScreenState } from '@/components/shared/screen-state';
 
 import type { VideoModel, VideoRatio } from '@/application/dto/minimax/video/VideoDTO';
 
@@ -13,9 +15,9 @@ import { EMPTY_VIDEO_MEDIA, detectVideoScenario, type VideoMediaValues, videoRat
  * The ratio is corrected whenever the scenario or the model changes, so the
  * browser can never submit an option that MiniMax would silently ignore.
  */
-export function useVideoComposition(model: VideoModel, initialRatio: VideoRatio = '16:9') {
-  const [media, setMedia] = useState<VideoMediaValues>(EMPTY_VIDEO_MEDIA);
-  const [ratio, setRatio] = useState<VideoRatio>(initialRatio);
+export function useVideoComposition(namespace: string, model: VideoModel, initialRatio: VideoRatio = '16:9') {
+  const [media, setMedia] = useScreenState<VideoMediaValues>(`${namespace}:media`, EMPTY_VIDEO_MEDIA);
+  const [ratio, setRatio] = useScreenState<VideoRatio>(`${namespace}:ratio`, initialRatio);
 
   const scenario = useMemo(() => detectVideoScenario(media), [media]);
   const ratioOptions = useMemo(() => videoRatioOptions(scenario, model), [scenario, model]);

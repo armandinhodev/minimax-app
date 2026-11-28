@@ -11,6 +11,7 @@ import { VideoAgentClient } from '@/infrastructure/minimax/video-agent/VideoAgen
 
 import { requireAuth } from '@/app/api/_shared/auth';
 import { createInvalidJsonResponse, createMiniMaxRouteErrorResponse } from '../../_shared/route-error';
+import { recordVideoAgentTaskBestEffort } from '../../_shared/video-library-recording';
 
 export async function POST(request: Request) {
   const authError = requireAuth(request);
@@ -42,13 +43,21 @@ export async function POST(request: Request) {
   };
 
   try {
+    const textInputs = asInputs(payload.textInputs);
+    const templateId = typeof payload.templateId === 'string' ? payload.templateId : '';
     const useCase = new CreateVideoAgentTaskUseCase(new VideoAgentClient());
     const result = await useCase.execute({
-      templateId: typeof payload.templateId === 'string' ? payload.templateId : '',
-      textInputs: asInputs(payload.textInputs),
+      templateId,
+      textInputs,
       mediaInputs: asInputs(payload.mediaInputs),
       callbackUrl: typeof payload.callbackUrl === 'string' ? payload.callbackUrl : undefined,
     });
+
+    // Library must list the task even while it renders.
+    recordVideoAgentTaskBestEffort(
+      { taskId: result.taskId, status: 'preparing' },
+      { prompt: textInputs[0]?.value, templateId },
+    );
 
     return NextResponse.json(result);
   } catch (error) {

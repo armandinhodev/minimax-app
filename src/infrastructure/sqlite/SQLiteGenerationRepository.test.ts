@@ -114,4 +114,38 @@ describe('SQLiteGenerationRepository', () => {
     expect(created.assets[0].kind).toBe('metadata');
     expect(created.assets[0].storageType).toBe('metadata_only');
   });
+
+  it('round-trips a Video Agent task and keeps its prompt and template through status updates', () => {
+    const repository = new SQLiteGenerationRepository();
+    repository.upsertTaskGeneration({
+      kind: 'video', source: 'video-agent', providerTaskId: 'agent-1', prompt: 'A product film',
+      status: 'processing',
+      metadata: { providerStatus: 'preparing', taskType: 'video-agent', templateId: '394176968202485769' },
+      assets: [],
+    });
+
+    const finished = repository.upsertTaskGeneration({
+      kind: 'video', source: 'video-agent', providerTaskId: 'agent-1', status: 'completed',
+      metadata: { providerStatus: 'succeeded' },
+      assets: [{
+        kind: 'video', storageType: 'provider_url', storageRef: 'https://example.com/agent.mp4',
+        format: 'mp4', mimeType: 'video/mp4', metadata: { temporaryUrl: true },
+      }],
+    });
+
+    expect(finished.source).toBe('video-agent');
+    expect(finished.prompt).toBe('A product film');
+    expect(finished.metadata.templateId).toBe('394176968202485769');
+    expect(finished.metadata.providerStatus).toBe('succeeded');
+    expect(finished.assets).toHaveLength(1);
+    expect(finished.assets[0].storageRef).toBe('https://example.com/agent.mp4');
+
+    // A late poll must not downgrade a finished task back to processing.
+    const stale = repository.upsertTaskGeneration({
+      kind: 'video', source: 'video-agent', providerTaskId: 'agent-1', status: 'processing',
+      metadata: { providerStatus: 'processing' }, assets: [],
+    });
+    expect(stale.status).toBe('completed');
+    expect(stale.assets).toHaveLength(1);
+  });
 });

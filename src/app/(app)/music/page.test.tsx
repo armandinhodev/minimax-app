@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 import MusicPage from './page';
 
 const authClientMocks = vi.hoisted(() => ({
@@ -91,6 +92,31 @@ function changeTextarea(textarea: HTMLTextAreaElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
   setter?.call(textarea, value);
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function coverPreprocessRecord() {
+  return {
+    generation: {
+      id: 'library-cover-preprocess-1',
+      kind: 'music',
+      source: 'cover-preprocess',
+      status: 'completed',
+      title: 'Cover preprocess',
+      prompt: '[Verse]\nCity lights',
+      model: 'music-cover',
+      providerGenerationId: 'cover-feature-1',
+      providerTaskId: null,
+      providerFileId: null,
+      metadata: {
+        coverFeatureId: 'cover-feature-1',
+        formattedLyrics: '[Verse]\nCity lights',
+        expiresAt: Date.now() + 60_000,
+      },
+      assets: [],
+      createdAt: 1,
+      updatedAt: 1,
+    },
+  };
 }
 
 describe('MusicPage', () => {
@@ -313,6 +339,178 @@ describe('MusicPage', () => {
         audioSetting: { sampleRate: 44100, bitrate: 256000, format: 'mp3' },
       }),
     }));
+  });
+
+  it('re-applies a new deep link when the page mounts again', async () => {
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?prompt=First+style`);
+
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    const prompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;
+    expect(prompt.value).toBe('First style');
+
+    act(() => {
+      changeTextarea(prompt, 'Edited by the user');
+    });
+
+    // Navigate away and come back through a Library link with other values.
+    act(() => {
+      root!.render(<span>Library</span>);
+    });
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?prompt=Second+style`);
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    const nextPrompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;
+    expect(nextPrompt.value).toBe('Second style');
+  });
+
+  it('keeps Reset disabled while a generation is in flight', () => {
+    useScreenStore.getState().setValue('music:isLoading', true);
+
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    const reset = Array.from(container!.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Reset',
+    ) as HTMLButtonElement | undefined;
+
+    expect(reset?.disabled).toBe(true);
+  });
+
+  it('keeps the user edits when the page mounts again with the same cover link', async () => {
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?coverPreprocessId=library-cover-preprocess-1`);
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url === '/api/library/generations/library-cover-preprocess-1') {
+        return Response.json(coverPreprocessRecord());
+      }
+      return Response.json({ id: 'trace-cover', audio: '00010203', format: 'mp3', metadata: {} });
+    });
+
+    await act(async () => {
+      root!.render(<MusicPage />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const lyrics = container!.querySelector('#music-lyrics') as HTMLTextAreaElement;
+    expect(lyrics.value).toBe('[Verse]\nCity lights');
+    act(() => {
+      changeTextarea(lyrics, 'My own rewrite');
+    });
+
+    // Leave for Library and come back through the same link.
+    act(() => {
+      root!.render(<span>Library</span>);
+    });
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect((container!.querySelector('#music-lyrics') as HTMLTextAreaElement).value).toBe('My own rewrite');
+    const libraryLoads = authClientMocks.authFetch.mock.calls.filter(
+      ([url]) => url === '/api/library/generations/library-cover-preprocess-1',
+    );
+    expect(libraryLoads).toHaveLength(1);
+  });
+
+  it('keeps the edit when the page mounts again with the same link', () => {
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?prompt=from+library`);
+
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    const prompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;
+    expect(prompt.value).toBe('from library');
+    act(() => {
+      changeTextarea(prompt, 'Mine');
+    });
+
+    // Go to Library and come back with Back: the URL is still the same link.
+    act(() => {
+      root!.render(<span>Library</span>);
+    });
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    expect((container!.querySelector('#music-prompt') as HTMLTextAreaElement).value).toBe('Mine');
+  });
+
+  it('does not re-apply the link for an unrelated query param', () => {
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?prompt=First+style`);
+
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+    act(() => {
+      changeTextarea(container!.querySelector('#music-prompt') as HTMLTextAreaElement, 'Mine');
+    });
+
+    act(() => {
+      root!.render(<span>Library</span>);
+    });
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?prompt=First+style&utm=email`);
+
+    act(() => {
+      root!.render(<MusicPage />);
+    });
+
+    expect((container!.querySelector('#music-prompt') as HTMLTextAreaElement).value).toBe('Mine');
+  });
+
+  it('clears the form and re-hydrates the link values on reset', async () => {
+    window.history.replaceState(null, '', `${window.location.pathname || '/'}?coverPreprocessId=library-cover-preprocess-1`);
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url === '/api/library/generations/library-cover-preprocess-1') {
+        return Response.json(coverPreprocessRecord());
+      }
+      return Response.json({ id: 'trace-cover', audio: '00010203', format: 'mp3', metadata: {} });
+    });
+
+    await act(async () => {
+      root!.render(<MusicPage />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const prompt = container!.querySelector('#music-prompt') as HTMLTextAreaElement;
+    const lyrics = container!.querySelector('#music-lyrics') as HTMLTextAreaElement;
+    act(() => {
+      changeTextarea(prompt, 'User style');
+      changeTextarea(lyrics, 'User lyrics');
+    });
+
+    const resetButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Reset');
+    await act(async () => {
+      resetButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const libraryLoads = authClientMocks.authFetch.mock.calls.filter(
+      ([url]) => url === '/api/library/generations/library-cover-preprocess-1',
+    );
+    expect(libraryLoads).toHaveLength(2);
+    expect((container!.querySelector('#music-prompt') as HTMLTextAreaElement).value).toBe('');
+    expect((container!.querySelector('#music-lyrics') as HTMLTextAreaElement).value).toBe('[Verse]\nCity lights');
+    expect((container!.querySelector('#cover-feature-id') as HTMLInputElement).value).toBe('cover-feature-1');
+    expect(container!.textContent).toContain('Loaded Cover Preprocess record from Library');
   });
 
   it('does not offer the discontinued free music models and shows the availability notice', async () => {

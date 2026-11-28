@@ -7,6 +7,8 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,14 +24,14 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { AreaHeader } from '@/components/ui/area-header';
 
 export default function VoicesPage() {
-  const [systemVoices, setSystemVoices] = useState<VoiceDTO[]>([]);
-  const [userVoices, setUserVoices] = useState<VoiceDTO[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [filter, setFilter] = useState('');
+  const [systemVoices, setSystemVoices] = useScreenState<VoiceDTO[]>('voices:systemVoices', []);
+  const [userVoices, setUserVoices] = useScreenState<VoiceDTO[]>('voices:userVoices', []);
+  const [isLoading, setIsLoading] = useScreenState('voices:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('voices:error', null);
+  const [filter, setFilter] = useScreenState('voices:filter', '');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteVoice, setPendingDeleteVoice] = useState<VoiceDTO | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('voices:actionStatus', null);
 
   const loadVoices = async () => {
     setIsLoading(true);
@@ -137,9 +139,12 @@ export default function VoicesPage() {
         title="Voice gallery"
         description="Browse system voices and manage voices you have saved."
         actions={
-          <Button variant="outline" onClick={loadVoices} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Refresh'}
-          </Button>
+          <Box display="flex" gap={2}>
+            <Button variant="outline" onClick={loadVoices} disabled={isLoading}>
+              {isLoading ? 'Loading...' : 'Refresh'}
+            </Button>
+            <ScreenResetButton namespace="voices" disabled={isLoading} onReset={() => void loadVoices()} />
+          </Box>
         }
       />
 

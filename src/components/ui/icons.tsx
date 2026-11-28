@@ -32,6 +32,7 @@ export type IconName =
   | "copy"
   | "chevron-down"
   | "menu"
+  | "microphone"
   | "refresh";
 
 const PATHS: Record<IconName, React.ReactNode> = {
@@ -145,6 +146,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   "chevron-down": <path d="m5 9 7 7 7-7" />,
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+  microphone: (
+    <>
+      <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+    </>
+  ),
   refresh: (
     <>
       <path d="M20 11a8 8 0 1 0-2.3 5.7" />

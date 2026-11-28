@@ -38,6 +38,9 @@ Slate chrome, cool workspace, white panels, one copper accent.
 | `run` | `#805700` | Queued, preparing, running, processing. |
 | `error` | `#A12C32` | Failure and destructive action. |
 
+**Placeholders** use `content.placeholder` (`#7F8B98`), lighter than
+`muted`, so an example prompt is not read as prefilled text.
+
 **Application rules**
 
 - One copper primary per form. Its label stays opaque white on hover; focus
@@ -102,6 +105,66 @@ characters.
 - **Job strip:** Compose, Dispatch, Render, Retrieve. Completed steps carry a
   check, the current step a 3px copper top rule and `aria-current="step"`. The
   backend decides the stage; Failed and Cancelled keep the last reached stage.
+
+## Chat
+
+Chat is the one conversation canvas: no workbench panels. The thread is a
+48rem column, the composer sits at the foot of the page with Enter to send
+and Shift+Enter for a new line. The model sits beside Send and Dictate; the
+upstream surface and system prompt live behind Settings. Dictate records a
+short clip and transcribes it with MiniMax ASR into the composer. Assistant
+replies render GFM Markdown (lists, bold, code, tables, links) with raw HTML
+disabled; the user message stays plain text.
+
+## Session state
+
+Every screen keeps its composition in a Zustand store that lives above the
+routes, so changing area and coming back restores the form, the result and the
+thread instead of emptying them. Keys are namespaced per screen
+(`image:prompt`, `chat:messages`), which is also what a reset filters on. A full
+reload starts a new session and signing out drops it. Because state outlives the
+page, each screen that can accumulate work offers a reset next to its title:
+**Reset** returns the composition to its initial values, and chat offers **New
+chat**. Reset stays disabled while a request is in flight, so it cannot enable a
+duplicate paid call, and it clears the result the request was about to write.
+Transient UI (open dialogs, drag state, dictation in progress, a polling loop)
+stays local to the page. A Library or Lyrics link opens Music with query params;
+each distinct link is applied once, so a new link wins over the previous edit
+while going back to or reopening the same link keeps what was edited. The Cover
+Preprocess record is hydrated once for the same reason, and Reset brings both
+back.
+
+## Media references
+
+Image references (Video first frame, last frame and reference images; Image to
+image references) accept a public URL, an `mm_file://<id>`
+reference or a data URL. Each image field shows the control for the selected
+method: **URL**, **Paste image** (focuses a target for Ctrl+V or ⌘V), or
+**Upload**. Pasting and uploading send one image to MiniMax with the purpose of
+that screen and fill the field with the `mm_file://` reference, while the
+original stays only in tab memory for its thumbnail. There is no library
+picker: MiniMax does not expose a downloadable preview for image generation
+inputs, so an existing file cannot be shown. Attached references are listed
+with a responsive 96–128 px thumbnail and a remove action regardless of the
+selected method. The browser loads public URL thumbnails without sending a
+referrer. Recent originals are kept only in tab memory (at most 32 files and
+64 MiB), survive in-app navigation, and are cleared on reload or logout. A
+stored reference without a local original is still removable and submits
+normally but shows no thumbnail. Multi-reference fields append up to their
+limit. The shared upload route caps files at 20 MB; each field keeps its own
+limit (9 reference images in Video, 16 in Image to image).
+
+Video Agent does not use the MiniMax file picker. Pasted or selected images
+stay in tab memory with local previews; the app checks format, size and
+dimensions and sends them as data URLs only when creating the task. The
+template fixes the exact image count (three for the 3D character template, one
+for the rest with media), so multi-image templates list each image with its
+count and keep **Create video** disabled until the exact count is attached.
+Only the templates that accept text show the text box. Public image URLs are
+accepted for single-image templates.
+
+Image generation and editing results are stacked; each image fills the Results
+panel's content width at its natural aspect ratio, without cropping.
 
 ## Components
 

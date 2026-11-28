@@ -19,7 +19,7 @@ function Input({ className, ...props }: React.ComponentProps<typeof ChakraInput>
         boxShadow: "0 0 0 3px var(--chakra-colors-interaction-focus-ring)",
         outline: "none",
       }}
-      _placeholder={{ color: "content.readout" }}
+      _placeholder={{ color: "content.placeholder" }}
       _disabled={{ opacity: 1, cursor: "not-allowed", bg: "surface.field", color: "content.readout" }}
       {...props}
     />

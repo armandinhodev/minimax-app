@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
+import { useScreenState } from '@/components/shared/screen-state';
+
 import { Box } from '@chakra-ui/react';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { Button } from '@/components/ui/button';
@@ -41,14 +44,14 @@ function buildMusicGenerationHref(result: LyricsGenerationResult, prompt: string
 }
 
 export default function LyricsGenerationPage() {
-  const [mode, setMode] = useState('write_full_song');
-  const [title, setTitle] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [lyrics, setLyrics] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [result, setResult] = useState<LyricsGenerationResult | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [mode, setMode] = useScreenState('lyrics:mode', 'write_full_song');
+  const [title, setTitle] = useScreenState('lyrics:title', '');
+  const [prompt, setPrompt] = useScreenState('lyrics:prompt', '');
+  const [lyrics, setLyrics] = useScreenState('lyrics:lyrics', '');
+  const [isLoading, setIsLoading] = useScreenState('lyrics:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('lyrics:error', null);
+  const [result, setResult] = useScreenState<LyricsGenerationResult | null>('lyrics:result', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('lyrics:actionStatus', null);
 
   const validationMessage = (() => {
     if (prompt.length > PROMPT_MAX_LENGTH) return 'Prompt exceeds 2,000 characters.';
@@ -110,7 +113,11 @@ export default function LyricsGenerationPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Lyrics" description="Draft a lyric sheet or revise an existing one." />
+      <AreaHeader
+        title="Lyrics"
+        description="Draft a lyric sheet or revise an existing one."
+        actions={<ScreenResetButton namespace="lyrics" disabled={isLoading} />}
+      />
 
       <Box borderRadius="md" bg="state.runSoft" px="12px" py="10px" color="content.ink" fontSize="label">
         {MUSIC_AVAILABILITY_NOTICE}

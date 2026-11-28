@@ -173,6 +173,7 @@ describe('application color system', () => {
     for (const token of [
       '--chakra-colors-surface-plate',
       '--chakra-colors-surface-separator',
+      '--chakra-colors-content-placeholder',
       '--chakra-colors-transport-text',
       '--chakra-colors-interaction-soft',
       '--chakra-colors-state-ok',

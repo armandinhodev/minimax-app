@@ -1,6 +1,7 @@
 import React, { act, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useScreenStore } from '@/components/shared/screen-store';
 import ImageToImagePage from './page';
 
 const authClientMocks = vi.hoisted(() => ({
@@ -11,9 +12,15 @@ const authClientMocks = vi.hoisted(() => ({
 vi.mock('@/lib/auth-client', () => authClientMocks);
 
 vi.mock('@chakra-ui/react', () => ({
-  Box: ({ children, as: Component = 'div', ...props }: { children?: ReactNode; as?: keyof JSX.IntrinsicElements } & Record<string, unknown>) => {
-    void props;
-    return <Component>{children}</Component>;
+  Box: ({ children, as: Component = 'div', role, 'aria-label': ariaLabel, gridTemplateColumns, position }: {
+    children?: ReactNode;
+    as?: keyof JSX.IntrinsicElements;
+    role?: string;
+    'aria-label'?: string;
+    gridTemplateColumns?: unknown;
+    position?: React.CSSProperties['position'];
+  }) => {
+    return <Component role={role} aria-label={ariaLabel} style={{ gridTemplateColumns: typeof gridTemplateColumns === 'string' ? gridTemplateColumns : undefined, position }}>{children}</Component>;
   },
 }));
 
@@ -70,30 +77,12 @@ function clickButton(container: HTMLElement, id: string) {
   button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 }
 
-function selectFiles(input: HTMLInputElement, files: File[]) {
-  Object.defineProperty(input, 'files', { value: files, configurable: true });
-  input.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
 describe('ImageToImagePage', () => {
   let container: HTMLDivElement | null = null;
   let root: ReturnType<typeof createRoot> | null = null;
-  const originalFileReader = globalThis.FileReader;
-
   beforeEach(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.clearAllMocks();
-
-    class MockFileReader {
-      result: string | null = null;
-      onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
-      onerror: (() => void) | null = null;
-      readAsDataURL(file: File) {
-        this.result = `data:${file.type};base64,${Buffer.from(file.name).toString('base64')}`;
-        this.onload?.(new ProgressEvent('load') as ProgressEvent<FileReader>);
-      }
-    }
-    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -104,10 +93,23 @@ describe('ImageToImagePage', () => {
     act(() => {
       root?.unmount();
     });
-    globalThis.FileReader = originalFileReader;
     container?.remove();
     root = null;
     container = null;
+  });
+
+  it('keeps Reset disabled while a request is in flight', () => {
+    useScreenStore.getState().setValue('image-edit:isLoading', true);
+
+    act(() => {
+      root!.render(<ImageToImagePage />);
+    });
+
+    const reset = Array.from(container!.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Reset',
+    ) as HTMLButtonElement | undefined;
+
+    expect(reset?.disabled).toBe(true);
   });
 
   it('blocks generation until at least one reference image is selected', async () => {
@@ -159,14 +161,12 @@ describe('ImageToImagePage', () => {
     });
 
     const input = container!.querySelector('#reference-images') as HTMLInputElement;
+    expect(container!.querySelector('[style*="position: sticky"]')?.textContent).toContain('No result yet');
     const prompt = container!.querySelector('#image-edit-prompt') as HTMLTextAreaElement;
     const count = container!.querySelector('#image-edit-count') as HTMLInputElement;
 
-    await act(async () => {
-      selectFiles(input, [
-        new File(['cat'], 'cat.png', { type: 'image/png' }),
-        new File(['dog'], 'dog.jpg', { type: 'image/jpeg' }),
-      ]);
+    act(() => {
+      changeInput(input, 'https://cdn.example.com/cat.png, https://cdn.example.com/dog.png');
     });
 
     act(() => {
@@ -193,11 +193,70 @@ describe('ImageToImagePage', () => {
         aspectRatio: '3:4',
         area: '4K',
         images: [
-          { imageUrl: `data:image/png;base64,${Buffer.from('cat.png').toString('base64')}` },
-          { imageUrl: `data:image/jpeg;base64,${Buffer.from('dog.jpg').toString('base64')}` },
+          { imageUrl: 'https://cdn.example.com/cat.png' },
+          { imageUrl: 'https://cdn.example.com/dog.png' },
         ],
       }),
     }));
+    const image = container!.querySelector<HTMLImageElement>('img[alt="Generated image 1"]');
+    expect(image?.parentElement?.parentElement?.style.gridTemplateColumns).toBe('minmax(0, 1fr)');
+    expect(image?.style.width).toBe('100%');
+    expect(image?.style.height).toBe('auto');
+    expect(image?.style.aspectRatio).toBe('');
+    expect(image?.style.objectFit).toBe('');
+    expect(image?.closest('[style*="position: static"]')).toBeTruthy();
+  });
+
+  it('uploads the reference and never offers the MiniMax library picker', async () => {
+    authClientMocks.authFetch.mockImplementation(async (url: string, options?: RequestInit) => {
+      if (url === '/api/minimax/files' && options?.method === 'POST') {
+        return Response.json({ fileId: '88' });
+      }
+
+      return Response.json({
+        id: 'req-upload',
+        imageUrls: ['https://example.com/edit-upload.jpg'],
+        images: [{ index: 0, url: 'https://example.com/edit-upload.jpg', size: '1024x1024', revisedPrompt: null, error: null }],
+        metadata: { successCount: 1, failedCount: 0, totalCount: 1, outputFormat: 'jpeg', requestId: 'req-upload', created: 1, usage: null },
+        expiresAt: null,
+      });
+    });
+
+    await act(async () => {
+      root!.render(<ImageToImagePage />);
+    });
+
+    const group = container!.querySelector('[aria-label="Choose how to add the reference image"]') as HTMLElement;
+    const methods = Array.from(group.querySelectorAll('button')).map((button) => button.textContent);
+    expect(methods).toEqual(['URL', 'Paste image', 'Upload']);
+    expect(container!.textContent).not.toContain('From MiniMax');
+
+    act(() => {
+      Array.from(group.querySelectorAll('button')).find((button) => button.textContent === 'Upload')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    const fileInput = container!.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', { configurable: true, value: [new File(['x'], 'studio.png', { type: 'image/png' })] });
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    expect(container!.textContent).toContain('studio.png');
+
+    const prompt = container!.querySelector('#image-edit-prompt') as HTMLTextAreaElement;
+    act(() => {
+      changeTextarea(prompt, 'Restyle it as a studio portrait.');
+    });
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate images');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const call = authClientMocks.authFetch.mock.calls.find(([url]) => url === '/api/minimax/image');
+    const body = JSON.parse((call![1] as RequestInit).body as string);
+    expect(body.images).toEqual([{ imageUrl: 'mm_file://88' }]);
   });
 
   it('rejects more than 16 reference images', async () => {
@@ -206,8 +265,8 @@ describe('ImageToImagePage', () => {
     });
 
     const input = container!.querySelector('#reference-images') as HTMLInputElement;
-    await act(async () => {
-      selectFiles(input, Array.from({ length: 17 }, (_value, index) => new File(['x'], `ref-${index}.png`, { type: 'image/png' })));
+    act(() => {
+      changeInput(input, Array.from({ length: 17 }, (_value, index) => `https://cdn.example.com/ref-${index}.png`).join(', '));
     });
 
     const prompt = container!.querySelector('#image-edit-prompt') as HTMLTextAreaElement;
@@ -257,8 +316,8 @@ describe('ImageToImagePage', () => {
     const input = container!.querySelector('#reference-images') as HTMLInputElement;
     const prompt = container!.querySelector('#image-edit-prompt') as HTMLTextAreaElement;
 
-    await act(async () => {
-      selectFiles(input, [new File(['cat'], 'cat.png', { type: 'image/png' })]);
+    act(() => {
+      changeInput(input, 'https://cdn.example.com/cat.png');
     });
 
     act(() => {

@@ -121,6 +121,8 @@ const config = defineConfig({
           readout: { value: '{colors.bench.muted}' },
           muted: { value: '{colors.bench.muted}' },
           subtle: { value: '#5F6C7B' },
+          // Placeholder: lighter than readout so it is not read as a value.
+          placeholder: { value: '#7F8B98' },
           inverse: { value: '#FFFFFF' },
         },
 

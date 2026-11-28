@@ -6,7 +6,9 @@
  * Shows TTL countdown badge after successful clone.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
@@ -25,12 +27,14 @@ import { AreaHeader } from '@/components/ui/area-header';
 const CLONE_TTL_MS = 168 * 60 * 60 * 1000;
 
 export default function CloneVoicePage() {
-  const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
-  const [voiceId, setVoiceId] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null; details?: { upstreamStatus?: number; upstreamMessage?: string } } | null>(null);
-  const [clonedVoice, setClonedVoice] = useState<VoiceDTO | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [uploadedFileId, setUploadedFileId] = useScreenState<string | null>('voices-clone:uploadedFileId', null);
+  const [voiceId, setVoiceId] = useScreenState('voices-clone:voiceId', '');
+  const [isLoading, setIsLoading] = useScreenState('voices-clone:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null; details?: { upstreamStatus?: number; upstreamMessage?: string } } | null>('voices-clone:error', null);
+  const [clonedVoice, setClonedVoice] = useScreenState<VoiceDTO | null>('voices-clone:clonedVoice', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('voices-clone:actionStatus', null);
+  // Owned by VoiceUpload; read here only to keep Reset off while an upload runs.
+  const [isUploading] = useScreenState('voice-upload:isUploading', false);
 
   const handleFileSelected = (_file: File) => {
     setUploadedFileId(null);
@@ -98,6 +102,7 @@ export default function CloneVoicePage() {
       <AreaHeader
         title="Clone voice"
         description="Create a reusable voice from a clean audio sample."
+        actions={<ScreenResetButton namespace="voices-clone" extraNamespaces={['voice-upload']} disabled={isLoading || isUploading} />}
       />
 
       <Sheet>

@@ -5,7 +5,7 @@
  * preview player for trial audio, accept/regenerate buttons, TTL warning.
  */
 
-import { useState } from 'react';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,15 +42,15 @@ export function VoiceDesigner({
   initialPrompt = '',
   initialPreviewText = '',
 }: VoiceDesignerProps) {
-  const [prompt, setPrompt] = useState(initialPrompt);
-  const [previewText, setPreviewText] = useState(initialPreviewText);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [previewResult, setPreviewResult] = useState<{ voice: VoiceDTO; trialAudioUrl?: string; trialAudio?: string } | null>(
+  const [prompt, setPrompt] = useScreenState('voice-design:prompt', initialPrompt);
+  const [previewText, setPreviewText] = useScreenState('voice-design:previewText', initialPreviewText);
+  const [isLoading, setIsLoading] = useScreenState('voice-design:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('voice-design:error', null);
+  const [previewResult, setPreviewResult] = useScreenState<{ voice: VoiceDTO; trialAudioUrl?: string; trialAudio?: string } | null>('voice-design:previewResult',
     null
   );
-  const [savedVoice, setSavedVoice] = useState<VoiceDTO | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [savedVoice, setSavedVoice] = useScreenState<VoiceDTO | null>('voice-design:savedVoice', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('voice-design:actionStatus', null);
 
   const handleDesign = async () => {
     if (!prompt.trim()) {

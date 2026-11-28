@@ -7,7 +7,8 @@
  * with its monogram, what it does and how much has been generated with it.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useScreenState } from '@/components/shared/screen-state';
 import Link from 'next/link';
 import { Box } from '@chakra-ui/react';
 
@@ -73,7 +74,7 @@ function formatDate(timestamp: number): string {
 }
 
 export default function DashboardPage() {
-  const [summary, setSummary] = useState<LibrarySummaryDTO>(EMPTY_SUMMARY);
+  const [summary, setSummary] = useScreenState<LibrarySummaryDTO>('overview:summary', EMPTY_SUMMARY);
 
   useEffect(() => {
     let isMounted = true;

@@ -3,31 +3,44 @@
 /**
  * Chat Studio — MiniMax text models.
  *
- * One canonical conversation, four upstream surfaces. The surface selector
- * picks which MiniMax endpoint the app talks to:
+ * A conversation canvas, not a parameter sheet: the thread scrolls, the
+ * composer stays at the foot, and the endpoint configuration lives behind a
+ * compact Settings disclosure. Four upstream surfaces share one thread:
  * - native:    POST /v1/text/chatcompletion_v2
  * - openai:    POST /v1/chat/completions
  * - anthropic: POST /anthropic/v1/messages
  * - responses: POST /v1/responses
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { DictationButton } from '@/components/chat/DictationButton';
+import { Icon } from '@/components/ui/icons';
+import { Label } from '@/components/ui/label';
 import { Select, type SelectOption } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
 import { authFetch } from '@/lib/auth-client';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Field, Spec, SpecList } from '@/components/ui/spec';
-import { AreaHeader } from '@/components/ui/area-header';
+import { Markdown } from '@/components/chat/Markdown';
+import { nextConversation, type ChatMessage } from './conversation';
 
 const MODEL_OPTIONS: SelectOption[] = [
-  { value: 'MiniMax-M3.1-Flash', label: 'MiniMax-M3.1-Flash' },
-  { value: 'MiniMax-M3', label: 'MiniMax-M3' },
+  { value: 'MiniMax-M3.1-Flash', label: 'M3.1 Flash' },
+  { value: 'MiniMax-M3', label: 'M3' },
 ];
+
+const VISUALLY_HIDDEN: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0,0,0,0)',
+};
 
 const SURFACE_OPTIONS: SelectOption[] = [
   { value: 'native', label: 'Native — /v1/text/chatcompletion_v2' },
@@ -58,17 +71,98 @@ interface AssistantReply {
   usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
 }
 
-export default function TextPage() {
-  const [model, setModel] = useState('MiniMax-M3.1-Flash');
-  const [surface, setSurface] = useState('native');
-  const [system, setSystem] = useState('');
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
-  const [reply, setReply] = useState<AssistantReply | null>(null);
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function AssistantBlock({ reply }: { reply: AssistantReply }) {
+  return (
+    <Box display="grid" gap="8px">
+      <Box display="flex" alignItems="center" gap="8px">
+        <Box
+          aria-hidden="true"
+          display="inline-flex"
+          alignItems="center"
+          justifyContent="center"
+          w="28px"
+          h="28px"
+          bg="surface.inset"
+          border="1px solid"
+          borderColor="surface.separator"
+          borderRadius="md"
+          color="content.readout"
+        >
+          <Icon name="chat" size={15} />
+        </Box>
+        <Box fontSize="label" fontWeight={700} color="content.ink">
+          Assistant
+        </Box>
+      </Box>
 
-  const canSend = !isSending && input.trim().length > 0;
+      {reply.reasoningContent && (
+        <Box as="details" border="1px solid" borderColor="surface.separator" borderRadius="md" px="12px" py="8px">
+          <Box as="summary" cursor="pointer" fontSize="help" color="content.readout">
+            Reasoning
+          </Box>
+          <Box mt="6px" color="content.readout" fontSize="help" lineHeight="help" whiteSpace="pre-wrap">
+            {reply.reasoningContent}
+          </Box>
+        </Box>
+      )}
+
+      {reply.content && (
+        <Markdown content={reply.content} />
+      )}
+
+      {reply.toolCalls && reply.toolCalls.length > 0 && (
+        <Box display="grid" gap="6px">
+          {reply.toolCalls.map((call) => (
+            <Box key={call.id} border="1px solid" borderColor="surface.separator" borderRadius="md" p="10px">
+              <Box fontSize="help" fontWeight={700} color="interaction.accent">
+                {call.name}
+              </Box>
+              <Box as="pre" fontSize="0.75rem" whiteSpace="pre-wrap" color="content.readout" m={0}>
+                {call.arguments}
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {(reply.usage || reply.finishReason) && (
+        <Box as="details">
+          <Box as="summary" cursor="pointer" fontSize="help" color="content.readout">
+            Usage
+          </Box>
+          <SpecList mt="6px">
+            {reply.usage?.inputTokens !== undefined && <Spec label="Input tokens" value={String(reply.usage.inputTokens)} />}
+            {reply.usage?.outputTokens !== undefined && <Spec label="Output tokens" value={String(reply.usage.outputTokens)} />}
+            {reply.finishReason && <Spec label="Finish reason" value={reply.finishReason} />}
+          </SpecList>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+export default function TextPage() {
+  const [model, setModel] = useScreenState<string>('chat:model', 'MiniMax-M3.1-Flash');
+  const [surface, setSurface] = useScreenState<string>('chat:surface', 'native');
+  const [system, setSystem] = useScreenState<string>('chat:system', '');
+  const [input, setInput] = useScreenState<string>('chat:input', '');
+  const [messages, setMessages] = useScreenState<ChatMessage[]>('chat:messages', []);
+  const [reply, setReply] = useScreenState<AssistantReply | null>('chat:reply', null);
+  const [isSending, setIsSending] = useScreenState<boolean>('chat:sending', false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
+
+  const canSend = !isSending && !isDictating && input.trim().length > 0;
+
+  useEffect(() => {
+    const node = endRef.current;
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({ block: 'end' });
+    }
+  }, [messages, reply?.content, reply?.reasoningContent, isSending]);
 
   /** Extrae el texto incremental de un chunk SSE de chat completion. */
   const readStreamDelta = (chunk: string): { content: string; reasoning: string } => {
@@ -100,7 +194,7 @@ export default function TextPage() {
     const prompt = input.trim();
     if (!prompt) return;
 
-    const conversation = [...messages, { role: 'user' as const, text: prompt }];
+    const conversation = nextConversation(messages, reply, prompt);
     setMessages(conversation);
     setInput('');
     setReply(null);
@@ -196,163 +290,218 @@ export default function TextPage() {
     }
   };
 
+  const newChat = () => {
+    if (isSending) return;
+    setMessages([]);
+    setReply(null);
+    setInput('');
+    setError(null);
+  };
+
+  const applyTranscript = (text: string) => {
+    setInput((current) => {
+      if (!current) return text;
+      return current + (/\s$/.test(current) ? '' : ' ') + text;
+    });
+    inputRef.current?.focus();
+  };
+
   return (
-    <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Chat" description="Compose a message and follow the response live." />
+    <Box
+      display="flex"
+      flexDirection="column"
+      height={{ base: 'calc(100dvh - 5.75rem)', md: 'calc(100dvh - 4rem)' }}
+      minH="30rem"
+    >
+      <Box
+        display="flex"
+        alignItems="flex-end"
+        justifyContent="space-between"
+        gap="12px"
+        flexWrap="wrap"
+        pb="12px"
+        borderBottom="1px solid"
+        borderColor="surface.separator"
+      >
+        <Box display="flex" alignItems="baseline" gap="10px">
+          <Box fontSize="title" lineHeight="title" fontWeight={700} letterSpacing="-0.024em">
+            Chat
+          </Box>
+          <Box display={{ base: 'none', sm: 'block' }} color="content.readout" fontSize="help">
+            {surface}
+          </Box>
+        </Box>
 
-      <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
-        <Sheet>
-          <SheetHeader icon="chat">
-            <SheetTitle>Prompt</SheetTitle>
-            <SheetDescription>Configure the model and send a message.</SheetDescription>
-          </SheetHeader>
-          <SheetContent display="grid" gap={4}>
-                        <Field label="Model" htmlFor="text-model">
+        <Box display="flex" gap="8px" flexWrap="wrap">
+          <Button variant="outline" onClick={newChat} disabled={isSending}>
+            New chat
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsSettingsOpen((current) => !current)}
+            aria-expanded={isSettingsOpen}
+            aria-controls="chat-settings"
+          >
+            {isSettingsOpen ? 'Hide settings' : 'Settings'}
+          </Button>
+        </Box>
+      </Box>
+
+      {isSettingsOpen && (
+        <Box
+          id="chat-settings"
+          mt="16px"
+          bg="surface.sheet"
+          border="1px solid"
+          borderColor="surface.separator"
+          borderRadius="lg"
+          p="16px"
+          display="grid"
+          gap="12px"
+        >
+          <Box display="grid" gap="12px" gridTemplateColumns={{ base: '1fr', md: 'minmax(0, 20rem) minmax(0, 1fr)' }}>
+            <Field label="Surface" htmlFor="text-surface">
               <Select
-                              id="text-model"
-                              value={model}
-                              options={MODEL_OPTIONS}
-                              disabled={isSending}
-                              onValueChange={setModel}
-                            />
+                id="text-surface"
+                value={surface}
+                options={SURFACE_OPTIONS}
+                disabled={isSending}
+                onValueChange={setSurface}
+              />
             </Field>
-
-                        <Field label="Surface" htmlFor="text-surface">
-              <Select
-                              id="text-surface"
-                              value={surface}
-                              options={SURFACE_OPTIONS}
-                              disabled={isSending}
-                              onValueChange={setSurface}
-                            />
-            </Field>
-
-                        <Field label="System prompt" htmlFor="text-system">
+            <Field label="System prompt" htmlFor="text-system">
               <Textarea
-                              id="text-system"
-                              value={system}
-                              disabled={isSending}
-                              minH="5rem"
-                              placeholder="You are a concise assistant."
-                              onChange={(event) => setSystem(event.currentTarget.value)}
-                            />
+                id="text-system"
+                value={system}
+                disabled={isSending}
+                minH="72px"
+                placeholder="You are a concise studio assistant."
+                onChange={(event) => setSystem(event.currentTarget.value)}
+              />
             </Field>
+          </Box>
+          <Box color="content.readout" fontSize="help" lineHeight="help">
+            The surface selects the upstream endpoint. The system prompt applies to every message in the thread.
+          </Box>
+        </Box>
+      )}
 
-                        <Field label="Message" htmlFor="text-input">
-              <Textarea
-                              id="text-input"
-                              value={input}
-                              disabled={isSending}
-                              required
-                              aria-required="true"
-                              minH="8rem"
-                              placeholder="Ask something, or describe an image to reason about."
-                              onChange={(event) => setInput(event.currentTarget.value)}
-                            />
-            </Field>
-
-            {error && <ErrorDisplay message={error} />}
-
-            <Button onClick={handleSend} disabled={!canSend}>
-              {isSending ? 'Thinking...' : 'Send'}
-            </Button>
-          </SheetContent>
-        </Sheet>
-
-        <Sheet minH="28rem">
-          <SheetHeader icon="folder">
-            <SheetTitle>Conversation</SheetTitle>
-            <SheetDescription>Messages in this session.</SheetDescription>
-          </SheetHeader>
-          <SheetContent display="grid" gap={4}>
-            {messages.length === 0 && !reply && !isSending && (
-              <Box borderRadius="md" p="2rem" textAlign="center" color="content.readout" bg="surface.inset">
-                Send a message to start.
-              </Box>
-            )}
-
-            {messages.map((message, index) => (
+      <Box flex="1 1 auto" minH={0} overflowY="auto">
+        <Box maxW="48rem" mx="auto" height="100%" display="flex" flexDirection="column" gap="24px" py="24px">
+          {messages.map((message, index) =>
+            message.role === 'user' ? (
               <Box
                 key={`${message.role}-${index}`}
-                border="1px solid"
-                borderColor={message.role === 'user' ? 'surface.rule' : 'interaction.soft'}
-                borderRadius="xl"
-                bg="surface.sheet"
-                p="0.75rem"
+                justifySelf="end"
+                maxW="80%"
+                bg="interaction.soft"
+                borderRadius="lg"
+                px="16px"
+                py="12px"
+                color="content.ink"
+                fontSize="body"
+                lineHeight="1.6"
+                whiteSpace="pre-wrap"
               >
-                <Box color="content.readout" fontSize="label" fontWeight={500} lineHeight="label">
-                  {message.role === 'user' ? 'You' : 'Assistant'}
-                </Box>
-                <Box color="content.ink" whiteSpace="pre-wrap" mt={1}>
-                  {message.text}
-                </Box>
+                {message.text}
               </Box>
-            ))}
+            ) : (
+              <AssistantBlock key={`${message.role}-${index}`} reply={{ content: message.text }} />
+            ),
+          )}
 
-            {reply && (
-              <Box border="1px solid" borderColor="state.okSoft" borderRadius="xl" bg="surface.sheet" p="0.75rem">
-                <Box color="content.readout" fontSize="label" fontWeight={500} lineHeight="label">
-                  Assistant
-                </Box>
+          {reply && <AssistantBlock reply={reply} />}
 
-                {reply.reasoningContent && (
-                  <Box
-                    mt={2}
-                    border="1px dashed"
-                    borderColor="interaction.soft"
-                    borderRadius="lg"
-                    p="0.6rem"
-                    color="content.readout"
-                    fontSize="0.85rem"
-                    whiteSpace="pre-wrap"
-                  >
-                    <Box fontWeight={700} color="interaction.accent" fontSize="0.75rem" mb={1}>
-                      Thinking
-                    </Box>
-                    {reply.reasoningContent}
-                  </Box>
-                )}
+          {isSending && !reply && (
+            <Box display="flex" alignItems="center" gap="8px" color="content.readout" fontSize="label">
+              <Box aria-hidden="true" w="6px" h="6px" borderRadius="full" bg="interaction.accent" />
+              MiniMax is thinking.
+            </Box>
+          )}
 
-                <Box color="content.ink" whiteSpace="pre-wrap" mt={2}>
-                  {reply.content}
-                </Box>
+          <div ref={endRef} />
+        </Box>
+      </Box>
 
-                {reply.toolCalls && reply.toolCalls.length > 0 && (
-                  <Box display="grid" gap="0.5rem" mt={2}>
-                    {reply.toolCalls.map((call) => (
-                      <Box key={call.id} border="1px solid" borderColor="interaction.soft" borderRadius="lg" p="0.5rem">
-                        <Box fontSize="0.8rem" fontWeight={700} color="interaction.accent">
-                          {call.name}
-                        </Box>
-                        <Box as="pre" fontSize="0.75rem" whiteSpace="pre-wrap" color="content.readout" m={0}>
-                          {call.arguments}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+      <Box flex="0 0 auto" pt="12px" bg="surface.field">
+        <Box maxW="48rem" mx="auto" display="grid" gap="8px">
+          {error && <ErrorDisplay message={error} />}
 
-                {reply.usage && (
-                  <SpecList>
-                    {reply.usage.inputTokens !== undefined && (
-                      <Spec label="Input tokens" value={String(reply.usage.inputTokens)} />
-                    )}
-                    {reply.usage.outputTokens !== undefined && (
-                      <Spec label="Output tokens" value={String(reply.usage.outputTokens)} />
-                    )}
-                    {reply.finishReason && <Spec label="Finish reason" value={reply.finishReason} />}
-                  </SpecList>
-                )}
+          <Box
+            border="1px solid"
+            borderColor="surface.rule"
+            borderRadius="lg"
+            bg="surface.plate"
+            p="10px"
+            display="grid"
+            gap="6px"
+            _focusWithin={{ borderColor: 'interaction.accent', boxShadow: '0 0 0 3px var(--chakra-colors-interaction-focus-ring)' }}
+          >
+            <Label htmlFor="text-input" style={VISUALLY_HIDDEN}>
+              Message
+            </Label>
+            <Textarea
+              ref={inputRef}
+              id="text-input"
+              value={input}
+              disabled={isSending}
+              required
+              aria-required="true"
+              minH="52px"
+              maxH="200px"
+              resize="none"
+              border="none"
+              bg="transparent"
+              px="4px"
+              py="4px"
+              placeholder="Message MiniMax..."
+              _focus={{ borderColor: 'transparent', boxShadow: 'none', outline: 'none' }}
+              onChange={(event) => setInput(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  void handleSend();
+                }
+              }}
+            />
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap="8px" flexWrap="wrap">
+              <Box display={{ base: 'none', sm: 'block' }} color="content.readout" fontSize="help" lineHeight="help">
+                Enter to send. Shift+Enter for a new line.
               </Box>
-            )}
 
-            {isSending && !reply && (
-              <Box borderRadius="md" p="1.5rem" textAlign="center" color="content.readout" bg="surface.inset">
-                MiniMax is thinking.
+              <Box display="flex" alignItems="center" gap="8px" ml="auto">
+                <Box width="150px" maxW="45vw">
+                  <Label htmlFor="text-model" style={VISUALLY_HIDDEN}>
+                    Model
+                  </Label>
+                  <Select
+                    id="text-model"
+                    value={model}
+                    options={MODEL_OPTIONS}
+                    disabled={isSending || isDictating}
+                    onValueChange={setModel}
+                  />
+                </Box>
+                <DictationButton
+                  disabled={isSending}
+                  onTranscript={applyTranscript}
+                  onError={setError}
+                  onBusyChange={(busy) => {
+                    setIsDictating(busy);
+                    if (busy) setError(null);
+                  }}
+                />
+                <Button onClick={() => void handleSend()} disabled={!canSend}>
+                  {isSending ? 'Sending...' : 'Send'}
+                </Button>
               </Box>
-            )}
-          </SheetContent>
-        </Sheet>
+            </Box>
+          </Box>
+
+          <Box aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>
+            {isSending ? 'MiniMax is responding.' : reply ? 'Response complete.' : ''}
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

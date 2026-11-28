@@ -12,6 +12,7 @@ import { VideoAgentClient } from '@/infrastructure/minimax/video-agent/VideoAgen
 
 import { requireAuth } from '@/app/api/_shared/auth';
 import { createMiniMaxRouteErrorResponse } from '../../../_shared/route-error';
+import { recordVideoAgentTaskBestEffort } from '../../../_shared/video-library-recording';
 
 export async function GET(
   request: Request,
@@ -25,6 +26,10 @@ export async function GET(
   try {
     const useCase = new QueryVideoAgentTaskUseCase(new VideoAgentClient());
     const task = await useCase.execute(taskId);
+
+    // Every status query completes or refreshes the same Library record.
+    recordVideoAgentTaskBestEffort(task);
+
     return NextResponse.json(task);
   } catch (error) {
     if (error instanceof Error && error.name === 'QueryVideoAgentTaskValidationError') {

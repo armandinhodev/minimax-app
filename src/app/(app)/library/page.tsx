@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -92,6 +94,7 @@ function getSourceLabel(source: LibraryGenerationSource | null): string | null {
   if (source === 'video-generation') return 'Video Generation';
   if (source === 'video-context-ir') return 'Video Context-IR';
   if (source === 'video-regeneration') return 'Video Regeneration';
+  if (source === 'video-agent') return 'Video Agent';
   if (source === 'image-to-image') return 'Image to Image';
   if (source === 'text-to-image') return 'Text to Image';
   if (source === 'text-to-music') return 'Text to Music';
@@ -156,9 +159,28 @@ function getCoverGenerationHref(generation: LibraryGenerationDTO): string | null
 interface LibraryItemCardProps {
   generation: LibraryGenerationDTO;
   onDelete: (generation: LibraryGenerationDTO) => void;
+  onCheckStatus: (generation: LibraryGenerationDTO) => void;
+  isChecking: boolean;
 }
 
-function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
+/** Provider task IDs can be queried while unfinished or when the video is missing. */
+const RECHECKABLE_SOURCES: ReadonlySet<LibraryGenerationSource> = new Set([
+  'video-generation',
+  'video-context-ir',
+  'video-regeneration',
+  'video-agent',
+]);
+
+function canRecheckProvider(generation: LibraryGenerationDTO): boolean {
+  if (generation.kind !== 'video' || !generation.providerTaskId) return false;
+  // Only known video sources: an unknown source would query the wrong endpoint.
+  if (!generation.source || !RECHECKABLE_SOURCES.has(generation.source)) return false;
+  if (generation.status === 'processing') return true;
+  return generation.status === 'completed'
+    && !generation.assets.some((asset) => asset.kind === 'video' && isDownloadable(asset));
+}
+
+function LibraryItemCard({ generation, onDelete, onCheckStatus, isChecking }: LibraryItemCardProps) {
   const videoAsset = generation.assets.find((asset) => asset.kind === 'video' && isDownloadable(asset));
   const enhancedPrompt = generation.kind === 'video' ? getStringMetadata(generation.metadata, 'enhancedPrompt') : undefined;
   const audioAsset = generation.assets.find((asset) => asset.kind === 'audio' && isDownloadable(asset));
@@ -273,7 +295,11 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
                 <Button variant="outline" size="sm" onClick={() => downloadUrl(videoAsset.storageType === 'provider_url' ? videoAsset.storageRef! : getDownloadUrl(generation, videoAsset))}>Download video</Button>
               </>
             )}
-            <a href="/video/generation">Open Video Studio</a>
+            {canRecheckProvider(generation) && (
+              <Button variant="outline" size="sm" disabled={isChecking} onClick={() => onCheckStatus(generation)}>
+                {isChecking ? 'Checking…' : 'Check status'}
+              </Button>
+            )}
           </Box>
         )}
         {imageAssets.length > 0 && (
@@ -341,12 +367,14 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
 }
 
 export default function LibraryPage() {
-  const [generations, setGenerations] = useState<LibraryGenerationDTO[]>([]);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
+  const [generations, setGenerations] = useScreenState<LibraryGenerationDTO[]>('library:generations', []);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('library:error', null);
   const [pendingDeleteGeneration, setPendingDeleteGeneration] = useState<LibraryGenerationDTO | null>(null);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
-  const [filter, setFilter] = useState<LibraryFilter>('all');
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [filter, setFilter] = useScreenState<LibraryFilter>('library:filter', 'all');
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('library:actionStatus', null);
+  const [checkingId, setCheckingId] = useState<string | null>(null);
+  const checkingRef = useRef(false);
 
   const loadGenerations = async () => {
     setError(null);
@@ -370,6 +398,40 @@ export default function LibraryPage() {
   useEffect(() => {
     void loadGenerations();
   }, []);
+
+  /**
+   * Asks MiniMax for the current state of one task and reloads the local
+   * record. The provider route records the result, so no regeneration happens.
+   */
+  const checkProviderStatus = async (generation: LibraryGenerationDTO) => {
+    if (!generation.providerTaskId || checkingRef.current) return;
+
+    checkingRef.current = true;
+    setCheckingId(generation.id);
+    setError(null);
+    setActionStatus(null);
+
+    try {
+      const url = generation.source === 'video-agent'
+        ? `/api/minimax/video-agent/generations/${encodeURIComponent(generation.providerTaskId)}`
+        : `/api/minimax/video/tasks/${encodeURIComponent(generation.providerTaskId)}`;
+      const response = await authFetch(url);
+
+      if (!response.ok) {
+        const err = await parseApiError(response);
+        setError({ code: err?.code ?? response.status, message: err?.message ?? `HTTP ${response.status}` });
+        return;
+      }
+
+      await loadGenerations();
+      setActionStatus('Checked with MiniMax.');
+    } catch {
+      setError({ code: null, message: 'Could not check the task with MiniMax.' });
+    } finally {
+      checkingRef.current = false;
+      setCheckingId(null);
+    }
+  };
 
   const deleteGeneration = async (generation: LibraryGenerationDTO): Promise<boolean> => {
     const response = await authFetch(`/api/library/generations/${encodeURIComponent(generation.id)}`, { method: 'DELETE' });
@@ -423,6 +485,7 @@ export default function LibraryPage() {
             <Button variant="outline" onClick={() => void loadGenerations()}>
               Refresh
             </Button>
+            <ScreenResetButton namespace="library" label="Reset filters" onReset={() => void loadGenerations()} />
             {generations.length > 0 && (
               <Button variant="destructive" onClick={() => setIsClearDialogOpen(true)}>
                 Clear all
@@ -470,6 +533,8 @@ export default function LibraryPage() {
             key={generation.id}
             generation={generation}
             onDelete={setPendingDeleteGeneration}
+            onCheckStatus={checkProviderStatus}
+            isChecking={checkingId === generation.id}
           />
         ))}
         {generations.length === 0 && (

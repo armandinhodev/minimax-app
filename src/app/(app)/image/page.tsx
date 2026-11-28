@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
+import { useScreenState } from '@/components/shared/screen-state';
+
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Plate } from '@/components/ui/plate';
@@ -103,19 +106,19 @@ function downloadImageUrl(url: string, filename: string): void {
 }
 
 export default function ImagePage() {
-  const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState<Model>('MiniMax-H3-Image');
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
-  const [area, setArea] = useState<Area>('4K');
-  const [customSize, setCustomSize] = useState('');
-  const [imageCount, setImageCount] = useState(1);
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>('jpeg');
-  const [outputCompression, setOutputCompression] = useState(95);
-  const [disablePromptEnhanced, setDisablePromptEnhanced] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [result, setResult] = useState<ImageGenerationResult | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [prompt, setPrompt] = useScreenState('image:prompt', '');
+  const [model, setModel] = useScreenState<Model>('image:model', 'MiniMax-H3-Image');
+  const [aspectRatio, setAspectRatio] = useScreenState<AspectRatio>('image:aspectRatio', 'auto');
+  const [area, setArea] = useScreenState<Area>('image:area', '4K');
+  const [customSize, setCustomSize] = useScreenState('image:customSize', '');
+  const [imageCount, setImageCount] = useScreenState('image:imageCount', 1);
+  const [outputFormat, setOutputFormat] = useScreenState<OutputFormat>('image:outputFormat', 'jpeg');
+  const [outputCompression, setOutputCompression] = useScreenState('image:outputCompression', 95);
+  const [disablePromptEnhanced, setDisablePromptEnhanced] = useScreenState('image:disablePromptEnhanced', false);
+  const [isLoading, setIsLoading] = useScreenState('image:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('image:error', null);
+  const [result, setResult] = useScreenState<ImageGenerationResult | null>('image:result', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('image:actionStatus', null);
 
   const remainingCharacters = PROMPT_MAX_LENGTH - prompt.length;
   const trimmedSize = customSize.trim();
@@ -203,7 +206,11 @@ export default function ImagePage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Image generation" description="Compose a visual brief and inspect the resulting images." />
+      <AreaHeader
+        title="Image generation"
+        description="Compose a visual brief and inspect the resulting images."
+        actions={<ScreenResetButton namespace="image" disabled={isLoading} />}
+      />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>
@@ -377,7 +384,7 @@ export default function ImagePage() {
           </SheetContent>
         </Sheet>
 
-        <Plate minH="28rem" position="sticky" top="4.5rem" title="Results" description="Latest image batch.">
+        <Plate minH="28rem" position={successfulItems.length ? 'static' : 'sticky'} top="4.5rem" title="Results" description="Latest image batch.">
             {result && (
               <SpecList>
                 <Spec label="Generated" value={String(result.metadata.successCount)} />
@@ -401,7 +408,7 @@ export default function ImagePage() {
             )}
 
             {result && successfulItems.length > 0 && (
-              <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}>
+              <Box display="grid" gap={4} gridTemplateColumns="minmax(0, 1fr)">
                 {successfulItems.map((item) => (
                   <Box key={`${item.url}-${item.index}`} border="1px solid" borderColor="surface.rule" borderRadius="lg" overflow="hidden" bg="surface.plate">
                     <img
@@ -409,7 +416,7 @@ export default function ImagePage() {
                       alt={`Generated image ${item.index + 1}`}
                       loading="lazy"
                       decoding="async"
-                      style={{ width: '100%', aspectRatio: resultRatio.value.replace(':', ' / '), objectFit: 'cover', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
+                      style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--chakra-colors-surface-field)' }}
                     />
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} p="0.75rem" flexWrap="wrap">
                       <Box display="grid" gap="0.125rem">

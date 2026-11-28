@@ -1,4 +1,5 @@
 import type { CreateLibraryAssetDTO, LibraryGenerationSource } from '@/application/dto/library/LibraryDTO';
+import type { VideoAgentTaskDTO } from '@/application/dto/minimax/video-agent/VideoAgentDTO';
 import type { VideoTaskDTO } from '@/application/dto/minimax/video/VideoDTO';
 import { SQLiteGenerationRepository } from '@/infrastructure/sqlite/SQLiteGenerationRepository';
 
@@ -37,5 +38,36 @@ export function recordVideoTaskBestEffort(task: VideoTaskDTO, prompt?: string): 
     });
   } catch {
     console.error('Failed to persist video task metadata.');
+  }
+}
+
+/**
+ * Video Agent tasks live in the same Library as H3 generations. The create
+ * response only carries the ID, so the task is recorded as pending and the
+ * status queries complete it with the temporary clip URL.
+ */
+export function recordVideoAgentTaskBestEffort(
+  task: VideoAgentTaskDTO,
+  options: { prompt?: string; templateId?: string } = {},
+): void {
+  try {
+    const url = safeOutputUrl(task.videoUrl);
+    const assets: CreateLibraryAssetDTO[] = task.status === 'succeeded' && url ? [{
+      kind: 'video', storageType: 'provider_url', storageRef: url, format: 'mp4', mimeType: 'video/mp4',
+      metadata: { temporaryUrl: true, expirationUnknown: true },
+    }] : [];
+    const metadata: Record<string, unknown> = {
+      providerStatus: task.status,
+      taskType: 'video-agent',
+      ...(options.templateId ? { templateId: options.templateId } : {}),
+      ...(task.error?.message ? { providerError: task.error.message } : {}),
+    };
+    new SQLiteGenerationRepository().upsertTaskGeneration({
+      kind: 'video', source: 'video-agent', providerTaskId: task.taskId, prompt: options.prompt,
+      status: task.status === 'succeeded' ? 'completed' : task.status === 'failed' ? 'failed' : 'processing',
+      metadata, assets,
+    });
+  } catch {
+    console.error('Failed to persist Video Agent task metadata.');
   }
 }

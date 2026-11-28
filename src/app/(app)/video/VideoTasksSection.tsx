@@ -1,5 +1,9 @@
 'use client';
 
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
+import { useScreenState } from '@/components/shared/screen-state';
+
 /**
  * Video tasks — browse, filter and cancel the MiniMax video tasks
  * (GET /v2/query/video_generation, DELETE /v2/video_generation/{id}).
@@ -7,7 +11,6 @@
  * Its own route: /video/tasks
  */
 
-import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
@@ -27,14 +30,14 @@ import { VideoRequestError, cancelVideoTask, listVideoTasks } from './video-api'
 import { Field } from '@/components/ui/spec';
 
 export function VideoTasksSection() {
-  const [tasks, setTasks] = useState<VideoTaskDTO[]>([]);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [taskTypeFilter, setTaskTypeFilter] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [errorNonce, setErrorNonce] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [tasks, setTasks] = useScreenState<VideoTaskDTO[]>('video-tasks:tasks', []);
+  const [statusFilter, setStatusFilter] = useScreenState('video-tasks:statusFilter', '');
+  const [taskTypeFilter, setTaskTypeFilter] = useScreenState('video-tasks:taskTypeFilter', '');
+  const [isRefreshing, setIsRefreshing] = useScreenState('video-tasks:isRefreshing', false);
+  const [hasLoaded, setHasLoaded] = useScreenState('video-tasks:hasLoaded', false);
+  const [error, setError] = useScreenState<string | null>('video-tasks:error', null);
+  const [errorNonce, setErrorNonce] = useScreenState('video-tasks:errorNonce', 0);
+  const [notice, setNotice] = useScreenState<string | null>('video-tasks:notice', null);
 
   const reportError = (message: string) => {
     setError(message);
@@ -81,7 +84,8 @@ export function VideoTasksSection() {
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
       <VideoStudioHeader
         title="Video tasks"
-        description="Inspect recent renders and manage active tasks."
+        description="Inspect recent renders and manage active tasks."
+        actions={<ScreenResetButton namespace="video-tasks" disabled={isRefreshing} onReset={() => {void refreshTasks()}} />}
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />

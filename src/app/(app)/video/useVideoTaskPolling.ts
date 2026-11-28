@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useScreenState } from '@/components/shared/screen-state';
+
 import type { VideoTaskDTO, VideoTaskStatus } from '@/application/dto/minimax/video/VideoDTO';
 
 import { VideoRequestError, queryVideoTask } from './video-api';
@@ -32,10 +34,10 @@ export interface VideoTaskPolling {
  * the next attempt is only scheduled once the previous one resolved, and both
  * the timer and the in-flight request are cleaned up when the page unmounts.
  */
-export function useVideoTaskPolling(): VideoTaskPolling {
-  const [task, setTask] = useState<VideoTaskDTO | null>(null);
+export function useVideoTaskPolling(namespace: string): VideoTaskPolling {
+  const [task, setTask] = useScreenState<VideoTaskDTO | null>(`${namespace}:task`, null);
   const [isPolling, setIsPolling] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useScreenState<string | null>(`${namespace}:pollError`, null);
 
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

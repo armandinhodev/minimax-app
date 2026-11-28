@@ -1,5 +1,7 @@
 'use client';
 
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+
 /**
  * 2K Regeneration — re-renders a MiniMax H3 768P result in 2K
  * (POST /v2/video_regeneration).
@@ -7,7 +9,7 @@
  * Its own route: /video/regeneration
  */
 
-import { useState } from 'react';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 
 import { Button } from '@/components/ui/button';
@@ -31,18 +33,18 @@ import { EMPTY_VIDEO_MEDIA, type VideoMediaValues } from './video-options';
 const REGENERATION_PROMPT_MAX_LENGTH = 40000;
 
 export function VideoRegenerationSection() {
-  const [regenerationMode, setRegenerationMode] = useState<'task' | 'video'>('task');
-  const [sourceTaskId, setSourceTaskId] = useState('');
-  const [baseVideo, setBaseVideo] = useState('');
-  const [regenerationPrompt, setRegenerationPrompt] = useState('');
-  const [regenerationMedia, setRegenerationMedia] = useState<VideoMediaValues>(EMPTY_VIDEO_MEDIA);
+  const [regenerationMode, setRegenerationMode] = useScreenState<'task' | 'video'>('video-regeneration:regenerationMode', 'task');
+  const [sourceTaskId, setSourceTaskId] = useScreenState('video-regeneration:sourceTaskId', '');
+  const [baseVideo, setBaseVideo] = useScreenState('video-regeneration:baseVideo', '');
+  const [regenerationPrompt, setRegenerationPrompt] = useScreenState('video-regeneration:regenerationPrompt', '');
+  const [regenerationMedia, setRegenerationMedia] = useScreenState<VideoMediaValues>('video-regeneration:regenerationMedia', EMPTY_VIDEO_MEDIA);
 
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [errorNonce, setErrorNonce] = useState(0);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useScreenState('video-regeneration:isCreating', false);
+  const [error, setError] = useScreenState<string | null>('video-regeneration:error', null);
+  const [errorNonce, setErrorNonce] = useScreenState('video-regeneration:errorNonce', 0);
+  const [notice, setNotice] = useScreenState<string | null>('video-regeneration:notice', null);
 
-  const polling = useVideoTaskPolling();
+  const polling = useVideoTaskPolling('video-regeneration');
 
   const reportError = (message: string) => {
     setError(message);
@@ -95,6 +97,7 @@ export function VideoRegenerationSection() {
       <VideoStudioHeader
         title="2K regeneration"
         description="Re-render a 768P result in 2K."
+        actions={<ScreenResetButton namespace="video-regeneration" disabled={isCreating || polling.isPolling} onReset={() => {polling.clearTask()}} />}
       />
 
       <VideoMessageBanner error={error} notice={notice} nonce={errorNonce} />
@@ -184,6 +187,7 @@ export function VideoRegenerationSection() {
                     values={regenerationMedia}
                     disabled={isCreating}
                     onChange={(key, value) => setRegenerationMedia((current) => ({ ...current, [key]: value }))}
+                    onMediaError={reportError}
                   />
                 </Box>
               </>

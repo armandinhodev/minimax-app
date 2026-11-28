@@ -13,6 +13,8 @@ import { Box } from '@chakra-ui/react';
 import { AreaHeader } from '@/components/ui/area-header';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 
+import { splitMediaReferences } from '@/lib/media-references';
+
 import type { VideoMediaValues } from './video-options';
 
 export type VideoContentItem = {
@@ -43,17 +45,17 @@ export function buildComposition(prompt: string, media: VideoMediaValues): Video
     content.push({ type: 'image_url', url: lastFrame, role: 'last_frame' });
   }
 
-  const references = media.referenceImages.split(',').map((entry) => entry.trim()).filter(Boolean);
+  const references = splitMediaReferences(media.referenceImages);
   for (const url of references) {
     content.push({ type: 'image_url', url, role: 'reference_image' });
   }
 
-  const videos = media.referenceVideos.split(',').map((entry) => entry.trim()).filter(Boolean);
+  const videos = splitMediaReferences(media.referenceVideos);
   for (const url of videos) {
     content.push({ type: 'video_url', url, role: 'reference_video' });
   }
 
-  const audios = media.referenceAudio.split(',').map((entry) => entry.trim()).filter(Boolean);
+  const audios = splitMediaReferences(media.referenceAudio);
   for (const url of audios) {
     content.push({ type: 'audio_url', url, role: 'reference_audio' });
   }
@@ -65,6 +67,8 @@ interface VideoStudioHeaderProps {
   title: string;
   description: string;
   note?: string;
+  /** Controls that belong to the header, such as Reset. */
+  actions?: ReactNode;
 }
 
 /**
@@ -77,12 +81,14 @@ export function VideoStudioHeader({
   title,
   description,
   note,
+  actions,
 }: VideoStudioHeaderProps) {
   return (
     <AreaHeader
       title={title}
       description={description}
       note={note}
+      actions={actions}
     />
   );
 }

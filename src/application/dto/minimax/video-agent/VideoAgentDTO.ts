@@ -24,6 +24,12 @@ export interface VideoAgentTemplate {
   readonly description: string;
   readonly requiresMedia: boolean;
   readonly requiresText: boolean;
+  /**
+   * Exact media input count MiniMax validates for this template. The published
+   * table omits it; these values were confirmed against the API, which answers
+   * `2013` with `expected: N` when the count does not match.
+   */
+  readonly mediaCount: number;
 }
 
 /**
@@ -37,6 +43,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'The subject of the picture completes a perfect dive.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '393769180141805569',
@@ -44,6 +51,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'Your pet survives in the wilderness as a wild beast.',
     requiresMedia: true,
     requiresText: true,
+    mediaCount: 1,
   },
   {
     id: '397087679467597833',
@@ -51,6 +59,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A car transforms into a mecha.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '393881433990066176',
@@ -58,6 +67,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'The subject performs a perfect still rings routine.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '393498001241890824',
@@ -65,6 +75,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'Your pet performs a perfect weightlifting move.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '393488336655310850',
@@ -72,6 +83,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'The subject completes a perfect sport climbing move.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '394514820878671878',
@@ -79,6 +91,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A casual anime-style gameplay video of the scene you describe.',
     requiresMedia: false,
     requiresText: true,
+    mediaCount: 0,
   },
   {
     id: '393879757702918151',
@@ -86,6 +99,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: "Your pet becomes a McDonald's delivery pet.",
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '397017167949312007',
@@ -93,6 +107,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'Your pet pilots a fighter jet.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '394176968202485769',
@@ -100,6 +115,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A miniature figure crafting process video of your product.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '393876118804459526',
@@ -107,6 +123,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A male model try-on ad with the clothing you upload.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '393866076583718914',
@@ -114,6 +131,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A female model try-on ad with the clothing you upload.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '394875727173492739',
@@ -121,6 +139,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'Artistic decorative text made of the element you choose.',
     requiresMedia: false,
     requiresText: true,
+    mediaCount: 0,
   },
   {
     id: '394220989629177861',
@@ -128,13 +147,17 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A drink waterfall video of your beverage.',
     requiresMedia: true,
     requiresText: false,
+    mediaCount: 1,
   },
   {
+    // The published table says no media and required text, but the API expects
+    // one image and zero text inputs (confirmed 2026-11-28).
     id: '393853165953970178',
     name: 'E-commerce Display Ad',
     description: 'A minimalist e-commerce display video of your product.',
-    requiresMedia: false,
-    requiresText: true,
+    requiresMedia: true,
+    requiresText: false,
+    mediaCount: 1,
   },
   {
     id: '401431836934868999',
@@ -142,6 +165,7 @@ export const VIDEO_AGENT_TEMPLATES: readonly VideoAgentTemplate[] = [
     description: 'A custom 3D character explaining your product.',
     requiresMedia: true,
     requiresText: true,
+    mediaCount: 3,
   },
 ];
 
@@ -273,6 +297,14 @@ export const CreateVideoAgentTaskSchema = z
         path: ['mediaInputs'],
         message: `The "${template.name}" template needs a media input`,
       });
+    } else if (value.mediaInputs.length !== template.mediaCount) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['mediaInputs'],
+        message: template.mediaCount === 0
+          ? `The "${template.name}" template does not take images`
+          : `The "${template.name}" template needs exactly ${template.mediaCount} images`,
+      });
     }
 
     if (template.requiresText && value.textInputs.length === 0) {
@@ -280,6 +312,12 @@ export const CreateVideoAgentTaskSchema = z
         code: 'custom',
         path: ['textInputs'],
         message: `The "${template.name}" template needs a text input`,
+      });
+    } else if (!template.requiresText && value.textInputs.length > 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['textInputs'],
+        message: `The "${template.name}" template does not take text inputs`,
       });
     }
 

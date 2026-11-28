@@ -5,7 +5,9 @@
  * UI: text input, voice selector, format/speed/pitch controls, generate button, copy/download.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,21 +40,21 @@ const FORMAT_OPTIONS: SelectOption[] = [
 ];
 
 export default function TTSPage() {
-  const [generateText, setGenerateText] = useState('');
-  const [generateVoiceId, setGenerateVoiceId] = useState('');
-  const [streamingText, setStreamingText] = useState('');
-  const [streamingVoiceId, setStreamingVoiceId] = useState('');
-  const [model, setModel] = useState(DEFAULT_T2A_MODEL);
-  const [format, setFormat] = useState(DEFAULT_T2A_FORMAT);
-  const [emotion, setEmotion] = useState<'auto' | T2AEmotion>('auto');
+  const [generateText, setGenerateText] = useScreenState('tts:generateText', '');
+  const [generateVoiceId, setGenerateVoiceId] = useScreenState('tts:generateVoiceId', '');
+  const [streamingText, setStreamingText] = useScreenState('tts:streamingText', '');
+  const [streamingVoiceId, setStreamingVoiceId] = useScreenState('tts:streamingVoiceId', '');
+  const [model, setModel] = useScreenState('tts:model', DEFAULT_T2A_MODEL);
+  const [format, setFormat] = useScreenState('tts:format', DEFAULT_T2A_FORMAT);
+  const [emotion, setEmotion] = useScreenState<'auto' | T2AEmotion>('tts:emotion', 'auto');
   const generateTextRef = useRef<HTMLTextAreaElement | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioHex, setAudioHex] = useState<string | null>(null);
-  const [streamingEnabled, setStreamingEnabled] = useState(false);
-  const [useWebSocketTransport, setUseWebSocketTransport] = useState(false);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useScreenState('tts:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('tts:error', null);
+  const [audioUrl, setAudioUrl] = useScreenState<string | null>('tts:audioUrl', null);
+  const [audioHex, setAudioHex] = useScreenState<string | null>('tts:audioHex', null);
+  const [streamingEnabled, setStreamingEnabled] = useScreenState('tts:streamingEnabled', false);
+  const [useWebSocketTransport, setUseWebSocketTransport] = useScreenState('tts:useWebSocketTransport', false);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('tts:actionStatus', null);
 
   const handleModelChange = useCallback((value: string) => {
     setModel(value as typeof model);
@@ -138,6 +140,7 @@ export default function TTSPage() {
       <AreaHeader
         title="Speech generation"
         description="Generate a finished clip with text to speech (TTS), or listen as it is produced."
+        actions={<ScreenResetButton namespace="tts" disabled={isLoading} />}
       />
 
       <Box display="grid" gap={4} gridTemplateColumns={{ base: '1fr', xl: 'repeat(2, minmax(0, 1fr))' }} alignItems="start">

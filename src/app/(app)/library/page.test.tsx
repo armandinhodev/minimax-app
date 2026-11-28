@@ -166,6 +166,171 @@ describe('LibraryPage backend source of truth', () => {
     });
   }
 
+  function findButton(container: HTMLElement, label: string): HTMLButtonElement {
+    const button = Array.from(container.querySelectorAll('button')).find((item) => item.textContent === label);
+    if (!button) throw new Error(`Button not found: ${label}`);
+    return button;
+  }
+
+  it('rechecks a pending Video Agent task with the provider and updates the card', async () => {
+    const pending = createGeneration({
+      id: 'agent-pending', kind: 'video', source: 'video-agent', status: 'processing',
+      providerTaskId: '583083242778116098', metadata: { providerStatus: 'processing' }, assets: [],
+    });
+    generations = [pending];
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url.startsWith('/api/library/generations?')) return Response.json({ generations });
+      if (url === '/api/minimax/video-agent/generations/583083242778116098') {
+        generations = [{
+          ...pending, status: 'completed', metadata: { providerStatus: 'succeeded' },
+          assets: [{ id: 'agent-asset', kind: 'video', storageType: 'provider_url',
+            storageRef: 'https://example.com/agent.mp4', format: 'mp4', mimeType: 'video/mp4',
+            sizeBytes: null, expiresAt: null, metadata: { temporaryUrl: true }, createdAt: 1 }],
+        }];
+        return Response.json({ taskId: '583083242778116098', status: 'succeeded', videoUrl: 'https://example.com/agent.mp4' });
+      }
+      return Response.json({ error: 'Not found' }, { status: 404 });
+    });
+
+    await renderPage();
+    act(() => { findButton(container!, 'Check status').click(); });
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+    expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/video-agent/generations/583083242778116098');
+    expect(container!.querySelector('video')?.getAttribute('src')).toBe('https://example.com/agent.mp4');
+    expect(container!.textContent).toContain('Checked with MiniMax.');
+    expect(container!.textContent).not.toContain('Check status');
+  });
+
+  it.each(['video-generation', 'video-context-ir', 'video-regeneration'] as const)(
+    'uses the video task endpoint for the %s source',
+    async (source) => {
+      generations = [createGeneration({
+        id: `${source}-pending`, kind: 'video', source, status: 'processing',
+        providerTaskId: '401047179385389059', metadata: { providerStatus: 'queued' }, assets: [],
+      })];
+      authClientMocks.authFetch.mockImplementation(async (url: string) => {
+        if (url.startsWith('/api/library/generations?')) return Response.json({ generations });
+        if (url === '/api/minimax/video/tasks/401047179385389059') {
+          return Response.json({ task: { id: '401047179385389059', status: 'processing', taskType: source === 'video-context-ir' ? 'h3_context_ir' : source === 'video-regeneration' ? 'regeneration' : 'generation' } });
+        }
+        return Response.json({ error: 'Not found' }, { status: 404 });
+      });
+
+      await renderPage();
+      act(() => { findButton(container!, 'Check status').click(); });
+      await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+      expect(authClientMocks.authFetch).toHaveBeenCalledWith('/api/minimax/video/tasks/401047179385389059');
+      expect(authClientMocks.authFetch).not.toHaveBeenCalledWith(expect.stringContaining('/video-agent/'));
+      expect(container!.textContent).toContain('Checked with MiniMax.');
+    },
+  );
+
+  it('offers the status check only for unfinished tasks or missing videos, and never links to Video Studio', async () => {
+    generations = [
+      createGeneration({ id: 'pending', kind: 'video', source: 'video-agent', status: 'processing', providerTaskId: '1', assets: [], prompt: 'Pending task' }),
+      createGeneration({ id: 'finished', kind: 'video', source: 'video-generation', status: 'completed', providerTaskId: '2', prompt: 'Finished task',
+        assets: [{ id: 'a', kind: 'video', storageType: 'provider_url', storageRef: 'https://example.com/done.mp4',
+          format: 'mp4', mimeType: 'video/mp4', sizeBytes: null, expiresAt: null, metadata: {}, createdAt: 1 }] }),
+      createGeneration({ id: 'failed', kind: 'video', source: 'video-generation', status: 'failed', providerTaskId: '3', assets: [], prompt: 'Failed task' }),
+      createGeneration({ id: 'missing-video', kind: 'video', source: 'video-agent', status: 'completed', providerTaskId: '4', assets: [], prompt: 'Missing video' }),
+      createGeneration({ id: 'no-task', kind: 'video', source: 'video-generation', status: 'processing', providerTaskId: null, assets: [], prompt: 'No task id' }),
+      createGeneration({ id: 'unknown-source', kind: 'video', source: null, status: 'processing', providerTaskId: '6', assets: [], prompt: 'Unknown source' }),
+    ];
+    authClientMocks.authFetch.mockImplementation(async (url: string) => url.startsWith('/api/library/generations?')
+      ? Response.json({ generations })
+      : Response.json({ error: 'Not found' }, { status: 404 }));
+
+    await renderPage();
+
+    const card = (text: string) => {
+      let node: HTMLElement | null = null;
+      for (const element of Array.from(container!.querySelectorAll<HTMLElement>('p, div'))) {
+        if (element.textContent?.trim() === `“${text}”`) { node = element; break; }
+      }
+      while (node && !Array.from(node.querySelectorAll('button')).some((button) => button.textContent === 'Remove')) {
+        node = node.parentElement;
+      }
+      return node;
+    };
+    const hasCheck = (text: string) => Array.from(card(text)?.querySelectorAll('button') ?? [])
+      .some((button) => button.textContent === 'Check status');
+
+    expect(hasCheck('Pending task')).toBe(true);
+    expect(hasCheck('Missing video')).toBe(true);
+    expect(hasCheck('Finished task')).toBe(false);
+    expect(hasCheck('Failed task')).toBe(false);
+    expect(hasCheck('No task id')).toBe(false);
+    expect(hasCheck('Unknown source')).toBe(false);
+    expect(container!.textContent).not.toContain('Open Video Studio');
+    expect(container!.querySelector('a[href="/video/generation"]')).toBeNull();
+  });
+
+  it('shows progress and sends a single provider request for a double click', async () => {
+    let finish!: (response: Response) => void;
+    generations = [createGeneration({
+      id: 'checking', kind: 'video', source: 'video-agent', status: 'processing',
+      providerTaskId: '77', metadata: { providerStatus: 'processing' }, assets: [], prompt: 'Checking task',
+    })];
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url.startsWith('/api/library/generations?')) return Response.json({ generations });
+      return new Promise<Response>((resolve) => { finish = resolve; });
+    });
+
+    await renderPage();
+    const button = findButton(container!, 'Check status');
+    act(() => {
+      button.click();
+      button.click();
+    });
+
+    const busy = findButton(container!, 'Checking…');
+    expect(busy.disabled).toBe(true);
+    const providerCalls = authClientMocks.authFetch.mock.calls.filter(([url]) => url.includes('/api/minimax/'));
+    expect(providerCalls).toHaveLength(1);
+
+    await act(async () => { finish(Response.json({ taskId: '77', status: 'processing' })); });
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(findButton(container!, 'Check status').disabled).toBe(false);
+  });
+
+  it('recovers from a network failure and re-enables the check', async () => {
+    generations = [createGeneration({
+      id: 'offline', kind: 'video', source: 'video-agent', status: 'processing',
+      providerTaskId: '88', metadata: { providerStatus: 'processing' }, assets: [], prompt: 'Offline task',
+    })];
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url.startsWith('/api/library/generations?')) return Response.json({ generations });
+      throw new TypeError('Failed to fetch');
+    });
+
+    await renderPage();
+    act(() => { findButton(container!, 'Check status').click(); });
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+    expect(container!.textContent).toContain('Could not check the task with MiniMax.');
+    expect(findButton(container!, 'Check status').disabled).toBe(false);
+  });
+
+  it('reports a provider failure without changing the local task', async () => {
+    generations = [createGeneration({
+      id: 'pending-error', kind: 'video', source: 'video-agent', status: 'processing',
+      providerTaskId: '99', metadata: { providerStatus: 'processing' }, assets: [],
+    })];
+    authClientMocks.authFetch.mockImplementation(async (url: string) => {
+      if (url.startsWith('/api/library/generations?')) return Response.json({ generations });
+      return Response.json({ error: 'Could not query the task' }, { status: 502 });
+    });
+
+    await renderPage();
+    act(() => { findButton(container!, 'Check status').click(); });
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+    expect(container!.textContent).toContain('HTTP 502');
+    expect(container!.textContent).toContain('Processing');
+  });
+
   it('shows video playback, temporary URL warning and a video-only filter', async () => {
     let downloadedUrl = '';
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { downloadedUrl = this.href; });
@@ -199,6 +364,21 @@ describe('LibraryPage backend source of truth', () => {
     expect(container!.textContent).toContain('An enhanced cinematic prompt');
     expect(container!.querySelector('video')).toBeNull();
     expect(Array.from(container!.querySelectorAll('button')).some((button) => button.textContent === 'Download video')).toBe(false);
+  });
+
+  it('shows a Video Agent clip with its source and temporary URL warning', async () => {
+    generations = [createGeneration({
+      id: 'agent-1', kind: 'video', source: 'video-agent', prompt: 'A product film',
+      metadata: { providerStatus: 'succeeded' },
+      assets: [{ id: 'agent-asset', kind: 'video', storageType: 'provider_url',
+        storageRef: 'https://example.com/agent.mp4', format: 'mp4', mimeType: 'video/mp4',
+        sizeBytes: null, expiresAt: null, metadata: { temporaryUrl: true }, createdAt: 1 }],
+    })];
+    await renderPage();
+
+    expect(container!.querySelector('video')?.getAttribute('src')).toBe('https://example.com/agent.mp4');
+    expect(specValue(container!, 'Source')).toBe('Video Agent');
+    expect(container!.textContent).toContain('Temporary video URL');
   });
 
   it('loads backend records only and ignores localStorage history', async () => {

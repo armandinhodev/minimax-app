@@ -1,0 +1,140 @@
+.markdown {
+  color: var(--chakra-colors-content-ink);
+  font-size: var(--chakra-font-sizes-body);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown p {
+  margin: 0 0 12px;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 20px 0 10px;
+}
+
+.markdown h1 {
+  font-size: 1.5rem;
+}
+
+.markdown h2 {
+  font-size: 1.25rem;
+}
+
+.markdown h3 {
+  font-size: 1.0625rem;
+}
+
+.markdown h4 {
+  font-size: 1rem;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.markdown li {
+  margin: 4px 0;
+}
+
+.markdown li > p {
+  margin: 0;
+}
+
+.markdown strong {
+  font-weight: 700;
+}
+
+.markdown em {
+  font-style: italic;
+}
+
+.markdown a {
+  color: var(--chakra-colors-interaction-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown code {
+  background: var(--chakra-colors-surface-inset);
+  border-radius: var(--chakra-radii-sm);
+  font-family: var(--chakra-fonts-mono);
+  font-size: 0.8125rem;
+  padding: 2px 5px;
+}
+
+.markdown pre {
+  background: var(--chakra-colors-surface-inset);
+  border: 1px solid var(--chakra-colors-surface-separator);
+  border-radius: var(--chakra-radii-md);
+  margin: 0 0 12px;
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.markdown pre code {
+  background: transparent;
+  border-radius: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  padding: 0;
+}
+
+.markdown blockquote {
+  border-left: 3px solid var(--chakra-colors-surface-rule);
+  color: var(--chakra-colors-content-readout);
+  margin: 0 0 12px;
+  padding-left: 12px;
+}
+
+.markdown table {
+  border-collapse: collapse;
+  display: block;
+  font-size: 0.875rem;
+  margin: 0 0 12px;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid var(--chakra-colors-surface-separator);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.markdown th {
+  background: var(--chakra-colors-surface-inset);
+  font-weight: 600;
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--chakra-colors-surface-separator);
+  margin: 16px 0;
+}
+
+.markdown img {
+  border-radius: var(--chakra-radii-md);
+  max-width: 100%;
+}
+
+.markdown input[type="checkbox"] {
+  margin-right: 6px;
+}

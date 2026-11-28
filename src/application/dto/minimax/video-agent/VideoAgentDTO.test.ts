@@ -12,6 +12,8 @@ import {
 
 const DIVE_ID = '392747428568649728';
 const ANIME_ID = '394514820878671878';
+const THREE_D_ID = '401431836934868999';
+const ECOMMERCE_ID = '393853165953970178';
 
 describe('VIDEO_AGENT_TEMPLATES', () => {
   it('ships the official catalogue with unique ids', () => {
@@ -21,17 +23,13 @@ describe('VIDEO_AGENT_TEMPLATES', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('marks which templates need media and which need text', () => {
-    expect(findVideoAgentTemplate(DIVE_ID)).toMatchObject({
-      name: 'Diving',
-      requiresMedia: true,
-      requiresText: false,
-    });
-    expect(findVideoAgentTemplate(ANIME_ID)).toMatchObject({
-      name: 'Anime Life Sim',
-      requiresMedia: false,
-      requiresText: true,
-    });
+  it('records the exact input counts the provider validates', () => {
+    expect(findVideoAgentTemplate(DIVE_ID)).toMatchObject({ requiresMedia: true, requiresText: false, mediaCount: 1 });
+    expect(findVideoAgentTemplate(ANIME_ID)).toMatchObject({ requiresMedia: false, requiresText: true, mediaCount: 0 });
+    expect(findVideoAgentTemplate(THREE_D_ID)).toMatchObject({ requiresMedia: true, requiresText: true, mediaCount: 3 });
+    // The published table omits media and requires text, but the API expects
+    // one image and zero text inputs.
+    expect(findVideoAgentTemplate(ECOMMERCE_ID)).toMatchObject({ requiresMedia: true, requiresText: false, mediaCount: 1 });
   });
 });
 
@@ -79,6 +77,42 @@ describe('CreateVideoAgentTaskSchema', () => {
     });
 
     expect(parsed.success).toBe(false);
+  });
+
+  it('requires exactly three images for the 3D character template', () => {
+    const image = { value: 'https://example.com/product.png' };
+    const missing = CreateVideoAgentTaskSchema.safeParse({
+      templateId: THREE_D_ID,
+      mediaInputs: [image],
+      textInputs: [{ value: 'A friendly character presents the product.' }],
+    });
+    expect(missing.success).toBe(false);
+    if (!missing.success) {
+      expect(missing.error.issues.map((issue) => issue.message).join(' ')).toContain('exactly 3 images');
+    }
+
+    const complete = CreateVideoAgentTaskSchema.safeParse({
+      templateId: THREE_D_ID,
+      mediaInputs: [image, image, image],
+      textInputs: [{ value: 'A friendly character presents the product.' }],
+    });
+    expect(complete.success).toBe(true);
+  });
+
+  it('rejects inputs the provider counts as zero', () => {
+    const extraMedia = CreateVideoAgentTaskSchema.safeParse({
+      templateId: ANIME_ID,
+      mediaInputs: [{ value: 'https://example.com/a.png' }],
+      textInputs: [{ value: 'A scene.' }],
+    });
+    expect(extraMedia.success).toBe(false);
+
+    const extraText = CreateVideoAgentTaskSchema.safeParse({
+      templateId: DIVE_ID,
+      mediaInputs: [{ value: 'https://example.com/a.png' }],
+      textInputs: [{ value: 'Unused text.' }],
+    });
+    expect(extraText.success).toBe(false);
   });
 });
 

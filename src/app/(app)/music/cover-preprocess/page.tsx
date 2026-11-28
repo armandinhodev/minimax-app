@@ -1,6 +1,8 @@
 'use client';
 
 import { type ChangeEvent, useState } from 'react';
+import { ScreenResetButton } from '@/components/shared/ScreenResetButton';
+import { useScreenState } from '@/components/shared/screen-state';
 import { Box } from '@chakra-ui/react';
 import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { Button } from '@/components/ui/button';
@@ -139,13 +141,13 @@ function buildCoverGenerationHref(result: CoverPreprocessResult): string {
 }
 
 export default function MusicCoverPreprocessPage() {
-  const [audioUrl, setAudioUrl] = useState('');
-  const [selectedFile, setSelectedFile] = useState<SelectedAudioFile | null>(null);
+  const [audioUrl, setAudioUrl] = useScreenState('cover-preprocess:audioUrl', '');
+  const [selectedFile, setSelectedFile] = useScreenState<SelectedAudioFile | null>('cover-preprocess:selectedFile', null);
   const [isReadingFile, setIsReadingFile] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
-  const [result, setResult] = useState<CoverPreprocessResult | null>(null);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useScreenState('cover-preprocess:isLoading', false);
+  const [error, setError] = useScreenState<{ code: number | null; message: string | null } | null>('cover-preprocess:error', null);
+  const [result, setResult] = useScreenState<CoverPreprocessResult | null>('cover-preprocess:result', null);
+  const [actionStatus, setActionStatus] = useScreenState<string | null>('cover-preprocess:actionStatus', null);
 
   const hasAudioUrl = audioUrl.trim().length > 0;
   const hasFile = selectedFile !== null;
@@ -246,7 +248,11 @@ export default function MusicCoverPreprocessPage() {
 
   return (
     <Box display="grid" gap={6} gridTemplateColumns="minmax(0, 1fr)" width="100%">
-      <AreaHeader title="Cover preprocess" description="Prepare reference audio for cover generation." />
+      <AreaHeader
+        title="Cover preprocess"
+        description="Prepare reference audio for cover generation."
+        actions={<ScreenResetButton namespace="cover-preprocess" disabled={isLoading || isReadingFile} />}
+      />
 
       <Box display="grid" gridTemplateColumns={{ base: '1fr', xl: 'minmax(0, 7fr) minmax(0, 5fr)' }} gap={4} alignItems="start">
         <Sheet>

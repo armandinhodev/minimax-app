@@ -1,0 +1,23 @@
+.preview,
+.previewPlaceholder {
+  --preview-size: clamp(96px, 28vw, 128px);
+  width: var(--preview-size);
+  height: var(--preview-size);
+  flex: 0 0 var(--preview-size);
+  border-radius: var(--chakra-radii-md);
+  background: var(--chakra-colors-surface-inset);
+}
+
+.preview {
+  object-fit: contain;
+}
+
+.previewPlaceholder {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  text-align: center;
+  font-size: var(--chakra-font-sizes-help);
+  line-height: 1.2;
+  color: var(--chakra-colors-content-subtle);
+}
