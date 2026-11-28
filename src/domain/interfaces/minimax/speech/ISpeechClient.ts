@@ -3,7 +3,7 @@ import type { AudioOutput } from '../../../entities/AudioOutput';
 import type { T2ATask } from '../../../entities/T2ATask';
 import type { VoiceId } from '../../../value-objects/VoiceId';
 import type { TaskStatus } from '../../../value-objects/TaskStatus';
-import type { T2ARequest } from '../../../value-objects/T2APolicy';
+import type { T2AEmotion, T2ARequest } from '../../../value-objects/T2APolicy';
 
 /**
  * Port interface for all MiniMax T2A (text-to-audio) and voice operations.
@@ -12,7 +12,7 @@ import type { T2ARequest } from '../../../value-objects/T2APolicy';
 export interface ISpeechClient {
   // T2A operations
   synthesize(request: T2ARequest): Promise<AudioOutput>;
-  stream(text: string, voiceId: string, model?: string): Promise<ReadableStream>;
+  stream(text: string, voiceId: string, model?: string, emotion?: T2AEmotion): Promise<ReadableStream>;
   submitAsync(request: T2ARequest): Promise<T2ATask>;
   pollTask(taskId: string): Promise<{ status: TaskStatus; fileId?: string }>;
 

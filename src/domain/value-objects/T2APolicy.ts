@@ -18,6 +18,59 @@ export const MAX_SYNC_T2A_TEXT_LENGTH = 10_000;
  */
 export const MAX_ASYNC_T2A_TEXT_LENGTH = 100_000;
 
+export const T2A_EMOTIONS = [
+  'happy',
+  'sad',
+  'angry',
+  'fearful',
+  'disgusted',
+  'surprised',
+  'calm',
+  'fluent',
+  'whisper',
+] as const;
+
+export type T2AEmotion = (typeof T2A_EMOTIONS)[number];
+
+/**
+ * Preset emotions the UI may offer for a model.
+ * "fluent" and "whisper" are documented only for speech-2.6 models.
+ */
+export function emotionsForModel(model: string): T2AEmotion[] {
+  if (model.includes('2.6')) return [...T2A_EMOTIONS];
+  return T2A_EMOTIONS.filter((emotion) => emotion !== 'fluent' && emotion !== 'whisper');
+}
+
+/**
+ * Inline interjection tags are documented only for Speech 2.8.
+ * They are typed into the text, e.g. "Omg(sighs), ...".
+ */
+export const T2A_INTERJECTION_TAGS = [
+  'laughs',
+  'chuckle',
+  'coughs',
+  'clear-throat',
+  'groans',
+  'breath',
+  'pant',
+  'inhale',
+  'exhale',
+  'gasps',
+  'sniffs',
+  'sighs',
+  'snorts',
+  'burps',
+  'lip-smacking',
+  'humming',
+  'hissing',
+  'emm',
+  'sneezes',
+] as const;
+
+export function supportsInterjectionTags(model: string): boolean {
+  return model.startsWith('speech-2.8');
+}
+
 export interface T2APolicy {
   model: string;
   format: AudioFormat;
@@ -28,4 +81,5 @@ export interface T2ARequest {
   voiceId: string;
   model?: string;
   format?: AudioFormat;
+  emotion?: T2AEmotion;
 }

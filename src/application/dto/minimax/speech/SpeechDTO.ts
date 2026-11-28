@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { VoiceIdSchema } from '@/domain/value-objects/VoiceId';
 import { AudioFormatSchema } from '@/domain/value-objects/AudioFormat';
-import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL, MAX_ASYNC_T2A_TEXT_LENGTH, MAX_SYNC_T2A_TEXT_LENGTH } from '@/domain/value-objects/T2APolicy';
+import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL, MAX_ASYNC_T2A_TEXT_LENGTH, MAX_SYNC_T2A_TEXT_LENGTH, T2A_EMOTIONS } from '@/domain/value-objects/T2APolicy';
+
+/** The documented preset emotions (voice_setting.emotion). */
+export const EmotionSchema = z.enum(T2A_EMOTIONS);
 
 /**
  * T2A Request DTO — sync synthesis, ≤10 000 chars.
@@ -15,6 +18,7 @@ export const SynthesizeT2ASchema = z.object({
   voiceId: VoiceIdSchema,
   model: z.string().default(DEFAULT_T2A_MODEL),
   format: AudioFormatSchema.default(DEFAULT_T2A_FORMAT),
+  emotion: EmotionSchema.optional(),
 });
 
 export type SynthesizeT2ARequest = z.infer<typeof SynthesizeT2ASchema>;
@@ -34,6 +38,7 @@ export const StreamT2ASchema = z.object({
     .max(MAX_SYNC_T2A_TEXT_LENGTH, `Text must be at most ${MAX_SYNC_T2A_TEXT_LENGTH.toLocaleString('en-US')} characters`),
   voiceId: VoiceIdSchema,
   model: z.string().default(DEFAULT_T2A_MODEL),
+  emotion: EmotionSchema.optional(),
 });
 
 export type StreamT2ARequest = z.infer<typeof StreamT2ASchema>;
@@ -51,6 +56,7 @@ export const SubmitAsyncT2ASchema = z.object({
   voiceId: VoiceIdSchema,
   model: z.string().default(DEFAULT_T2A_MODEL),
   format: AudioFormatSchema.default(DEFAULT_T2A_FORMAT),
+  emotion: EmotionSchema.optional(),
 });
 
 export type SubmitAsyncT2ARequest = z.infer<typeof SubmitAsyncT2ASchema>;

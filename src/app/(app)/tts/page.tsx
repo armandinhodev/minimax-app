@@ -5,7 +5,7 @@
  * UI: text input, voice selector, format/speed/pitch controls, generate button, copy/download.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -16,8 +16,10 @@ import { ErrorDisplay } from '@/components/shared/ErrorDisplay';
 import { TextInput } from '@/components/tts/TextInput';
 import { VoiceSelector } from '@/components/tts/VoiceSelector';
 import { AudioPlayer } from '@/components/tts/AudioPlayer';
+import { EmotionSelect, EmotionTags } from '@/components/tts/EmotionControls';
+import { insertEmotionTag } from '@/components/tts/emotion-tag';
 import { StreamingPlayer } from '@/components/tts/StreamingPlayer';
-import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
+import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL, emotionsForModel, type T2AEmotion } from '@/domain/value-objects/T2APolicy';
 import { Field } from '@/components/ui/spec';
 import { AreaHeader } from '@/components/ui/area-header';
 
@@ -42,6 +44,8 @@ export default function TTSPage() {
   const [streamingVoiceId, setStreamingVoiceId] = useState('');
   const [model, setModel] = useState(DEFAULT_T2A_MODEL);
   const [format, setFormat] = useState(DEFAULT_T2A_FORMAT);
+  const [emotion, setEmotion] = useState<'auto' | T2AEmotion>('auto');
+  const generateTextRef = useRef<HTMLTextAreaElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<{ code: number | null; message: string | null } | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -52,7 +56,23 @@ export default function TTSPage() {
 
   const handleModelChange = useCallback((value: string) => {
     setModel(value as typeof model);
+    // A preset must be valid for the new model; otherwise go back to Auto.
+    setEmotion((current) =>
+      current === 'auto' || emotionsForModel(value).includes(current) ? current : 'auto',
+    );
   }, []);
+
+  const insertTag = useCallback((tag: string) => {
+    const textarea = generateTextRef.current;
+    const result = insertEmotionTag(
+      generateText,
+      textarea?.selectionStart ?? null,
+      textarea?.selectionEnd ?? null,
+      tag,
+    );
+    setGenerateText(result.text);
+    textarea?.focus();
+  }, [generateText]);
 
   const handleFormatChange = useCallback((value: string) => {
     setFormat(value as typeof format);
@@ -82,7 +102,13 @@ export default function TTSPage() {
       const response = await authFetch('/api/minimax/speech/t2a', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: generateText, voiceId: generateVoiceId, model, format }),
+        body: JSON.stringify({
+          text: generateText,
+          voiceId: generateVoiceId,
+          model,
+          format,
+          ...(emotion === 'auto' ? {} : { emotion }),
+        }),
       });
 
       if (!response.ok) {
@@ -125,12 +151,15 @@ export default function TTSPage() {
         <SheetContent display="grid" gap={4}>
           {/* Text Input — Phase 6 component */}
           <TextInput
+            textareaRef={generateTextRef}
             value={generateText}
             onChange={setGenerateText}
             id="tts-text"
             label="Text"
             disabled={isLoading}
           />
+
+          <EmotionTags model={model} disabled={isLoading} onInsert={insertTag} />
 
           {/* Voice Selector — Phase 6 component */}
           <VoiceSelector
@@ -157,6 +186,8 @@ export default function TTSPage() {
                             />
             </Field>
           </Box>
+
+          <EmotionSelect value={emotion} model={model} disabled={isLoading} onChange={setEmotion} />
 
           {error && <ErrorDisplay code={error.code ?? null} message={error.message ?? ''} />}
           {actionStatus && !error && (

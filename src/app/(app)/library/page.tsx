@@ -197,6 +197,9 @@ function LibraryItemCard({ generation, onDelete }: LibraryItemCardProps) {
         {getStringMetadata(generation.metadata, 'voiceId') && (
           <Spec label="Voice" value={getStringMetadata(generation.metadata, 'voiceId') ?? ''} />
         )}
+        {getStringMetadata(generation.metadata, 'emotion') && (
+          <Spec label="Emotion" value={getStringMetadata(generation.metadata, 'emotion') ?? ''} />
+        )}
         {generation.providerFileId && (
           <Spec label="File" value={generation.providerFileId} />
         )}

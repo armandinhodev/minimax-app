@@ -225,6 +225,49 @@ describe('TTSPage', () => {
     expect(container!.querySelector('[data-audio-player]')).not.toBeNull();
   });
 
+  it('sends the chosen emotion and inserts an interjection tag at the cursor', async () => {
+    authClientMocks.authFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ audio: '00010203' }),
+    });
+
+    act(() => {
+      root!.render(<TTSPage />);
+    });
+
+    const textArea = container!.querySelector('#tts-text') as HTMLTextAreaElement;
+    const selects = Array.from(container!.querySelectorAll('select'));
+    const emotionSelect = selects.find((select) =>
+      Array.from(select.options).some((option) => option.value === 'happy'),
+    ) as HTMLSelectElement;
+    const tagSelect = selects.find((select) =>
+      Array.from(select.options).some((option) => option.value === 'laughs'),
+    ) as HTMLSelectElement;
+    const voiceSelect = selects.find((select) => select.getAttribute('aria-label') === 'Voice') as HTMLSelectElement;
+
+    expect(emotionSelect).toBeDefined();
+    expect(tagSelect).toBeDefined();
+
+    act(() => {
+      changeTextarea(textArea, 'Hello from MiniMax');
+      changeSelect(voiceSelect, 'voice-a');
+      changeSelect(emotionSelect, 'happy');
+      changeSelect(tagSelect, 'sighs');
+    });
+
+    expect(textArea.value).toContain('(sighs)');
+
+    const generateButton = Array.from(container!.querySelectorAll('button')).find((button) => button.textContent === 'Generate');
+    await act(async () => {
+      generateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const call = authClientMocks.authFetch.mock.calls.find(([url]) => url === '/api/minimax/speech/t2a');
+    const body = JSON.parse(String(call?.[1]?.body));
+    expect(body).toMatchObject({ emotion: 'happy' });
+    expect(body.text).toContain('(sighs)');
+  });
+
   it('previews audioUrl responses without writing browser history', async () => {
     authClientMocks.authFetch.mockResolvedValue({
       ok: true,

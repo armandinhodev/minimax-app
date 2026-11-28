@@ -11,7 +11,7 @@ import type { T2ATask } from '@/domain/entities/T2ATask';
 import type { TaskStatus } from '@/domain/value-objects/TaskStatus';
 import type { Voice } from '@/domain/entities/Voice';
 import type { VoiceId } from '@/domain/value-objects/VoiceId';
-import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL, type T2ARequest } from '@/domain/value-objects/T2APolicy';
+import { DEFAULT_T2A_FORMAT, DEFAULT_T2A_MODEL, type T2AEmotion, type T2ARequest } from '@/domain/value-objects/T2APolicy';
 import { isMiniMaxInt64, normalizeMiniMaxId, quoteMiniMaxInt64Fields, rawMiniMaxInt64, stringifyMiniMaxJson } from '@/application/dto/minimax/files/FileDTO';
 import { VOICE_CLONE_NOT_VERIFIED_CODE, VoiceCloneNotVerifiedError } from '@/application/errors/VoiceCloneNotVerifiedError';
 
@@ -420,13 +420,14 @@ export class SpeechClient {
    * POST /v1/t2a_v2
    */
   async synthesize(request: T2ARequest): Promise<AudioOutput & { audioHex?: string }> {
-    const { text, voiceId, model = DEFAULT_T2A_MODEL, format = DEFAULT_T2A_FORMAT } = request;
+    const { text, voiceId, model = DEFAULT_T2A_MODEL, format = DEFAULT_T2A_FORMAT, emotion } = request;
     const url = withGroupId('/v1/t2a_v2', GROUP_ID);
     const body = {
       model,
       text,
       voice_setting: {
         voice_id: voiceId,
+        ...(emotion ? { emotion } : {}),
       },
       audio_setting: {
         format,
@@ -458,13 +459,14 @@ export class SpeechClient {
    * SSE streaming T2A — returns a ReadableStream of raw SSE chunks.
    * POST /v1/t2a_v2 with stream: true
    */
-  async stream(text: string, voiceId: string, model = DEFAULT_T2A_MODEL): Promise<ReadableStream> {
+  async stream(text: string, voiceId: string, model = DEFAULT_T2A_MODEL, emotion?: T2AEmotion): Promise<ReadableStream> {
     const url = withGroupId('/v1/t2a_v2', GROUP_ID);
     const body = {
       model,
       text,
       voice_setting: {
         voice_id: voiceId,
+        ...(emotion ? { emotion } : {}),
       },
       stream: true,
     };
@@ -543,13 +545,14 @@ export class SpeechClient {
    * POST /v1/t2a_async_v2
    */
   async submitAsync(request: T2ARequest): Promise<T2ATask> {
-    const { text, voiceId, model = DEFAULT_T2A_MODEL, format = DEFAULT_T2A_FORMAT } = request;
+    const { text, voiceId, model = DEFAULT_T2A_MODEL, format = DEFAULT_T2A_FORMAT, emotion } = request;
     const url = withGroupId('/v1/t2a_async_v2', GROUP_ID);
     const body = {
       model,
       text,
       voice_setting: {
         voice_id: voiceId,
+        ...(emotion ? { emotion } : {}),
       },
       audio_setting: {
         format,

@@ -5,7 +5,7 @@
 
 import type { ISpeechClient } from '@/domain/interfaces/minimax/speech/ISpeechClient';
 import { StreamT2ASchema } from '@/application/dto/minimax/speech/SpeechDTO';
-import { DEFAULT_T2A_MODEL } from '@/domain/value-objects/T2APolicy';
+import { DEFAULT_T2A_MODEL, type T2AEmotion } from '@/domain/value-objects/T2APolicy';
 
 export class StreamT2AValidationError extends Error {
   constructor(message: string) {
@@ -27,6 +27,7 @@ export class StreamT2AUseCase {
     text: string;
     voiceId: string;
     model?: string;
+    emotion?: T2AEmotion;
   }): Promise<ReadableStream> {
     const parsed = StreamT2ASchema.safeParse(request);
     if (!parsed.success) {
@@ -35,8 +36,8 @@ export class StreamT2AUseCase {
       );
     }
 
-    const { text, voiceId, model = DEFAULT_T2A_MODEL } = parsed.data;
+    const { text, voiceId, model = DEFAULT_T2A_MODEL, emotion } = parsed.data;
 
-    return this.speechClient.stream(text, voiceId, model);
+    return this.speechClient.stream(text, voiceId, model, emotion);
   }
 }

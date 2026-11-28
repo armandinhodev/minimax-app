@@ -117,7 +117,7 @@ describe('AppLayout navigation', () => {
 
     expect(container!.querySelector('a[href="/tts"]')?.getAttribute('data-active')).toBe('true');
     expect(links().filter((link) => link.current === 'page')).toEqual([
-      expect.objectContaining({ href: '/asr', text: 'Transcription' }),
+      expect.objectContaining({ href: '/asr', text: expect.stringContaining('Transcription') }),
     ]);
     expect(links().map((link) => link.href)).toEqual(expect.arrayContaining(['/tts', '/asr', '/voices', '/voices/clone', '/voices/design']));
   });

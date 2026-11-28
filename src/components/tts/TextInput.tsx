@@ -18,6 +18,8 @@ interface TextInputProps {
   label?: string;
   id?: string;
   disabled?: boolean;
+  /** Lets the page insert an inline tag at the cursor. */
+  textareaRef?: React.Ref<HTMLTextAreaElement>;
 }
 
 const MAX_CHARS = 10000;
@@ -30,6 +32,7 @@ export const TextInput = memo(function TextInput({
   label = 'Text',
   id = 'tts-text',
   disabled = false,
+  textareaRef,
 }: TextInputProps) {
   const charCount = value.length;
   const isOverLimit = charCount > MAX_CHARS;
@@ -47,6 +50,7 @@ export const TextInput = memo(function TextInput({
         </Badge>
       </Box>
       <Textarea
+        ref={textareaRef}
         id={id}
         placeholder={placeholder}
         value={value}

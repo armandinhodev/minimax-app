@@ -42,6 +42,21 @@ Source of truth: <https://platform.minimax.io/docs/llms.txt> and the linked API 
 | `POST /v1/t2a_async_v2` | [speech-t2a-async-create](https://platform.minimax.io/docs/api-reference/speech-t2a-async-create) | Aligned — top-level `task_id`, inline text capped at 100,000 characters |
 | `GET /v1/query/t2a_async_query_v2` | [speech-t2a-async-query](https://platform.minimax.io/docs/api-reference/speech-t2a-async-query) | Aligned — top-level `status` / `file_id`, status case normalized |
 
+### Emotion and interjection tags
+
+- **Preset emotion:** `voice_setting.emotion` accepts `happy`, `sad`, `angry`,
+  `fearful`, `disgusted`, `surprised`, `calm`, `fluent` and `whisper`.
+  `fluent` and `whisper` are documented only for `speech-2.6-hd/turbo`; the UI
+  offers the presets valid for the selected model and `Auto` omits the field.
+- **Inline interjection tags:** only `speech-2.8-hd` and `speech-2.8-turbo`
+  read tags typed into the text: `(laughs)`, `(chuckle)`, `(coughs)`,
+  `(clear-throat)`, `(groans)`, `(breath)`, `(pant)`, `(inhale)`, `(exhale)`,
+  `(gasps)`, `(sniffs)`, `(sighs)`, `(snorts)`, `(burps)`, `(lip-smacking)`,
+  `(humming)`, `(hissing)`, `(emm)`, `(sneezes)`. Generate audio offers an
+  “Emotion tags” select that inserts the tag after the selected word (or at
+  the cursor). The tag follows the word it colors, as in `people(sighs),`.
+- The preset is persisted with the Library record as `metadata.emotion`.
+
 ### Voice
 
 | Endpoint | Reference | Status |

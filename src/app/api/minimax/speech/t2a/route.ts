@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         source: 'text-to-speech',
         prompt: parsed.data.text,
         model: parsed.data.model,
-        metadata: { voiceId: parsed.data.voiceId },
+        metadata: { voiceId: parsed.data.voiceId, ...(parsed.data.emotion ? { emotion: parsed.data.emotion } : {}) },
         assets: [{
           kind: 'audio',
           storageType: 'provider_url',

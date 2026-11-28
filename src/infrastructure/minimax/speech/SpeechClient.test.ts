@@ -114,6 +114,19 @@ describe('SpeechClient', () => {
     });
   });
 
+  it('sends the preset emotion in voice_setting', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      data: { audio: 'abcd', duration: 1 },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } })) as typeof fetch;
+
+    await new SpeechClient().synthesize({ text: 'hello', voiceId: 'sys_voice_1', emotion: 'happy' });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      voice_setting: { voice_id: 'sys_voice_1', emotion: 'happy' },
+    });
+  });
+
   it('reports and aborts when the upstream stream stalls', async () => {
     const report = vi.fn();
     setTelemetryReporterForTests({ report });

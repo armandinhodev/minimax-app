@@ -62,6 +62,20 @@ describe('SynthesizeT2ASchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('accepts a documented emotion preset and rejects an unknown one', () => {
+    expect(SynthesizeT2ASchema.safeParse({
+      text: 'Hello',
+      voiceId: 'sys_male_english_1',
+      emotion: 'happy',
+    }).success).toBe(true);
+
+    expect(SynthesizeT2ASchema.safeParse({
+      text: 'Hello',
+      voiceId: 'sys_male_english_1',
+      emotion: 'ecstatic',
+    }).success).toBe(false);
+  });
 });
 
 describe('StreamT2ASchema', () => {
